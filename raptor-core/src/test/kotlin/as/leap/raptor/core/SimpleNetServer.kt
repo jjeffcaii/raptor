@@ -18,7 +18,7 @@ object SimpleNetServer {
     val server = vertx.createNetServer(options)
     server.connectHandler({ socket ->
       val parser = RecordParser.newFixed(1, null)
-      val handler = BufferHandler(parser, { msg ->
+      val handler = MessageFliper(parser, { msg ->
         logger.info("got {} message: {} bytes.", msg.type().name, msg.buffer().length())
       })
       parser.setOutput(handler)

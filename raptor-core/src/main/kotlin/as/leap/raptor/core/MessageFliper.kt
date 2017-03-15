@@ -12,16 +12,13 @@ import java.lang.invoke.MethodHandles
 import kotlin.experimental.and
 
 
-class BufferHandler : Handler<Buffer> {
+class MessageFliper(private val parser: RecordParser, sub: (Message) -> Unit) : Handler<Buffer> {
 
   companion object {
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
   }
 
-  private val parser: RecordParser
-  private var bus = MBassador<Message>({ error ->
-    logger.error("event bus error.", error)
-  })
+  private val bus: MBassador<Message>
   private var state: ReadState = ReadState.HANDSHAKE0
   private var already: Int = 0
   // default chunk size
@@ -35,14 +32,16 @@ class BufferHandler : Handler<Buffer> {
   private var streamid: Long? = null
   private var headerBuffer: Buffer? = null
 
-  constructor(parser: RecordParser, sub: (Message) -> Unit) {
-    this.parser = parser
+  init {
+    this.bus = MBassador<Message>({ error ->
+      logger.error("event bus error.", error)
+    })
     this.bus.subscribe(MessageListener(sub))
   }
 
   private fun emit(msg: Message) {
     logger.debug("emit message: {} bytes.", msg.buffer().length())
-    this.bus.post(msg)
+    this.bus.publishAsync(msg)
   }
 
   override fun handle(buffer: Buffer) {
@@ -51,17 +50,17 @@ class BufferHandler : Handler<Buffer> {
     }
     when (state) {
       ReadState.HANDSHAKE0 -> {
-        this.emit(Message(MessageType.HANDSHAKE, buffer.slice(0, 1)))
+        this.emit(Message(MessageType.HANDSHAKE, buffer))
         this.state = ReadState.HANDSHAKE1
         this.parser.fixedSizeMode(1536)
       }
       ReadState.HANDSHAKE1 -> {
-        this.emit(Message(MessageType.HANDSHAKE, buffer.slice(0, 1536)))
+        this.emit(Message(MessageType.HANDSHAKE, buffer))
         this.state = ReadState.HANDSHAKE2
         this.parser.fixedSizeMode(1536)
       }
       ReadState.HANDSHAKE2 -> {
-        this.emit(Message(MessageType.HANDSHAKE, buffer.slice(0, 1536)))
+        this.emit(Message(MessageType.HANDSHAKE, buffer))
         this.state = ReadState.CHUNK_HEADER_BSC
         this.parser.fixedSizeMode(1)
       }
