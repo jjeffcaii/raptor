@@ -9,12 +9,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>raptor-core</artifactId>
+  <artifactId>raptor-api</artifactId>
 
-  <dependencies>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-lang-kotlin</artifactId>
-    </dependency>
-  </dependencies>
+
 </project>
