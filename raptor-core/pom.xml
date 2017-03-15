@@ -13,12 +13,21 @@
 
   <dependencies>
     <dependency>
+      <groupId>as.leap</groupId>
+      <artifactId>raptor-commons</artifactId>
+      <type>test-jar</type>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-lang-kotlin</artifactId>
     </dependency>
     <dependency>
       <groupId>net.engio</groupId>
       <artifactId>mbassador</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
     </dependency>
   </dependencies>
 </project>

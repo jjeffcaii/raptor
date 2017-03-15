@@ -4,6 +4,7 @@ import io.vertx.core.buffer.Buffer
 
 class SimpleDatum : Datum {
 
+  private var wrote: Int = 0
   private val buffer: Buffer
 
   constructor(alloc: Int) {
@@ -11,6 +12,8 @@ class SimpleDatum : Datum {
   }
 
   override fun write(buffer: Buffer): Datum {
+
+
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 

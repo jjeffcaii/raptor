@@ -2,10 +2,13 @@ package `as`.leap.raptor.core.model
 
 import io.vertx.core.buffer.Buffer
 
-data class Message(val header: Header, val buffer: Buffer) {
+class Message(private val type: MessageType, private val buffer: Buffer) {
 
-  fun <T : Buffered> toModel(clazz: Class<T>): T {
-    return clazz.newInstance().from(this.buffer)
+  fun type(): MessageType {
+    return this.type
   }
 
+  fun buffer(): Buffer {
+    return this.buffer
+  }
 }

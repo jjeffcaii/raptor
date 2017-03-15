@@ -5,6 +5,6 @@ data class Header(
     val csid: Short,
     val timestamp: Long = 0,
     val streamId: Int,
-    val type: MessageType,
+    val type: ChunkType,
     val length: Int?
 )
