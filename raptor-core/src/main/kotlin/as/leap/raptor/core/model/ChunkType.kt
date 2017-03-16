@@ -1,5 +1,7 @@
 package `as`.leap.raptor.core.model
 
+import `as`.leap.raptor.core.utils.Bytes
+
 enum class ChunkType(val code: Byte) {
   CTRL_SET_CHUNK_SIZE(0x01),
   CTRL_ABORT_MESSAGE(0x02),
@@ -18,12 +20,26 @@ enum class ChunkType(val code: Byte) {
   AGGREGATE(0x16);
 
   companion object {
-    private val dic: Map<Byte, ChunkType> by lazy {
-      ChunkType.values().map { t -> t.code to t }.toMap()
-    }
-
     fun toChunkType(code: Byte): ChunkType? {
-      return dic[code]
+      val c = Bytes.toUInt8(code)
+      return when (c) {
+        1 -> CTRL_SET_CHUNK_SIZE
+        2 -> CTRL_ABORT_MESSAGE
+        3 -> CTRL_SET_WINDOW_SIZE
+        4 -> USER_CONTROL
+        5 -> CTRL_ACK_WINDOW_SIZE
+        6 -> CTRL_SET_PEER_BANDWIDTH
+        20 -> COMMAND_AMF0
+        17 -> COMMAND_AMF3
+        18 -> DATA_AMF0
+        15 -> DATA_AMF3
+        19 -> SHARE_OBJECT_AMF0
+        16 -> SHARE_OBJECT_AMF3
+        8 -> MEDIA_AUDIO
+        9 -> MEDIA_VIDEO
+        22 -> AGGREGATE
+        else -> throw UnsupportedOperationException("Not valid chunk type: byte=$c.")
+      }
     }
   }
 }

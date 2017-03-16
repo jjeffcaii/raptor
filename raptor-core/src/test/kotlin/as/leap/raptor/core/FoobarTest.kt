@@ -26,8 +26,12 @@ class FoobarTest {
 
   @Test
   fun test3() {
-    var c: Int? = 2
-    println(c ?: 3)
+    val b: Byte = 25
+
+    println(b.toInt() and 0xFF)
+
+
+
   }
 
 
