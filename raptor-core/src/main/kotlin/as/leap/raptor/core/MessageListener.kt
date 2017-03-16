@@ -10,14 +10,14 @@ import java.lang.invoke.MethodHandles
 
 
 @Listener(references = References.Strong)
-class MessageListener(private val cb: (Message) -> Unit) {
+class MessageListener(private val cb: (Message<Any>) -> Unit) {
 
   companion object {
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
   }
 
   @Handler(delivery = Invoke.Asynchronously)
-  fun process(msg: Message) {
+  fun process(msg: Message<Any>) {
     this.cb(msg)
   }
 }

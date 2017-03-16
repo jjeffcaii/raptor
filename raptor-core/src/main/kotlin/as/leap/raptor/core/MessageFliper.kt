@@ -1,8 +1,12 @@
 package `as`.leap.raptor.core
 
 import `as`.leap.raptor.core.model.ChunkType
+import `as`.leap.raptor.core.model.FMT
+import `as`.leap.raptor.core.model.Header
 import `as`.leap.raptor.core.model.Message
-import `as`.leap.raptor.core.model.MessageType
+import `as`.leap.raptor.core.model.msg.Chunk
+import `as`.leap.raptor.core.model.msg.Handshake0
+import `as`.leap.raptor.core.model.msg.Handshake1
 import io.vertx.core.Handler
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.parsetools.RecordParser
@@ -12,18 +16,18 @@ import java.lang.invoke.MethodHandles
 import kotlin.experimental.and
 
 
-class MessageFliper(private val parser: RecordParser, sub: (Message) -> Unit) : Handler<Buffer> {
+class MessageFliper : Handler<Buffer> {
 
   companion object {
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
   }
 
-  private val bus: MBassador<Message>
+  private val bus: MBassador<Message<Any>>
   private var state: ReadState = ReadState.HANDSHAKE0
   private var already: Int = 0
   // default chunk size
   private var chunkSize: Int = 4096
-  private var fmt: Int? = null // 0,1,2,3
+  private var fmt: FMT? = null // 0,1,2,3
   private var csid: Int? = null
   private var ts: Int? = null
   private var ets: Long? = null
@@ -31,15 +35,17 @@ class MessageFliper(private val parser: RecordParser, sub: (Message) -> Unit) : 
   private var type: ChunkType? = null
   private var streamid: Long? = null
   private var headerBuffer: Buffer? = null
+  private val parser: RecordParser
 
-  init {
-    this.bus = MBassador<Message>({ error ->
+  constructor(parser: RecordParser, sub: (Message<Any>) -> Unit) {
+    this.parser = parser
+    this.bus = MBassador<Message<Any>>({ error ->
       logger.error("event bus error.", error)
     })
     this.bus.subscribe(MessageListener(sub))
   }
 
-  private fun emit(msg: Message) {
+  private fun emit(msg: Message<Any>) {
     logger.debug("emit message: {} bytes.", msg.buffer().length())
     this.bus.publishAsync(msg)
   }
@@ -50,26 +56,25 @@ class MessageFliper(private val parser: RecordParser, sub: (Message) -> Unit) : 
     }
     when (state) {
       ReadState.HANDSHAKE0 -> {
-        this.emit(Message(MessageType.HANDSHAKE, buffer))
+        this.emit(Handshake0(buffer))
         this.state = ReadState.HANDSHAKE1
         this.parser.fixedSizeMode(1536)
       }
       ReadState.HANDSHAKE1 -> {
-        this.emit(Message(MessageType.HANDSHAKE, buffer))
+        this.emit(Handshake1(buffer))
         this.state = ReadState.HANDSHAKE2
         this.parser.fixedSizeMode(1536)
       }
       ReadState.HANDSHAKE2 -> {
-        this.emit(Message(MessageType.HANDSHAKE, buffer))
+        this.emit(Handshake1(buffer))
         this.state = ReadState.CHUNK_HEADER_BSC
         this.parser.fixedSizeMode(1)
       }
       ReadState.CHUNK_HEADER_BSC -> {
-        val buff = Buffer.buffer()
-        buff.appendBuffer(buffer)
-        this.headerBuffer = buff
+        this.headerBuffer = Buffer.buffer()
+        this.headerBuffer?.appendBuffer(buffer)
         val b = buffer.getByte(0)
-        this.fmt = b.toInt().shr(6)
+        this.fmt = FMT.valueOf(b.toInt().shr(6))
         this.csid = (b and 0x3F).toInt()
         when (this.csid) {
           0 -> {
@@ -81,29 +86,22 @@ class MessageFliper(private val parser: RecordParser, sub: (Message) -> Unit) : 
             this.parser.fixedSizeMode(2)
           }
           else -> {
-            when (this.fmt) {
-              0 -> {
-                this.state = ReadState.CHUNK_HEADER_MSG_11
-                this.parser.fixedSizeMode(11)
-              }
-              1 -> {
-                this.state = ReadState.CHUNK_HEADER_MSG_7
-                this.parser.fixedSizeMode(7)
-              }
-              2 -> {
-                this.state = ReadState.CHUNK_HEADER_MSG_3
-                this.parser.fixedSizeMode(3)
-              }
-              3 -> {
-                this.state = ReadState.CHUNK_BODY
-                this.parser.fixedSizeMode(this.calculatePayloadLength())
-              }
-            }
+            this.fireMessageHeader()
           }
         }
       }
+      ReadState.CHUNK_HEADER_BSC_0 -> {
+        this.headerBuffer?.appendBuffer(buffer)
+        this.csid = buffer.getByte(0) + 64
+        this.fireMessageHeader()
+      }
+      ReadState.CHUNK_HEADER_BSC_1 -> {
+        this.headerBuffer?.appendBuffer(buffer)
+        this.csid = buffer.getUnsignedShortLE(0) + 64
+        this.fireMessageHeader()
+      }
       ReadState.CHUNK_HEADER_MSG_11 -> {
-        this.headerBuffer!!.appendBuffer(buffer)
+        this.headerBuffer?.appendBuffer(buffer)
         this.already = 0
         this.ts = buffer.getUnsignedShort(0) * 256 + buffer.getByte(2)
         this.len = buffer.getUnsignedShort(3) * 256 + buffer.getByte(5)
@@ -118,7 +116,7 @@ class MessageFliper(private val parser: RecordParser, sub: (Message) -> Unit) : 
         }
       }
       ReadState.CHUNK_HEADER_MSG_7 -> {
-        this.headerBuffer!!.appendBuffer(buffer)
+        this.headerBuffer?.appendBuffer(buffer)
         this.already = 0
         this.ts = buffer.getUnsignedShort(0) * 256 + buffer.getByte(2)
         this.len = buffer.getUnsignedShort(3) * 256 + buffer.getByte(5)
@@ -132,7 +130,7 @@ class MessageFliper(private val parser: RecordParser, sub: (Message) -> Unit) : 
         }
       }
       ReadState.CHUNK_HEADER_MSG_3 -> {
-        this.headerBuffer!!.appendBuffer(buffer)
+        this.headerBuffer?.appendBuffer(buffer)
         this.ts = buffer.getUnsignedShort(0) * 256 + buffer.getByte(2)
         this.state = ReadState.CHUNK_BODY
         this.parser.fixedSizeMode(Math.min(this.chunkSize, this.len!!))
@@ -145,21 +143,48 @@ class MessageFliper(private val parser: RecordParser, sub: (Message) -> Unit) : 
         }
       }
       ReadState.CHUNK_EXT_TS -> {
-        this.headerBuffer!!.appendBuffer(buffer)
+        this.headerBuffer?.appendBuffer(buffer)
         this.ets = buffer.getUnsignedInt(0)
         this.state = ReadState.CHUNK_BODY
         this.parser.fixedSizeMode(this.calculatePayloadLength())
       }
       ReadState.CHUNK_BODY -> {
-        val buff = headerBuffer!!
-        buff.appendBuffer(buffer)
-        this.emit(Message(MessageType.CHUNK, buff))
+        this.headerBuffer?.appendBuffer(buffer)
+        val timestamp: Long
+        if (this.ts!! == 0x7FFFFF) {
+          timestamp = this.ets!!
+        } else {
+          timestamp = this.ts!!.toLong()
+        }
+        val header = Header(this.fmt!!, this.csid!!, timestamp, this.streamid!!, this.type!!, this.len)
+        this.emit(Chunk(this.headerBuffer!!, header))
         this.headerBuffer = null
         this.state = ReadState.CHUNK_HEADER_BSC
         this.parser.fixedSizeMode(1)
       }
       else -> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+      }
+    }
+  }
+
+  private fun fireMessageHeader() {
+    when (this.fmt) {
+      FMT._0 -> {
+        this.state = ReadState.CHUNK_HEADER_MSG_11
+        this.parser.fixedSizeMode(11)
+      }
+      FMT._1 -> {
+        this.state = ReadState.CHUNK_HEADER_MSG_7
+        this.parser.fixedSizeMode(7)
+      }
+      FMT._2 -> {
+        this.state = ReadState.CHUNK_HEADER_MSG_3
+        this.parser.fixedSizeMode(3)
+      }
+      FMT._3 -> {
+        this.state = ReadState.CHUNK_BODY
+        this.parser.fixedSizeMode(this.calculatePayloadLength())
       }
     }
   }
