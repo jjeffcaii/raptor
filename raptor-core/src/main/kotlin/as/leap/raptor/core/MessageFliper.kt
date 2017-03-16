@@ -28,9 +28,9 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
   private var chunkSize: Int = 4096
   private var fmt: FMT = FMT._0
   private var csid: Int = 2
-  private var ts: Int = 0
-  private var ets: Long? = null
-  private var len: Int? = null
+  private var timestamp: Int = 0
+  private var extendTimestamp: Long? = null
+  private var length: Int = 0
   private var type: ChunkType? = null
   private var streamid: Long = 0
   private var cache: Buffer = Buffer.buffer()
@@ -46,7 +46,7 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
     if (logger.isDebugEnabled) {
       logger.debug("emit message: {} bytes.", msg.toBuffer().length())
     }
-    this.bus.publishAsync(msg)
+    this.bus.publish(msg)
   }
 
   override fun handle(buffer: Buffer) {
@@ -90,7 +90,7 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
       }
       ReadState.CHUNK_HEADER_BSC_0 -> {
         this.cache.appendBuffer(buffer)
-        this.csid = buffer.getByte(0) + 64
+        this.csid = buffer.getUnsignedByte(0) + 64
         this.fireMessageHeader()
       }
       ReadState.CHUNK_HEADER_BSC_1 -> {
@@ -101,68 +101,69 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
       ReadState.CHUNK_HEADER_MSG_11 -> {
         this.cache.appendBuffer(buffer)
         this.already = 0
-        this.ts = buffer.getUnsignedMedium(0)
-        this.len = buffer.getUnsignedMedium(3)
+        this.timestamp = buffer.getUnsignedMedium(0)
+        this.length = buffer.getUnsignedMedium(3)
         this.type = ChunkType.toChunkType(buffer.getUnsignedByte(6))
         this.streamid = buffer.getUnsignedIntLE(7)
-        if (this.ts == 0x7FFFFF) {
+        if (this.timestamp == 0x7FFFFF) {
           this.state = ReadState.CHUNK_EXT_TS
           this.parser.fixedSizeMode(4)
         } else {
           this.state = ReadState.CHUNK_BODY
-          this.parser.fixedSizeMode(this.calculatePayloadLength())
+          this.parser.fixedSizeMode(this.calcLength())
         }
       }
       ReadState.CHUNK_HEADER_MSG_7 -> {
         this.cache.appendBuffer(buffer)
         this.already = 0
-        this.ts = buffer.getUnsignedMedium(0)
-        this.len = buffer.getUnsignedMedium(3)
+        this.timestamp = buffer.getUnsignedMedium(0)
+        this.length = buffer.getUnsignedMedium(3)
         this.type = ChunkType.toChunkType(buffer.getUnsignedByte(6))
-        if (this.ts == 0x7FFFFF) {
+        if (this.timestamp == 0x7FFFFF) {
           this.state = ReadState.CHUNK_EXT_TS
           this.parser.fixedSizeMode(4)
         } else {
           this.state = ReadState.CHUNK_BODY
-          this.parser.fixedSizeMode(this.calculatePayloadLength())
+          this.parser.fixedSizeMode(this.calcLength())
         }
       }
       ReadState.CHUNK_HEADER_MSG_3 -> {
         this.cache.appendBuffer(buffer)
-        this.ts = buffer.getUnsignedMedium(0)
+        this.timestamp = buffer.getUnsignedMedium(0)
         this.state = ReadState.CHUNK_BODY
-        this.parser.fixedSizeMode(Math.min(this.chunkSize, this.len!!))
-        if (this.ts == 0x7FFFFF) {
+        this.parser.fixedSizeMode(Math.min(this.chunkSize, this.length))
+        if (this.timestamp == 0x7FFFFF) {
           this.state = ReadState.CHUNK_EXT_TS
           this.parser.fixedSizeMode(4)
         } else {
           this.state = ReadState.CHUNK_BODY
-          this.parser.fixedSizeMode(this.calculatePayloadLength())
+          this.parser.fixedSizeMode(this.calcLength())
         }
       }
       ReadState.CHUNK_EXT_TS -> {
         this.cache.appendBuffer(buffer)
-        this.ets = buffer.getUnsignedInt(0)
+        this.extendTimestamp = buffer.getUnsignedInt(0)
         this.state = ReadState.CHUNK_BODY
-        this.parser.fixedSizeMode(this.calculatePayloadLength())
+        this.parser.fixedSizeMode(this.calcLength())
       }
       ReadState.CHUNK_BODY -> {
         this.cache.appendBuffer(buffer)
-        val timestamp: Long
-        if (this.ts == 0x7FFFFF) {
-          timestamp = this.ets!!
+        val timestamp: Long = if (this.timestamp == 0x7FFFFF) {
+          this.extendTimestamp!!
         } else {
-          timestamp = this.ts.toLong()
+          this.timestamp.toLong()
         }
-        val header = Header(this.fmt, this.csid, timestamp, this.streamid, this.type!!, this.len)
-        logger.info("flip header: {}", header)
+        val header = Header(this.fmt, this.csid, timestamp, this.streamid, this.type!!, this.length)
+        if (logger.isDebugEnabled) {
+          logger.debug("flip message({} bytes): {} ", this.cache.length(), header)
+        }
         this.emit(Chunk(this.cache, header))
         this.cache = Buffer.buffer()
         this.state = ReadState.CHUNK_HEADER_BSC
         this.parser.fixedSizeMode(1)
       }
       else -> {
-        throw UnsupportedOperationException("Not valid ReadState: ${this.state}")
+        throw UnsupportedOperationException("Not valid ReadState: ${this.state}.")
       }
     }
   }
@@ -183,7 +184,7 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
       }
       FMT._3 -> {
         this.state = ReadState.CHUNK_BODY
-        this.parser.fixedSizeMode(this.calculatePayloadLength())
+        this.parser.fixedSizeMode(this.calcLength())
       }
       else -> {
         throw UnsupportedOperationException("Not valid FMT: ${this.fmt}")
@@ -191,20 +192,21 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
     }
   }
 
-  private fun calculatePayloadLength(): Int {
-    val ret: Int
-    val l = this.len!!
-    if (l <= this.chunkSize) {
-      ret = l
-    } else {
-      val d = l - this.already
-      ret = Math.min(d, this.chunkSize)
-      if (d < this.chunkSize) {
-        this.already += this.chunkSize
-      }
+  private fun calcLength(): Int {
+    // 消息长度比默认块小, 返回消息长度
+    if (this.length <= this.chunkSize) {
+      this.already = this.length
+      return this.length
     }
-    logger.info("calculate length: {}", ret)
-    return ret
+    // 剩余最后一个小块
+    val left = this.length - this.already
+    if (left < this.chunkSize) {
+      this.already = this.length
+      return left
+    }
+    // 按默认块大小
+    this.already += this.chunkSize
+    return this.chunkSize
   }
 
   private enum class ReadState {
@@ -220,6 +222,4 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
     CHUNK_EXT_TS,
     CHUNK_BODY
   }
-
-
 }
