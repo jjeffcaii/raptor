@@ -61,17 +61,23 @@ class Chunk(private val buffer: Buffer, private val header: Header) : Message<Pa
         ProtocolBandWidth(b.getUnsignedInt(0), limitType)
       }
       ChunkType.COMMAND_AMF0 -> {
-        val arr = CodecHelper.decodeAMF0(b.bytes)
-        when (arr[0] as String) {
-          "connect" -> {
-            CommandConnect(ChunkType.COMMAND_AMF0, (arr[1] as Number).toInt(), arr[2])
-          }
-          else -> EmptyPayload.INSTANCE
-        }
+        toCommand(CodecHelper.decodeAMF0(b.bytes))
+      }
+      ChunkType.COMMAND_AMF3 -> {
+        toCommand(CodecHelper.decodeAMF3(b.bytes))
       }
       else -> {
         EmptyPayload.INSTANCE
       }
+    }
+  }
+
+  private fun toCommand(values: List<Any>): Payload {
+    return when (values[0] as String) {
+      "connect" -> {
+        CommandConnect(ChunkType.COMMAND_AMF0, (values[1] as Number).toInt(), values[2])
+      }
+      else -> EmptyPayload.INSTANCE
     }
   }
 
