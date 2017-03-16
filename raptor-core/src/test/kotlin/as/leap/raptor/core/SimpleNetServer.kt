@@ -1,6 +1,5 @@
 package `as`.leap.raptor.core
 
-import `as`.leap.raptor.core.model.msg.Chunk
 import io.vertx.core.Vertx
 import io.vertx.core.parsetools.RecordParser
 import io.vertx.kotlin.core.net.NetClientOptions
@@ -30,17 +29,18 @@ object SimpleNetServer {
             logger.info("backend closed.")
             front.close()
           }
-          backend.exceptionHandler { throwable ->
-            logger.error("backend error.", throwable)
+          backend.exceptionHandler {
+            logger.error("backend error.", it)
           }
-          backend.handler { buffer ->
+          backend.handler {
             //logger.info("rcv toBuffer: {} bytes.", buffer.length())
-            front.write(buffer)
+            front.write(it)
           }
           front.resume()
           val parser = RecordParser.newFixed(1, null)
           val handler = MessageFliper(parser, {
             //logger.info("snd {} message: {} bytes.", msg.type().name, msg.toBuffer().length())
+            //logger.info("message model: {}", it.toModel())
             backend.write(it.toBuffer())
           })
           parser.setOutput(handler)
@@ -48,8 +48,8 @@ object SimpleNetServer {
             logger.info("socket closed.")
             backend.close()
           }
-          front.exceptionHandler { throwable ->
-            logger.error("socket error.", throwable)
+          front.exceptionHandler {
+            logger.error("socket error.", it)
           }
           front.handler(parser)
         } else {

@@ -1,19 +1,19 @@
 package `as`.leap.raptor.core.model
 
 enum class FMT(val code: Int) {
-  F1(0),
-  F2(1),
-  F3(2),
-  F4(3);
+  F0(0),
+  F1(1),
+  F2(2),
+  F3(3);
 
   companion object {
     fun valueOf(code: Byte): FMT {
       val c = (code.toInt() and 0xFF).ushr(6)
       return when (c) {
-        0 -> F1
-        1 -> F2
-        2 -> F3
-        3 -> F4
+        0 -> F0
+        1 -> F1
+        2 -> F2
+        3 -> F3
         else -> throw UnsupportedOperationException("Not valid FMT: byte=$code, fmt=$c.")
       }
     }

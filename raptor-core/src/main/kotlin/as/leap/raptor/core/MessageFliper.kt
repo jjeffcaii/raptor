@@ -18,7 +18,7 @@ import java.lang.invoke.MethodHandles
 class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Unit) : Handler<Buffer> {
 
   companion object {
-    private val DEFAULT_CHUNK_SIZE = 4096
+    private val DEFAULT_CHUNK_SIZE: Int = 4096
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
   }
 
@@ -27,7 +27,7 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
   private var already: Int = 0
   // default chunk size
   private var chunkSize: Int = DEFAULT_CHUNK_SIZE
-  private var fmt: FMT = FMT.F1
+  private var fmt: FMT = FMT.F0
   private var csid: Int = 2
   private var timestamp: Int = 0
   private var extendTimestamp: Long? = null
@@ -38,7 +38,7 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
 
   init {
     this.bus = MBassador<Message<Any>> {
-      logger.error("event bus error.", it)
+      logger.error("event bus error.", it.cause)
     }
     this.bus.subscribe(MessageListener(sub))
   }
@@ -47,7 +47,7 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
     if (logger.isDebugEnabled) {
       logger.debug("emit message: {} bytes.", msg.toBuffer().length())
     }
-    this.bus.publish(msg)
+    this.bus.publishAsync(msg)
   }
 
   override fun handle(buffer: Buffer) {
@@ -155,6 +155,10 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
         if (logger.isDebugEnabled) {
           logger.debug("flip message({} bytes): {} ", this.cache.length(), header)
         }
+        if (header.fmt == FMT.F0 && header.csid == 2 && header.type == ChunkType.CTRL_SET_CHUNK_SIZE) {
+          this.chunkSize = buffer.getUnsignedInt(0).toInt()
+          logger.info("reset chunk size: {}", this.chunkSize)
+        }
         this.emit(Chunk(this.cache, header))
         this.cache = Buffer.buffer()
         this.state = ReadState.CHUNK_HEADER_BSC
@@ -168,19 +172,19 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
 
   private fun fireMessageHeader() {
     when (this.fmt) {
-      FMT.F1 -> {
+      FMT.F0 -> {
         this.state = ReadState.CHUNK_HEADER_MSG_11
         this.parser.fixedSizeMode(11)
       }
-      FMT.F2 -> {
+      FMT.F1 -> {
         this.state = ReadState.CHUNK_HEADER_MSG_7
         this.parser.fixedSizeMode(7)
       }
-      FMT.F3 -> {
+      FMT.F2 -> {
         this.state = ReadState.CHUNK_HEADER_MSG_3
         this.parser.fixedSizeMode(3)
       }
-      FMT.F4 -> {
+      FMT.F3 -> {
         this.state = ReadState.CHUNK_BODY
         this.parser.fixedSizeMode(this.calcLength())
       }

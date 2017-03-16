@@ -41,7 +41,7 @@ object CodecHelper {
       val li = mutableListOf<Any>()
       do {
         val obj = deserializer.readObject()
-        li.add(obj)
+        li.add(obj ?: Unit)
       } while (deserializer.available() > 0)
       return li
     }
