@@ -2,6 +2,8 @@ package `as`.leap.raptor.core.model.msg
 
 import `as`.leap.raptor.core.model.Message
 import `as`.leap.raptor.core.model.MessageType
+import `as`.leap.raptor.core.utils.CodecUtils
+import com.google.common.base.MoreObjects
 import io.vertx.core.buffer.Buffer
 
 class Handshake1(private val buffer: Buffer) : Message<Handshake1.Body> {
@@ -27,6 +29,13 @@ class Handshake1(private val buffer: Buffer) : Message<Handshake1.Body> {
 
   inner class Body(val v1: Long, val v2: Long, val random: Buffer) {
 
+    override fun toString(): String {
+      return MoreObjects.toStringHelper(this)
+          .add("v1", this.v1)
+          .add("v2", this.v2)
+          .add("random", "Murmur3_128(${CodecUtils.murmur128(this.random.bytes)})")
+          .toString()
+    }
   }
 
 

@@ -2,6 +2,7 @@ package `as`.leap.raptor.core.model.msg
 
 import `as`.leap.raptor.core.model.Message
 import `as`.leap.raptor.core.model.MessageType
+import com.google.common.base.MoreObjects
 import io.vertx.core.buffer.Buffer
 
 class Handshake0(private val buffer: Buffer) : Message<Handshake0.Body> {
@@ -22,6 +23,14 @@ class Handshake0(private val buffer: Buffer) : Message<Handshake0.Body> {
     return this.model
   }
 
-  inner class Body(val version: Short = 3)
+  inner class Body(val version: Short = 3) {
+
+    override fun toString(): String {
+      return MoreObjects.toStringHelper(this)
+          .add("version", this.version)
+          .toString()
+    }
+
+  }
 
 }
