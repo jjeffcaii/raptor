@@ -1,5 +1,6 @@
 package `as`.leap.raptor.core
 
+import com.google.common.base.Throwables
 import io.vertx.core.Vertx
 import io.vertx.core.parsetools.RecordParser
 import io.vertx.kotlin.core.net.NetClientOptions
@@ -30,7 +31,7 @@ object SimpleNetServer {
             front.close()
           }
           backend.exceptionHandler {
-            logger.error("backend error.", it)
+            logger.error("backend error: {}", Throwables.getStackTraceAsString(it))
           }
           backend.handler {
             //logger.info("rcv toBuffer: {} bytes.", buffer.length())

@@ -44,9 +44,6 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
   }
 
   private fun emit(msg: Message<Any>) {
-    if (logger.isDebugEnabled) {
-      logger.debug("emit message: {} bytes.", msg.toBuffer().length())
-    }
     this.bus.publishAsync(msg)
   }
 
@@ -157,7 +154,9 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
         }
         if (header.fmt == FMT.F0 && header.csid == 2 && header.type == ChunkType.CTRL_SET_CHUNK_SIZE) {
           this.chunkSize = buffer.getUnsignedInt(0).toInt()
-          logger.info("reset chunk size: {}", this.chunkSize)
+          if (logger.isDebugEnabled) {
+            logger.debug("reset chunk size: {}", this.chunkSize)
+          }
         }
         this.emit(Chunk(this.cache, header))
         this.cache = Buffer.buffer()
