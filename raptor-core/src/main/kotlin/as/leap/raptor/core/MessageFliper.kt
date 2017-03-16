@@ -44,7 +44,8 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
   }
 
   private fun emit(msg: Message<Any>) {
-    this.bus.publishAsync(msg)
+    this.bus.publish(msg)
+    //this.bus.publishAsync(msg)
   }
 
   override fun handle(buffer: Buffer) {

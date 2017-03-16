@@ -16,7 +16,7 @@ class MessageListener(private val cb: (Message<Any>) -> Unit) {
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
   }
 
-  @Handler(delivery = Invoke.Asynchronously)
+  @Handler(delivery = Invoke.Synchronously)
   fun process(msg: Message<Any>) {
     this.cb(msg)
   }

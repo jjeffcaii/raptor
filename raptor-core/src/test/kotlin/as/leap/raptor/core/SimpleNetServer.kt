@@ -40,17 +40,17 @@ object SimpleNetServer {
           front.resume()
           val parser = RecordParser.newFixed(1, null)
           val handler = MessageFliper(parser, {
-            //logger.info("snd {} message: {} bytes.", msg.type().name, msg.toBuffer().length())
+            //logger.info("snd {} message: {} bytes.", it.type(), it.toBuffer().length())
             //logger.info("message model: {}", it.toModel())
             backend.write(it.toBuffer())
           })
           parser.setOutput(handler)
           front.closeHandler {
-            logger.info("socket closed.")
+            logger.info("front socket closed.")
             backend.close()
           }
           front.exceptionHandler {
-            logger.error("socket error.", it)
+            logger.error("front socket error.", Throwables.getStackTraceAsString(it))
           }
           front.handler(parser)
         } else {
