@@ -1,5 +1,6 @@
 package `as`.leap.raptor.core
 
+import `as`.leap.raptor.core.utils.CodecHelper
 import flex.messaging.io.SerializationContext
 import flex.messaging.io.amf.Amf0Input
 import flex.messaging.io.amf.Amf3Input
@@ -66,13 +67,26 @@ class FoobarTest {
     val deserializer = Amf0Input(context)
     val bis = ByteArrayInputStream(bytes)
     deserializer.setInputStream(bis)
-    println("av:"+deserializer.available())
+    println("av:" + deserializer.available())
     println(deserializer.readObject())
     println(deserializer.readObject())
     println(deserializer.readObject())
-    println("av:"+deserializer.available())
+    println("av:" + deserializer.available())
     println(deserializer.readObject())
     deserializer.close()
+
+
+  }
+
+  @Test
+  fun test5() {
+    val b64 = "AgAHY29ubmVjdAA/8AAAAAAAAAMAA2FwcAIAa21heHdvbi1saXZlL2Zvb2Jhcj9lPTE0ODg3ODQ1ODcmdG9rZW49ekhKcmpqd2NjQl9uMzBPMTZDQWl4THZmSl8wYnMwZ2Z0WnY4b09vSDpQLTJobEdGMDZjRzVteVNEZG5EcjBsMkhMVWs9AAR0eXBlAgAKbm9ucHJpdmF0ZQAIZmxhc2hWZXICAB9GTUxFLzMuMCAoY29tcGF0aWJsZTsgRk1TYy8xLjApAAZzd2ZVcmwCAHxydG1wOi8vMTI3LjAuMC4xL21heHdvbi1saXZlL2Zvb2Jhcj9lPTE0ODg3ODQ1ODcmdG9rZW49ekhKcmpqd2NjQl9uMzBPMTZDQWl4THZmSl8wYnMwZ2Z0WnY4b09vSDpQLTJobEdGMDZjRzVteVNEZG5EcjBsMkhMVWs9AAV0Y1VybAIAfHJ0bXA6Ly8xMjcuMC4wLjEvbWF4d29uLWxpdmUvZm9vYmFyP2U9MTQ4ODc4NDU4NyZ0b2tlbj16SEpyamp3Y2NCX24zME8xNkNBaXhMdmZKXzBiczBnZnRadjhvT29IOlAtMmhsR0YwNmNHNW15U0RkbkRyMGwySExVaz0AAAk="
+    val bytes = Base64.getDecoder().decode(b64)
+
+    var i = 0
+    CodecHelper.decodeAMF0(bytes).forEach {
+      println("${i++}: $it")
+    }
 
 
   }

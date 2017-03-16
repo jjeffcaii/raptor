@@ -1,5 +1,6 @@
 package `as`.leap.raptor.core
 
+import `as`.leap.raptor.core.model.msg.Chunk
 import io.vertx.core.Vertx
 import io.vertx.core.parsetools.RecordParser
 import io.vertx.kotlin.core.net.NetClientOptions
@@ -38,9 +39,9 @@ object SimpleNetServer {
           }
           front.resume()
           val parser = RecordParser.newFixed(1, null)
-          val handler = MessageFliper(parser, { msg ->
+          val handler = MessageFliper(parser, {
             //logger.info("snd {} message: {} bytes.", msg.type().name, msg.toBuffer().length())
-            backend.write(msg.toBuffer())
+            backend.write(it.toBuffer())
           })
           parser.setOutput(handler)
           front.closeHandler {

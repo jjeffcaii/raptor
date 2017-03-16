@@ -7,7 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue
 
 class SimpleEndpoint(private val host: String, private val port: Int) : Endpoint {
 
-  private val queue: BlockingQueue<Buffer> = LinkedBlockingQueue()
+  private val queue: BlockingQueue<Buffer> = LinkedBlockingQueue<Buffer>()
 
   init {
     VertxHelper.netClient.connect(port, host, { event ->

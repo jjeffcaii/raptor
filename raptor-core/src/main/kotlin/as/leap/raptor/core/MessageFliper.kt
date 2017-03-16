@@ -37,9 +37,9 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
   private var cache: Buffer = Buffer.buffer()
 
   init {
-    this.bus = MBassador<Message<Any>>({ error ->
-      logger.error("event bus error.", error)
-    })
+    this.bus = MBassador<Message<Any>> {
+      logger.error("event bus error.", it)
+    }
     this.bus.subscribe(MessageListener(sub))
   }
 
