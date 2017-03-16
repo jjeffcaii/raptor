@@ -1,6 +1,6 @@
 package `as`.leap.raptor.core
 
-import `as`.leap.raptor.core.utils.X
+import `as`.leap.raptor.core.utils.VertxHelper
 import io.vertx.core.buffer.Buffer
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -10,7 +10,7 @@ class SimpleEndpoint(private val host: String, private val port: Int) : Endpoint
   private val queue: BlockingQueue<Buffer> = LinkedBlockingQueue()
 
   init {
-    X.netClient.connect(port, host, { event ->
+    VertxHelper.netClient.connect(port, host, { event ->
 
     })
   }

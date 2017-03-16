@@ -4,7 +4,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.net.NetClient
 import io.vertx.kotlin.core.net.NetClientOptions
 
-object X {
+object VertxHelper {
 
   val vertx: Vertx by lazy {
     Vertx.vertx()
