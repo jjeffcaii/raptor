@@ -44,7 +44,7 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
 
   private fun emit(msg: Message<Any>) {
     if (logger.isDebugEnabled) {
-      logger.debug("emit message: {} bytes.", msg.buffer().length())
+      logger.debug("emit message: {} bytes.", msg.toBuffer().length())
     }
     this.bus.publishAsync(msg)
   }

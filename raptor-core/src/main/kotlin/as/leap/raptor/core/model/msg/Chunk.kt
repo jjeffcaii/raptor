@@ -5,7 +5,15 @@ import `as`.leap.raptor.core.model.Message
 import `as`.leap.raptor.core.model.MessageType
 import io.vertx.core.buffer.Buffer
 
-class Chunk(buffer: Buffer, private val header: Header?) : Message<Chunk.Body>(MessageType.CHUNK, buffer, Body::class.java) {
+class Chunk(private val buffer: Buffer, private val header: Header?) : Message<Chunk.Body> {
+
+  override fun toBuffer(): Buffer {
+    return this.buffer
+  }
+
+  override fun type(): MessageType {
+    return MessageType.CHUNK
+  }
 
   private val model: Body by lazy {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.

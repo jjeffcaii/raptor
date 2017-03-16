@@ -33,14 +33,14 @@ object SimpleNetServer {
             logger.error("backend error.", throwable)
           }
           backend.handler { buffer ->
-            logger.info("rcv buffer: {} bytes.", buffer.length())
+            logger.info("rcv toBuffer: {} bytes.", buffer.length())
             front.write(buffer)
           }
           front.resume()
           val parser = RecordParser.newFixed(1, null)
           val handler = MessageFliper(parser, { msg ->
-            logger.info("snd {} message: {} bytes.", msg.type().name, msg.buffer().length())
-            backend.write(msg.buffer())
+            logger.info("snd {} message: {} bytes.", msg.type().name, msg.toBuffer().length())
+            backend.write(msg.toBuffer())
           })
           parser.setOutput(handler)
           front.closeHandler {
