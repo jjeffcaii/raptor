@@ -2,7 +2,7 @@ package `as`.leap.raptor.core.utils
 
 import com.google.common.hash.Hashing
 
-object CodecUtils {
+object CodecHelper {
 
   fun murmur128(bytes: ByteArray): String {
     return Hashing.murmur3_128().newHasher()
