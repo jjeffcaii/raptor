@@ -1,5 +1,6 @@
 package `as`.leap.raptor.core
 
+import `as`.leap.raptor.core.utils.Bytes
 import io.vertx.core.buffer.Buffer
 import org.testng.annotations.Test
 import kotlin.experimental.and
@@ -26,11 +27,10 @@ class FoobarTest {
 
   @Test
   fun test3() {
-    val b: Byte = 25
+    val b = Buffer.buffer().appendByte(0).appendByte(1).appendByte(-51)
 
-    println(b.toInt() and 0xFF)
-
-
+    //0x00 0x01 0x01
+    println(b.getUnsignedMedium(0))
 
   }
 

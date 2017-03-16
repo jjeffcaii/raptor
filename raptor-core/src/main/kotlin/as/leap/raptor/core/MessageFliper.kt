@@ -7,7 +7,6 @@ import `as`.leap.raptor.core.model.Message
 import `as`.leap.raptor.core.model.msg.Chunk
 import `as`.leap.raptor.core.model.msg.Handshake0
 import `as`.leap.raptor.core.model.msg.Handshake1
-import `as`.leap.raptor.core.utils.Bytes
 import io.vertx.core.Handler
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.parsetools.RecordParser
@@ -102,9 +101,9 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
       ReadState.CHUNK_HEADER_MSG_11 -> {
         this.cache.appendBuffer(buffer)
         this.already = 0
-        this.ts = buffer.getUnsignedShort(0) * 256 + Bytes.toUInt8(buffer.getByte(2))
-        this.len = buffer.getUnsignedShort(3) * 256 + Bytes.toUInt8(buffer.getByte(5))
-        this.type = ChunkType.toChunkType(buffer.getByte(6))
+        this.ts = buffer.getUnsignedMedium(0)
+        this.len = buffer.getUnsignedMedium(3)
+        this.type = ChunkType.toChunkType(buffer.getUnsignedByte(6))
         this.streamid = buffer.getUnsignedIntLE(7)
         if (this.ts == 0x7FFFFF) {
           this.state = ReadState.CHUNK_EXT_TS
@@ -117,9 +116,9 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
       ReadState.CHUNK_HEADER_MSG_7 -> {
         this.cache.appendBuffer(buffer)
         this.already = 0
-        this.ts = buffer.getUnsignedShort(0) * 256 + Bytes.toUInt8(buffer.getByte(2))
-        this.len = buffer.getUnsignedShort(3) * 256 + Bytes.toUInt8(buffer.getByte(5))
-        this.type = ChunkType.toChunkType(buffer.getByte(6))
+        this.ts = buffer.getUnsignedMedium(0)
+        this.len = buffer.getUnsignedMedium(3)
+        this.type = ChunkType.toChunkType(buffer.getUnsignedByte(6))
         if (this.ts == 0x7FFFFF) {
           this.state = ReadState.CHUNK_EXT_TS
           this.parser.fixedSizeMode(4)
@@ -130,7 +129,7 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
       }
       ReadState.CHUNK_HEADER_MSG_3 -> {
         this.cache.appendBuffer(buffer)
-        this.ts = buffer.getUnsignedShort(0) * 256 + Bytes.toUInt8(buffer.getByte(2))
+        this.ts = buffer.getUnsignedMedium(0)
         this.state = ReadState.CHUNK_BODY
         this.parser.fixedSizeMode(Math.min(this.chunkSize, this.len!!))
         if (this.ts == 0x7FFFFF) {

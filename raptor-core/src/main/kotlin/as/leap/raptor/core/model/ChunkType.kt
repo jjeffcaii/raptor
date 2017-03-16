@@ -1,7 +1,5 @@
 package `as`.leap.raptor.core.model
 
-import `as`.leap.raptor.core.utils.Bytes
-
 enum class ChunkType(val code: Byte) {
   CTRL_SET_CHUNK_SIZE(0x01),
   CTRL_ABORT_MESSAGE(0x02),
@@ -20,9 +18,8 @@ enum class ChunkType(val code: Byte) {
   AGGREGATE(0x16);
 
   companion object {
-    fun toChunkType(code: Byte): ChunkType? {
-      val c = Bytes.toUInt8(code)
-      return when (c) {
+    fun toChunkType(code: Short): ChunkType? {
+      return when (code.toInt()) {
         1 -> CTRL_SET_CHUNK_SIZE
         2 -> CTRL_ABORT_MESSAGE
         3 -> CTRL_SET_WINDOW_SIZE
@@ -38,7 +35,7 @@ enum class ChunkType(val code: Byte) {
         8 -> MEDIA_AUDIO
         9 -> MEDIA_VIDEO
         22 -> AGGREGATE
-        else -> throw UnsupportedOperationException("Not valid chunk type: byte=$c.")
+        else -> throw UnsupportedOperationException("Not valid chunk type: byte=$code.")
       }
     }
   }
