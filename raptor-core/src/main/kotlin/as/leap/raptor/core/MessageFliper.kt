@@ -18,6 +18,7 @@ import java.lang.invoke.MethodHandles
 class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Unit) : Handler<Buffer> {
 
   companion object {
+    private val DEFAULT_CHUNK_SIZE = 4096
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
   }
 
@@ -25,8 +26,8 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
   private var state: ReadState = ReadState.HANDSHAKE0
   private var already: Int = 0
   // default chunk size
-  private var chunkSize: Int = 4096
-  private var fmt: FMT = FMT._0
+  private var chunkSize: Int = DEFAULT_CHUNK_SIZE
+  private var fmt: FMT = FMT.F1
   private var csid: Int = 2
   private var timestamp: Int = 0
   private var extendTimestamp: Long? = null
@@ -50,9 +51,6 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
   }
 
   override fun handle(buffer: Buffer) {
-    if (logger.isDebugEnabled) {
-      logger.debug("handle {} bytes.", buffer.length())
-    }
     when (state) {
       ReadState.HANDSHAKE0 -> {
         this.emit(Handshake0(buffer))
@@ -170,19 +168,19 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
 
   private fun fireMessageHeader() {
     when (this.fmt) {
-      FMT._0 -> {
+      FMT.F1 -> {
         this.state = ReadState.CHUNK_HEADER_MSG_11
         this.parser.fixedSizeMode(11)
       }
-      FMT._1 -> {
+      FMT.F2 -> {
         this.state = ReadState.CHUNK_HEADER_MSG_7
         this.parser.fixedSizeMode(7)
       }
-      FMT._2 -> {
+      FMT.F3 -> {
         this.state = ReadState.CHUNK_HEADER_MSG_3
         this.parser.fixedSizeMode(3)
       }
-      FMT._3 -> {
+      FMT.F4 -> {
         this.state = ReadState.CHUNK_BODY
         this.parser.fixedSizeMode(this.calcLength())
       }

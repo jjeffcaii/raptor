@@ -29,5 +29,35 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
+
+
+    <dependency>
+      <groupId>org.apache.flex.blazeds</groupId>
+      <artifactId>flex-messaging-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flex.blazeds</groupId>
+      <artifactId>flex-messaging-common</artifactId>
+    </dependency>
+
+    <!--
+        <dependency>
+          <groupId>org.graniteds</groupId>
+          <artifactId>granite-server-core</artifactId>
+        </dependency>
+    -->
+
+    <!--
+        <dependency>
+          <groupId>org.red5</groupId>
+          <artifactId>red5-io</artifactId>
+        </dependency>
+    -->
+
+
+    <!--<dependency>
+      <groupId>org.openamf</groupId>
+      <artifactId>openamf</artifactId>
+    </dependency>-->
   </dependencies>
 </project>

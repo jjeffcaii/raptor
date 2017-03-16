@@ -17,4 +17,9 @@ object CodecHelper {
         .hash()
         .toString()
   }
+
+  fun decodeAMF0(bytes: ByteArray) {
+
+  }
+
 }
