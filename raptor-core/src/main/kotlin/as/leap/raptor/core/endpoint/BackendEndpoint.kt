@@ -2,7 +2,6 @@ package `as`.leap.raptor.core.endpoint
 
 import `as`.leap.raptor.core.Endpoint
 import `as`.leap.raptor.core.MessageFliper
-import `as`.leap.raptor.core.model.Message
 import `as`.leap.raptor.core.utils.VertxHelper
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
@@ -11,10 +10,7 @@ import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 import java.util.*
 
-typealias Consumer = (Message<*>) -> Unit
-typealias OnError = (Throwable) -> Unit
-
-class BackendEndpoint(host: String, port: Int = 1935, consumer: Consumer, onError: OnError? = null) : Endpoint(consumer, onError) {
+class BackendEndpoint(host: String, port: Int = 1935) : Endpoint() {
 
   private var socket: NetSocket? = null
   private var queue: MutableList<Buffer> = mutableListOf()
@@ -22,11 +18,25 @@ class BackendEndpoint(host: String, port: Int = 1935, consumer: Consumer, onErro
   init {
     VertxHelper.netClient.connect(port, host, {
       if (it.succeeded()) {
-        logger.info("create backend socket success.")
+
         val socket = it.result()
         val parser = RecordParser.newFixed(1, null)
-        parser.setOutput(MessageFliper(parser, this.consumer))
+        parser.setOutput(MessageFliper(parser, {
+          this.consumer?.invoke(it)
+        }))
         socket.handler(parser)
+
+        socket.exceptionHandler {
+          logger.error("endpoint error.", it)
+          this.onError?.invoke(it)
+        }
+
+        socket.closeHandler {
+          logger.info("endpoint closed.")
+          this.onClose?.invoke()
+          this.socket = null
+        }
+
         synchronized(this.queue, {
           this.queue.forEach {
             socket.write(it)
@@ -34,9 +44,10 @@ class BackendEndpoint(host: String, port: Int = 1935, consumer: Consumer, onErro
         })
         this.queue = Collections.emptyList()
         this.socket = socket
+        logger.info("initialize endpoint success.")
       } else {
-        logger.error("create backend socket failed.", it.cause())
-        this.onErr?.invoke(it.cause())
+        logger.error("initialize endpoint failed.", it.cause())
+        this.onError?.invoke(it.cause())
       }
     })
   }
@@ -50,6 +61,10 @@ class BackendEndpoint(host: String, port: Int = 1935, consumer: Consumer, onErro
       })
     }
     return this
+  }
+
+  override fun close() {
+    this.socket?.close()
   }
 
   companion object {
