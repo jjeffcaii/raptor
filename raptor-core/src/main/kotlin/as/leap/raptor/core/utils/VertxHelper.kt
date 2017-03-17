@@ -11,7 +11,7 @@ object VertxHelper {
   }
 
   val netClient: NetClient by lazy {
-    val opts = NetClientOptions(connectTimeout = 5000)
+    val opts = NetClientOptions(connectTimeout = 15000, tcpNoDelay = true, usePooledBuffers = true)
     this.vertx.createNetClient(opts)
   }
 

@@ -8,7 +8,7 @@ import io.vertx.core.parsetools.RecordParser
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-class FrontEndpoint(private val socket: NetSocket) : Endpoint() {
+class Frontend(private val socket: NetSocket) : Endpoint() {
 
   init {
     val parser = RecordParser.newFixed(1, null)

@@ -93,7 +93,12 @@ class FoobarTest {
 
   @Test
   fun test6() {
+    var a: Int? = null
 
+
+    a?.let {
+      println("let:$it")
+    }
 
 
   }

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 import java.util.*
 
-class BackendEndpoint(host: String, port: Int = 1935) : Endpoint() {
+class Backend(host: String, port: Int = 1935) : Endpoint() {
 
   private var socket: NetSocket? = null
   private var queue: MutableList<Buffer> = mutableListOf()
@@ -18,7 +18,6 @@ class BackendEndpoint(host: String, port: Int = 1935) : Endpoint() {
   init {
     VertxHelper.netClient.connect(port, host, {
       if (it.succeeded()) {
-
         val socket = it.result()
         val parser = RecordParser.newFixed(1, null)
         parser.setOutput(MessageFliper(parser, {
@@ -36,13 +35,12 @@ class BackendEndpoint(host: String, port: Int = 1935) : Endpoint() {
           this.onClose?.invoke()
           this.socket = null
         }
-
-        synchronized(this.queue, {
+        synchronized(this) {
           this.queue.forEach {
             socket.write(it)
           }
-        })
-        this.queue = Collections.emptyList()
+          this.queue = Collections.emptyList()
+        }
         this.socket = socket
         logger.info("initialize endpoint success.")
       } else {
@@ -55,10 +53,13 @@ class BackendEndpoint(host: String, port: Int = 1935) : Endpoint() {
   override fun write(buffer: Buffer): Endpoint {
     if (this.socket != null) {
       this.socket!!.write(buffer)
-    } else {
-      synchronized(this.queue, {
+      return this
+    }
+    synchronized(this) {
+      if (this.socket == null) {
         this.queue.add(buffer)
-      })
+      }
+      this.socket?.write(buffer)
     }
     return this
   }

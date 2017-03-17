@@ -69,7 +69,7 @@ class Chunk(private val buffer: Buffer, private val header: Header) : Message<Pa
         toCommand(CodecHelper.decodeAMF3(b.bytes), ChunkType.COMMAND_AMF3)
       }
       else -> {
-        UnknownPayload.INSTANCE
+        UnknownPayload(this.header.type)
       }
     }
   }
@@ -91,7 +91,7 @@ class Chunk(private val buffer: Buffer, private val header: Header) : Message<Pa
       "close" -> CommandClose(values, type)
       else -> {
         logger.warn("unknown command name: {}", cmd)
-        UnknownPayload.INSTANCE
+        UnknownPayload(type)
       }
     }
   }

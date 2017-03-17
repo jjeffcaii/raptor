@@ -8,7 +8,7 @@ import net.engio.mbassy.listener.References
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-@Listener(references = References.Weak)
+@Listener(references = References.Strong)
 class MessageListener(private val cb: (Message<*>) -> Unit) {
 
   companion object {
