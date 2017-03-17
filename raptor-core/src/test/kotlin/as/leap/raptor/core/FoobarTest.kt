@@ -93,8 +93,8 @@ class FoobarTest {
 
   @Test
   fun test6() {
-    val li = listOf<String>("a", "b", "c", "d", "e")
-    println(li.slice(1 until li.size))
+
+
 
   }
 

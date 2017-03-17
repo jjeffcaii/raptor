@@ -8,9 +8,8 @@ import net.engio.mbassy.listener.References
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-
-@Listener(references = References.Strong)
-class MessageListener(private val cb: (Message<Any>) -> Unit) {
+@Listener(references = References.Weak)
+class MessageListener(private val cb: (Message<*>) -> Unit) {
 
   companion object {
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
@@ -18,6 +17,9 @@ class MessageListener(private val cb: (Message<Any>) -> Unit) {
 
   @Handler(delivery = Invoke.Synchronously)
   fun process(msg: Message<Any>) {
+    if (logger.isDebugEnabled) {
+      logger.debug("delivery message: {}", msg)
+    }
     this.cb(msg)
   }
 }

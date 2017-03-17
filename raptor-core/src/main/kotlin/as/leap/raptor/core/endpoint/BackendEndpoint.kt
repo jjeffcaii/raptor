@@ -1,38 +1,55 @@
 package `as`.leap.raptor.core.endpoint
 
 import `as`.leap.raptor.core.Endpoint
+import `as`.leap.raptor.core.MessageFliper
 import `as`.leap.raptor.core.model.Message
 import `as`.leap.raptor.core.utils.VertxHelper
-import com.google.common.collect.Queues
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
+import io.vertx.core.parsetools.RecordParser
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
-import java.util.concurrent.BlockingQueue
+import java.util.*
 
-class BackendEndpoint(
-    private val host: String,
-    private val port: Int = 1935,
-    private val consumer: (Message<Any>) -> Unit,
-    private val onError: ((Throwable) -> Unit)?) : Endpoint(consumer) {
+typealias Consumer = (Message<*>) -> Unit
+typealias OnError = (Throwable) -> Unit
 
-  private val queue: BlockingQueue<Message<Any>> = Queues.newLinkedBlockingQueue()
+class BackendEndpoint(host: String, port: Int = 1935, consumer: Consumer, onError: OnError? = null) : Endpoint(consumer, onError) {
+
   private var socket: NetSocket? = null
+  private var queue: MutableList<Buffer> = mutableListOf()
 
   init {
-    VertxHelper.netClient.connect(this.port, this.host, {
+    VertxHelper.netClient.connect(port, host, {
       if (it.succeeded()) {
         logger.info("create backend socket success.")
-        this.socket = it.result()
+        val socket = it.result()
+        val parser = RecordParser.newFixed(1, null)
+        parser.setOutput(MessageFliper(parser, this.consumer))
+        socket.handler(parser)
+        synchronized(this.queue, {
+          this.queue.forEach {
+            socket.write(it)
+          }
+        })
+        this.queue = Collections.emptyList()
+        this.socket = socket
       } else {
         logger.error("create backend socket failed.", it.cause())
-        this.onError?.invoke(it.cause())
+        this.onErr?.invoke(it.cause())
       }
     })
   }
 
   override fun write(buffer: Buffer): Endpoint {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    if (this.socket != null) {
+      this.socket!!.write(buffer)
+    } else {
+      synchronized(this.queue, {
+        this.queue.add(buffer)
+      })
+    }
+    return this
   }
 
   companion object {
