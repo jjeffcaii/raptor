@@ -15,14 +15,14 @@ import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
 
-class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Unit) : Handler<Buffer> {
+class MessageFliper(private val parser: RecordParser, sub: (Message<*>) -> Unit) : Handler<Buffer> {
 
   companion object {
     private val DEFAULT_CHUNK_SIZE: Int = 4096
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
   }
 
-  private val bus: MBassador<Message<Any>>
+  private val bus: MBassador<Message<*>>
   private var state: ReadState = ReadState.HANDSHAKE0
   private var already: Int = 0
   // default chunk size
@@ -37,7 +37,7 @@ class MessageFliper(private val parser: RecordParser, sub: (Message<Any>) -> Uni
   private var cache: Buffer = Buffer.buffer()
 
   init {
-    this.bus = MBassador<Message<Any>> {
+    this.bus = MBassador<Message<*>> {
       logger.error("event bus error.", it.cause)
     }
     this.bus.subscribe(MessageListener(sub))

@@ -1,9 +1,10 @@
 package `as`.leap.raptor.core
 
+import `as`.leap.raptor.core.model.Message
 import io.vertx.core.buffer.Buffer
 
-interface Endpoint {
+abstract class Endpoint(private val consumer: (Message<Any>) -> Unit) {
 
-  fun write(buffer: Buffer): Endpoint
+  abstract fun write(buffer: Buffer): Endpoint
 
 }

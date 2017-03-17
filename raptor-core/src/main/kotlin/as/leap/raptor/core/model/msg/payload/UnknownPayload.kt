@@ -3,7 +3,7 @@ package `as`.leap.raptor.core.model.msg.payload
 import `as`.leap.raptor.core.model.ChunkType
 import `as`.leap.raptor.core.model.msg.Payload
 
-class EmptyPayload : Payload {
+class UnknownPayload : Payload {
 
   override fun type(): ChunkType {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -11,12 +11,12 @@ class EmptyPayload : Payload {
 
   companion object {
     val INSTANCE: Payload by lazy {
-      EmptyPayload()
+      UnknownPayload()
     }
   }
 
   override fun toString(): String {
-    return "<EMPTY_PAYLOAD>"
+    return "<UNKNOWN_PAYLOAD>"
   }
 
 }

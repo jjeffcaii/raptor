@@ -4,6 +4,8 @@ import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.model.msg.payload.*
 import `as`.leap.raptor.core.utils.CodecHelper
 import io.vertx.core.buffer.Buffer
+import org.slf4j.LoggerFactory
+import java.lang.invoke.MethodHandles
 
 class Chunk(private val buffer: Buffer, private val header: Header) : Message<Payload> {
 
@@ -61,28 +63,45 @@ class Chunk(private val buffer: Buffer, private val header: Header) : Message<Pa
         ProtocolBandWidth(b.getUnsignedInt(0), limitType)
       }
       ChunkType.COMMAND_AMF0 -> {
-        toCommand(CodecHelper.decodeAMF0(b.bytes))
+        toCommand(CodecHelper.decodeAMF0(b.bytes), ChunkType.COMMAND_AMF0)
       }
       ChunkType.COMMAND_AMF3 -> {
-        toCommand(CodecHelper.decodeAMF3(b.bytes))
+        toCommand(CodecHelper.decodeAMF3(b.bytes), ChunkType.COMMAND_AMF3)
       }
       else -> {
-        EmptyPayload.INSTANCE
+        UnknownPayload.INSTANCE
       }
     }
   }
 
-  private fun toCommand(values: List<Any>): Payload {
-    return when (values[0] as String) {
-      "connect" -> {
-        CommandConnect(ChunkType.COMMAND_AMF0, (values[1] as Number).toInt(), values[2])
+  private fun toCommand(values: List<Any>, type: ChunkType): Payload {
+    val cmd = values[0] as String
+    return when (cmd) {
+      "_result" -> CommandResult(values, type)
+      "_error" -> CommandError(values, type)
+      "onStatus" -> CommandOnStatus(values, type)
+      "releaseStream" -> CommandReleaseStream(values, type)
+      "connect" -> CommandConnect(values, type)
+      "FCPublish" -> CommandFCPublish(values, type)
+      "onFCPublish" -> CommandOnFCPublish(values, type)
+      "createStream" -> CommandCreateStream(values, type)
+      "_checkbw" -> CommandCheckBW(values, type)
+      "publish" -> CommandPublish(values, type)
+      "deleteStream" -> CommandDeleteStream(values, type)
+      "close" -> CommandClose(values, type)
+      else -> {
+        logger.warn("unknown command name: {}", cmd)
+        UnknownPayload.INSTANCE
       }
-      else -> EmptyPayload.INSTANCE
     }
   }
 
   override fun toModel(): Payload {
     return this.model
+  }
+
+  companion object {
+    private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
   }
 
 }

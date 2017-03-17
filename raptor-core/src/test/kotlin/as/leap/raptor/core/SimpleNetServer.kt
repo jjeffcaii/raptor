@@ -21,9 +21,13 @@ object SimpleNetServer {
 
   @JvmStatic
   fun main(args: Array<String>) {
+    val platforms = mapOf(
+        "qiniu" to "pili-live-rtmp.maxwon.cn",
+        "douyu" to "send3.douyu.com"
+    )
     server.connectHandler({ front ->
       front.pause()
-      client.connect(1935, "pili-live-rtmp.maxwon.cn", { event ->
+      client.connect(1935, platforms["douyu"], { event ->
         if (event.succeeded()) {
           val backend = event.result()
           backend.closeHandler {
@@ -41,7 +45,7 @@ object SimpleNetServer {
           val parser = RecordParser.newFixed(1, null)
           val handler = MessageFliper(parser, {
             //logger.info("snd {} message: {} bytes.", it.type(), it.toBuffer().length())
-            //logger.info("message model: {}", it.toModel())
+            logger.info("message model: {}", it.toModel())
             backend.write(it.toBuffer())
           })
           parser.setOutput(handler)
