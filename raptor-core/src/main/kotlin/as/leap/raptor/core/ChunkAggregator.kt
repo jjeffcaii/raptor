@@ -2,17 +2,27 @@ package `as`.leap.raptor.core
 
 import `as`.leap.raptor.core.model.FMT
 import `as`.leap.raptor.core.utils.CodecHelper
+import `as`.leap.raptor.core.utils.Filter
 import io.vertx.core.buffer.Buffer
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
 
-class ChunkAggregator {
+class ChunkAggregator(private val filter: Filter<Chunk>? = null) {
 
   private val queue = mutableListOf<Chunk>()
   private var size: Int = 0
 
   fun push(chunk: Chunk): ChunkAggregator {
+    val pass: Boolean
+    if (this.filter == null) {
+      pass = true
+    } else {
+      pass = this.filter.invoke(chunk)
+    }
+    if (!pass) {
+      return this
+    }
     this.queue.add(chunk)
     val msgLen = chunk.header.length!!
     val payloadLen = chunk.payload.length()

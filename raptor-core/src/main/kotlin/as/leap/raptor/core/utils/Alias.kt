@@ -9,3 +9,5 @@ typealias OnError = (Throwable) -> Unit
 typealias OnClose = () -> Unit
 typealias OnChunk = (Chunk) -> Unit
 typealias OnHandshake = (Handshake) -> Unit
+
+typealias Filter<T> = (T) -> Boolean
