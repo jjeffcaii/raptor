@@ -17,6 +17,13 @@ enum class ChunkType(val code: Byte) {
   MEDIA_VIDEO(0x09),
   AGGREGATE(0x16);
 
+  fun isProtocol(): Boolean {
+    return when (this) {
+      CTRL_SET_CHUNK_SIZE, CTRL_SET_WINDOW_SIZE, CTRL_ABORT_MESSAGE, CTRL_ACK_WINDOW_SIZE, CTRL_SET_PEER_BANDWIDTH -> true
+      else -> false
+    }
+  }
+
   companion object {
     fun toChunkType(code: Short): ChunkType? {
       return when (code.toInt()) {

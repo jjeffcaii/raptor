@@ -1,24 +1,29 @@
 package `as`.leap.raptor.core
 
-import `as`.leap.raptor.core.model.Message
 import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
 import java.io.Closeable
 
-typealias OnMessage = (Message<*>) -> Unit
-typealias OnError = (Throwable) -> Unit
-typealias OnClose = () -> Unit
 
 abstract class Endpoint : Closeable {
 
-  protected var consumer: OnMessage? = null
+  protected var onHandshake: OnHandshake? = null
+  protected var onChunk: OnChunk? = null
   protected var onError: OnError? = null
   protected var onClose: OnClose? = null
 
-  fun onMessage(consumer: OnMessage): Endpoint {
+  fun onHandshake(consumer: OnHandshake): Endpoint {
     synchronized(this) {
-      Preconditions.checkArgument(this.consumer == null, "message handler exists already!")
-      this.consumer = consumer
+      Preconditions.checkArgument(this.onChunk == null, "handshake handler exists already!")
+      this.onHandshake = consumer
+      return this
+    }
+  }
+
+  fun onChunk(consumer: OnChunk): Endpoint {
+    synchronized(this) {
+      Preconditions.checkArgument(this.onChunk == null, "chunk handler exists already!")
+      this.onChunk = consumer
       return this
     }
   }

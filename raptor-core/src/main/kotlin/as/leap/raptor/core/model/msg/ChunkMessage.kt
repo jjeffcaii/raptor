@@ -7,7 +7,7 @@ import io.vertx.core.buffer.Buffer
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-class Chunk(private val buffer: Buffer, private val header: Header) : Message<Payload> {
+class ChunkMessage(private val buffer: Buffer, private val header: Header) : Message<Payload> {
 
   override fun toBuffer(): Buffer {
     return this.buffer

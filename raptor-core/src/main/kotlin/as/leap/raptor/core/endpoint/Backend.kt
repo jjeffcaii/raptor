@@ -1,7 +1,7 @@
 package `as`.leap.raptor.core.endpoint
 
 import `as`.leap.raptor.core.Endpoint
-import `as`.leap.raptor.core.MessageFliper
+import `as`.leap.raptor.core.RTMPFliper
 import `as`.leap.raptor.core.utils.VertxHelper
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
@@ -20,16 +20,13 @@ class Backend(host: String, port: Int = 1935) : Endpoint() {
       if (it.succeeded()) {
         val socket = it.result()
         val parser = RecordParser.newFixed(1, null)
-        parser.setOutput(MessageFliper(parser, {
-          this.consumer?.invoke(it)
-        }))
+        val fliper = RTMPFliper(parser, { this.onHandshake!!.invoke(it) }, { this.onChunk!!.invoke(it) })
+        parser.setOutput(fliper)
         socket.handler(parser)
-
         socket.exceptionHandler {
           logger.error("endpoint error.", it)
           this.onError?.invoke(it)
         }
-
         socket.closeHandler {
           logger.info("endpoint closed.")
           this.onClose?.invoke()

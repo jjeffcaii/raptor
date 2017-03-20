@@ -20,15 +20,38 @@ object SimpleNetServer {
     server.connectHandler({ socket ->
       socket.pause()
       val client = Frontend(socket)
-      val remote = Backend(platforms.first)
-      client.onClose { remote.close() }.onMessage {
-        //logger.info(">>> snd message: {}", it.toModel())
-        remote.write(it.toBuffer())
-      }
-      remote.onClose { client.close() }.onMessage {
-        //logger.info("<<< rcv message: {}", it.toModel())
-        client.write(it.toBuffer())
-      }
+      val remote = Backend(platforms.second)
+      client
+          .onClose { remote.close() }
+          .onHandshake {
+            val b = it.toBuffer()
+            //logger.info(">>> snd handshake: {} bytes", b.length())
+            remote.write(b)
+          }
+          .onChunk {
+            val b = it.toBuffer()
+            //logger.info(">>> snd chunk({} bytes): fmt={}, csid={} ", b.length(), it.fmt, it.csid)
+            remote.write(b)
+          }
+
+      val agg = ChunkAggregator()
+
+      remote
+          .onClose { client.close() }
+          .onHandshake {
+            val b = it.toBuffer()
+            //logger.info("<<< rcv handshake: {} bytes", b.length())
+            client.write(b)
+          }
+          .onChunk {
+
+            val b = it.toBuffer()
+            //logger.info("<<< rcv: {} bytes\n{}\n<<<", b.length(), CodecHelper.encodeHex(b.bytes, true))
+            agg.push(it)
+            //logger.info("<<< rcv chunk({} bytes): fmt={}, csid={} ", b.length(), it.fmt, it.csid)
+            client.write(b)
+
+          }
       socket.resume()
     })
 
