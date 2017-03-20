@@ -38,6 +38,9 @@ object CodecHelper {
   }
 
   fun encodeHex(bytes: ByteArray, pretty: Boolean = false): String {
+    if (bytes.isEmpty()) {
+      return StringUtils.EMPTY
+    }
     if (!pretty) {
       return Hex.encodeHexString(bytes)
     }
