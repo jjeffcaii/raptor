@@ -4,6 +4,8 @@ import `as`.leap.raptor.core.model.ChunkType
 import `as`.leap.raptor.core.model.FMT
 import `as`.leap.raptor.core.model.Handshake
 import `as`.leap.raptor.core.model.Header
+import `as`.leap.raptor.core.utils.OnChunk
+import `as`.leap.raptor.core.utils.OnHandshake
 import io.vertx.core.Handler
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.parsetools.RecordParser

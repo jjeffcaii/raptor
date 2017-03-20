@@ -1,5 +1,6 @@
-package `as`.leap.raptor.core
+package `as`.leap.raptor.core.utils
 
+import `as`.leap.raptor.core.Chunk
 import `as`.leap.raptor.core.model.Handshake
 import `as`.leap.raptor.core.model.Message
 

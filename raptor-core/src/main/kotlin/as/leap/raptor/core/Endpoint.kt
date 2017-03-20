@@ -1,5 +1,9 @@
 package `as`.leap.raptor.core
 
+import `as`.leap.raptor.core.utils.OnChunk
+import `as`.leap.raptor.core.utils.OnClose
+import `as`.leap.raptor.core.utils.OnError
+import `as`.leap.raptor.core.utils.OnHandshake
 import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
 import java.io.Closeable
