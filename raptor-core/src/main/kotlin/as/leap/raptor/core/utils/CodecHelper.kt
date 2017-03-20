@@ -41,18 +41,18 @@ object CodecHelper {
     if (!pretty) {
       return Hex.encodeHexString(bytes)
     }
+    val arr = Hex.encodeHexString(bytes).toCharArray()
     val sb = StringBuffer()
-    var i: Int = 0
-    Splitter.fixedLength(1).split(Hex.encodeHexString(bytes)).forEach {
-      i++
-      sb.append(it)
+    for (i in 1 until arr.size) {
+      sb.append(arr[i - 1])
       when {
-        i % 32 == 0 -> sb.append(StringUtils.LF)
-        i % 16 == 0 -> sb.append(StringUtils.SPACE).append(StringUtils.SPACE)
-        i % 2 == 0 -> sb.append(StringUtils.SPACE)
+        i and 31 == 0 -> sb.append(StringUtils.LF)
+        i and 15 == 0 -> sb.append(StringUtils.SPACE).append(StringUtils.SPACE)
+        i and 1 == 0 -> sb.append(StringUtils.SPACE)
       }
     }
-    return StringUtils.trim(sb.toString())
+    sb.append(arr.last())
+    return sb.toString()
   }
 
   fun encodeBase64(bytes: ByteArray): String {
