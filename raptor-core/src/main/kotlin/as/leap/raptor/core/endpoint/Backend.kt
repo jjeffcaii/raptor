@@ -1,7 +1,7 @@
 package `as`.leap.raptor.core.endpoint
 
 import `as`.leap.raptor.core.Endpoint
-import `as`.leap.raptor.core.RTMPFliper
+import `as`.leap.raptor.core.ChunkFliper
 import `as`.leap.raptor.core.utils.VertxHelper
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
@@ -20,7 +20,7 @@ class Backend(host: String, port: Int = 1935) : Endpoint() {
       if (it.succeeded()) {
         val socket = it.result()
         val parser = RecordParser.newFixed(1, null)
-        val fliper = RTMPFliper(parser, { this.onHandshake!!.invoke(it) }, { this.onChunk!!.invoke(it) })
+        val fliper = ChunkFliper(parser, { this.onHandshake!!.invoke(it) }, { this.onChunk!!.invoke(it) })
         parser.setOutput(fliper)
         socket.handler(parser)
         socket.exceptionHandler {

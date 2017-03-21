@@ -1,14 +1,9 @@
 package `as`.leap.raptor.core.model.msg.payload
 
-import `as`.leap.raptor.core.model.ChunkType
 import `as`.leap.raptor.core.model.msg.Payload
 import com.google.common.base.MoreObjects
 
-abstract class Command(protected val objects: List<Any>, private val type: ChunkType) : Payload {
-
-  override fun type(): ChunkType {
-    return this.type
-  }
+abstract class Command(protected val objects: List<Any>) : Payload {
 
   fun getCmd(): String {
     return this.objects[0] as String

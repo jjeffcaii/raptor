@@ -1,9 +1,11 @@
 package `as`.leap.raptor.core.model
 
-import io.vertx.core.buffer.Buffer
+import `as`.leap.raptor.core.model.msg.Payload
 
-interface Message<out T> {
-  fun type(): MessageType
-  fun toBuffer(): Buffer
-  fun toModel(): T
+abstract class Message(private val header: Header) : Buffered {
+
+  abstract fun toModel(): Payload
+
+  abstract fun toChunks(chunkSize: Int): Array<Chunk>
+
 }

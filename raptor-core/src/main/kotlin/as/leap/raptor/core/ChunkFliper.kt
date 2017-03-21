@@ -1,21 +1,17 @@
 package `as`.leap.raptor.core
 
-import `as`.leap.raptor.core.model.ChunkType
-import `as`.leap.raptor.core.model.FMT
-import `as`.leap.raptor.core.model.Handshake
-import `as`.leap.raptor.core.model.Header
-import `as`.leap.raptor.core.utils.OnChunk
-import `as`.leap.raptor.core.utils.OnHandshake
+import `as`.leap.raptor.core.model.*
+import `as`.leap.raptor.core.utils.Callback
 import io.vertx.core.Handler
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.parsetools.RecordParser
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-class RTMPFliper(
+class ChunkFliper(
     private val parser: RecordParser,
-    private val onHandshake: OnHandshake,
-    private val onChunk: OnChunk,
+    private val onHandshake: Callback<Handshake>,
+    private val onChunk: Callback<Chunk>,
     private var chunkSize: Int = 128
 ) : Handler<Buffer> {
 

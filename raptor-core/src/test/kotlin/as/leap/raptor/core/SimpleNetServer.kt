@@ -34,7 +34,7 @@ object SimpleNetServer {
             remote.write(b)
           }
 
-      //val agg = ChunkAggregator()
+      //val agg = MessageFliper()
 
       remote
           .onClose { client.close() }

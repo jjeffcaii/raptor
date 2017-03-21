@@ -1,7 +1,7 @@
 package `as`.leap.raptor.core.endpoint
 
 import `as`.leap.raptor.core.Endpoint
-import `as`.leap.raptor.core.RTMPFliper
+import `as`.leap.raptor.core.ChunkFliper
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
 import io.vertx.core.parsetools.RecordParser
@@ -12,7 +12,7 @@ class Frontend(private val socket: NetSocket) : Endpoint() {
 
   init {
     val parser = RecordParser.newFixed(1, null)
-    val fliper = RTMPFliper(parser, { this.onHandshake!!.invoke(it) }, { this.onChunk!!.invoke(it) })
+    val fliper = ChunkFliper(parser, { this.onHandshake!!.invoke(it) }, { this.onChunk!!.invoke(it) })
     parser.setOutput(fliper)
     this.socket.handler(parser)
     this.socket.closeHandler {
