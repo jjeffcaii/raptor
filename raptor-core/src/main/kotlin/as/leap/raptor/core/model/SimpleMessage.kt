@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
 
-class SimpleMessage(private val header: Header, private val payload: Buffer) : Message(header) {
+class SimpleMessage(header: Header, private val payload: Buffer) : Message(header) {
 
   override fun toChunks(chunkSize: Int): Array<Chunk> {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -20,11 +20,19 @@ class SimpleMessage(private val header: Header, private val payload: Buffer) : M
       ChunkType.CTRL_ABORT_MESSAGE -> ProtocolAbortMessage(this.payload.getUnsignedInt(0))
       ChunkType.CTRL_SET_WINDOW_SIZE -> ProtocolWindowSize(this.payload.getUnsignedInt(0))
       ChunkType.CTRL_ACK_WINDOW_SIZE -> ProtocolAckWindowSize(this.payload.getUnsignedInt(0))
-      ChunkType.COMMAND_AMF0 -> toCommand(CodecHelper.decodeAMF0(this.payload.bytes))
-      ChunkType.COMMAND_AMF3 -> toCommand(CodecHelper.decodeAMF3(this.payload.bytes))
+      ChunkType.CTRL_SET_PEER_BANDWIDTH -> {
+        val bandWidth = this.payload.getUnsignedInt(0)
+        val limitType = when {
+          this.payload.length() > 4 -> this.payload.getUnsignedByte(4)
+          else -> 0
+        }
+        ProtocolBandWidth(bandWidth, limitType)
+
+      }
+      ChunkType.COMMAND_AMF0 -> toCommand(CodecHelper.decodeAMF0(this.payload.bytes), this.header.type)
+      ChunkType.COMMAND_AMF3 -> toCommand(CodecHelper.decodeAMF3(this.payload.bytes), this.header.type)
 /*
       ChunkType.USER_CONTROL -> TODO()
-      ChunkType.CTRL_SET_PEER_BANDWIDTH -> TODO()
       ChunkType.DATA_AMF0 -> TODO()
       ChunkType.DATA_AMF3 -> TODO()
       ChunkType.SHARE_OBJECT_AMF0 -> TODO()
@@ -33,7 +41,7 @@ class SimpleMessage(private val header: Header, private val payload: Buffer) : M
       ChunkType.MEDIA_VIDEO -> TODO()
       ChunkType.AGGREGATE -> TODO()
 */
-      else -> UnknownPayload()
+      else -> UnknownPayload(this.header.type)
     }
   }
 
@@ -81,7 +89,7 @@ class SimpleMessage(private val header: Header, private val payload: Buffer) : M
     return b
   }
 
-  private fun toCommand(values: List<Any>): Payload {
+  private fun toCommand(values: List<Any>, type: ChunkType): Payload {
     val cmd = values[0] as String
     return when (cmd) {
       "_result" -> CommandResult(values)
@@ -98,7 +106,7 @@ class SimpleMessage(private val header: Header, private val payload: Buffer) : M
       "close" -> CommandClose(values)
       else -> {
         logger.warn("unknown command name: {}", cmd)
-        UnknownPayload()
+        UnknownPayload(type)
       }
     }
   }

@@ -13,6 +13,7 @@
     <module>raptor-core</module>
     <module>raptor-commons</module>
     <module>raptor-api</module>
+    <module>raptor-metadata</module>
   </modules>
 
   <properties>
@@ -80,6 +81,16 @@
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>as.leap</groupId>
+        <artifactId>raptor-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>as.leap</groupId>
+        <artifactId>raptor-core</artifactId>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>

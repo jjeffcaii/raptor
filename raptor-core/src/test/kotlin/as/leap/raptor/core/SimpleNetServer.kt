@@ -34,7 +34,10 @@ object SimpleNetServer {
             remote.write(b)
           }
 
-      //val agg = MessageFliper()
+      val agg = MessageFliper()
+      agg.onMessage {
+        logger.info("<<< rcv message: {}", it.toModel())
+      }
 
       remote
           .onClose { client.close() }
@@ -46,7 +49,7 @@ object SimpleNetServer {
           .onChunk {
             val b = it.toBuffer()
             //logger.info("<<< rcv: {} bytes\n{}\n<<<", b.length(), CodecHelper.encodeHex(b.bytes, true))
-            //agg.push(it)
+            agg.append(it)
             //logger.info("<<< rcv chunk({} bytes): fmt={}, csid={} ", b.length(), it.fmt, it.csid)
             client.write(b)
           }

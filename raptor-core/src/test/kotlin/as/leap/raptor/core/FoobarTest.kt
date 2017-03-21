@@ -1,6 +1,7 @@
 package `as`.leap.raptor.core
 
 import `as`.leap.raptor.core.utils.CodecHelper
+import `as`.leap.raptor.core.utils.VertxHelper
 import com.google.common.base.Splitter
 import flex.messaging.io.SerializationContext
 import flex.messaging.io.amf.Amf0Input
@@ -166,6 +167,15 @@ class FoobarTest {
 """
     val bytes = CodecHelper.decodeHex(s, true)
     println(bytes.size)
+  }
+
+  @Test
+  fun testsss() {
+    val b = Buffer.buffer(23)
+    //VertxHelper.fillZero(b, 23)
+    println(b.length())
+    println(CodecHelper.encodeHex(b.bytes, true))
+
   }
 
 

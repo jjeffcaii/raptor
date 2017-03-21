@@ -30,6 +30,10 @@
       <type>test-jar</type>
     </dependency>
     <dependency>
+      <groupId>as.leap</groupId>
+      <artifactId>raptor-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-lang-kotlin</artifactId>
     </dependency>
