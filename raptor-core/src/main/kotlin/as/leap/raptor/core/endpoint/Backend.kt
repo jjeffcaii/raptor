@@ -1,7 +1,7 @@
 package `as`.leap.raptor.core.endpoint
 
-import `as`.leap.raptor.core.Endpoint
 import `as`.leap.raptor.core.ChunkFliper
+import `as`.leap.raptor.core.Endpoint
 import `as`.leap.raptor.core.utils.VertxHelper
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
@@ -29,7 +29,7 @@ class Backend(host: String, port: Int = 1935) : Endpoint() {
         }
         socket.closeHandler {
           logger.info("endpoint closed.")
-          this.onClose?.invoke()
+          this.onClose?.invoke(Unit)
           this.socket = null
         }
         synchronized(this) {

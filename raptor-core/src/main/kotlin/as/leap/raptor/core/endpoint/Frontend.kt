@@ -1,7 +1,7 @@
 package `as`.leap.raptor.core.endpoint
 
-import `as`.leap.raptor.core.Endpoint
 import `as`.leap.raptor.core.ChunkFliper
+import `as`.leap.raptor.core.Endpoint
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
 import io.vertx.core.parsetools.RecordParser
@@ -16,7 +16,7 @@ class Frontend(private val socket: NetSocket) : Endpoint() {
     parser.setOutput(fliper)
     this.socket.handler(parser)
     this.socket.closeHandler {
-      this.onClose?.invoke()
+      this.onClose?.invoke(Unit)
       logger.info("endpoint closed.")
     }
     this.socket.exceptionHandler {
