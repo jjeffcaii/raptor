@@ -1,5 +1,6 @@
 package `as`.leap.raptor.core.model
 
+import com.google.common.hash.Hashing
 import io.vertx.core.buffer.Buffer
 
 data class Handshake(val buffer: Buffer) {
@@ -38,6 +39,15 @@ data class Handshake(val buffer: Buffer) {
           .appendUnsignedInt(this.v1)
           .appendUnsignedInt(this.v2)
           .appendBuffer(this.random)
+    }
+
+    fun hash(): Int {
+      return Hashing.murmur3_32().newHasher()
+          .putLong(this.v1)
+          .putLong(this.v2)
+          .putBytes(this.random.bytes)
+          .hash()
+          .asInt()
     }
 
   }

@@ -25,7 +25,7 @@ class MessageFliper(private val filter: Filter<Chunk>? = null) {
       return this
     }
     this.queue.add(chunk)
-    val msgLen = chunk.header.length!!
+    val msgLen = chunk.header.length
     val payloadLen = chunk.payload.length()
     size += payloadLen
     if (msgLen <= payloadLen || (chunk.header.fmt == FMT.F3 && msgLen == size)) {

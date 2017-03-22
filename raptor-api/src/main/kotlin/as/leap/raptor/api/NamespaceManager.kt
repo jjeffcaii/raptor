@@ -7,7 +7,7 @@ interface NamespaceManager {
   companion object {
     val INSTANCE: NamespaceManager = object : NamespaceManager {
       override fun exists(app: String): Boolean {
-        return false
+        return true
       }
     }
 

@@ -3,14 +3,13 @@ package `as`.leap.raptor.core.utils
 import com.google.common.base.Splitter
 import com.google.common.hash.Hashing
 import flex.messaging.io.SerializationContext
-import flex.messaging.io.amf.AbstractAmfInput
-import flex.messaging.io.amf.Amf0Input
-import flex.messaging.io.amf.Amf3Input
+import flex.messaging.io.amf.*
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.lang.invoke.MethodHandles
 import java.util.regex.Pattern
 
@@ -80,6 +79,26 @@ object CodecHelper {
         .toString()
   }
 
+  fun encodeAMF0(values: List<Any>): ByteArray {
+    ByteArrayOutputStream().use {
+      val serializer = Amf0Output(AMF_CONTEXT)
+      serializer.setOutputStream(it)
+      values.forEach(serializer::writeObject)
+      it.flush()
+      return it.toByteArray()
+    }
+  }
+
+  fun encodeAMF3(values: List<Any>): ByteArray {
+    ByteArrayOutputStream().use {
+      val serializer = Amf3Output(AMF_CONTEXT)
+      serializer.setOutputStream(it)
+      values.forEach(serializer::writeObject)
+      it.flush()
+      return it.toByteArray()
+    }
+  }
+
   fun decodeAMF0(bytes: ByteArray): List<Any> {
     try {
       return this.decodeAMF(Amf0Input(AMF_CONTEXT), bytes)
@@ -104,5 +123,4 @@ object CodecHelper {
       return li
     }
   }
-
 }

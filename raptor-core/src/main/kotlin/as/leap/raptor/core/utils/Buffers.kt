@@ -1,6 +1,6 @@
 package `as`.leap.raptor.core.utils
 
-import `as`.leap.raptor.core.model.msg.payload.ProtocolWindowSize
+import `as`.leap.raptor.core.model.payload.ProtocolWindowSize
 import io.vertx.core.buffer.Buffer
 
 object Buffers {

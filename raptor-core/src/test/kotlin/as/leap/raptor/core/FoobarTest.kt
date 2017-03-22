@@ -1,7 +1,6 @@
 package `as`.leap.raptor.core
 
 import `as`.leap.raptor.core.utils.CodecHelper
-import `as`.leap.raptor.core.utils.VertxHelper
 import com.google.common.base.Splitter
 import flex.messaging.io.SerializationContext
 import flex.messaging.io.amf.Amf0Input
@@ -170,7 +169,7 @@ class FoobarTest {
   }
 
   @Test
-  fun testsss() {
+  fun test12() {
     val b = Buffer.buffer(23)
     //VertxHelper.fillZero(b, 23)
     println(b.length())
@@ -178,5 +177,11 @@ class FoobarTest {
 
   }
 
+  @Test
+  fun test13() {
+    val li = listOf<String>("a", "b", "c", "d")
+    println(li.slice(1 until 4))
+
+  }
 
 }

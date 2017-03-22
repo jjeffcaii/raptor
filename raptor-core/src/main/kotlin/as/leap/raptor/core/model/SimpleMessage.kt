@@ -1,8 +1,8 @@
 package `as`.leap.raptor.core.model
 
-import `as`.leap.raptor.core.model.msg.Payload
-import `as`.leap.raptor.core.model.msg.payload.*
+import `as`.leap.raptor.core.model.payload.*
 import `as`.leap.raptor.core.utils.CodecHelper
+import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
@@ -27,7 +27,6 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
           else -> 0
         }
         ProtocolBandWidth(bandWidth, limitType)
-
       }
       ChunkType.COMMAND_AMF0 -> toCommand(CodecHelper.decodeAMF0(this.payload.bytes), this.header.type)
       ChunkType.COMMAND_AMF3 -> toCommand(CodecHelper.decodeAMF3(this.payload.bytes), this.header.type)
@@ -46,66 +45,30 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
   }
 
   override fun toBuffer(): Buffer {
-    val b = Buffer.buffer()
-    if (this.header.csid < 64) {
-      val v = this.header.fmt.code shl 6 or this.header.csid
-      b.appendByte(v.toByte())
-    } else if (this.header.csid < 320) {
-      val v = this.header.fmt.code shl 6
-      b.appendByte(v.toByte())
-      b.appendByte((this.header.csid - 64).toByte())
-    } else {
-      val v = this.header.fmt.code shl 6 or 1
-      b.appendByte(v.toByte())
-      b.appendUnsignedShortLE(this.header.csid - 64)
-    }
-
-    val hasExtendedTimestamp = this.header.timestamp > 0xFFFFFF
-    val ts: Int = if (hasExtendedTimestamp) 0x7FFFFF else this.header.timestamp.toInt()
-
-    when (this.header.fmt) {
-      FMT.F0 -> {
-        b.appendMedium(ts)
-        b.appendMedium(payload.length())
-        b.appendByte(this.header.type.code)
-        b.appendUnsignedIntLE(this.header.streamId)
-      }
-      FMT.F1 -> {
-        b.appendMedium(ts)
-        b.appendMedium(payload.length())
-        b.appendByte(this.header.type.code)
-      }
-      FMT.F2 -> {
-        b.appendMedium(ts)
-      }
-      else -> {
-        // do nothing
-      }
-    }
-    if (hasExtendedTimestamp) {
-      b.appendUnsignedInt(this.header.timestamp)
-    }
-    b.appendBuffer(this.payload)
-    return b
+    val headerCopy = Header(this.header.fmt, this.header.csid, this.header.timestamp, this.header.streamId, this.header.type, this.payload.length())
+    return Buffer.buffer().appendBuffer(headerCopy.toBuffer()).appendBuffer(this.payload)
   }
 
   private fun toCommand(values: List<Any>, type: ChunkType): Payload {
-    val cmd = values[0] as String
-    return when (cmd) {
-      "_result" -> CommandResult(values)
-      "_error" -> CommandError(values)
-      "onStatus" -> CommandOnStatus(values)
-      "releaseStream" -> CommandReleaseStream(values)
-      "connect" -> CommandConnect(values)
-      "FCPublish" -> CommandFCPublish(values)
-      "onFCPublish" -> CommandOnFCPublish(values)
-      "createStream" -> CommandCreateStream(values)
-      "_checkbw" -> CommandCheckBW(values)
-      "publish" -> CommandPublish(values)
-      "deleteStream" -> CommandDeleteStream(values)
-      "close" -> CommandClose(values)
+    Preconditions.checkArgument(values.size > 2, "Not valid AMF objects length: ${values.size}")
+    val first = values[0] as String
+    val second = (values[1] as Number).toInt()
+    val others = values.slice(2 until values.size)
+    return when (first) {
+      CommandResult.NAME -> CommandResult(second, others)
+      CommandError.NAME -> CommandError(second, others)
+      CommandOnStatus.NAME -> CommandOnStatus(second, others)
+      CommandReleaseStream.NAME -> CommandReleaseStream(second, others)
+      CommandConnect.NAME -> CommandConnect(second, others)
+      CommandFCPublish.NAME -> CommandFCPublish(second, others)
+      CommandOnFCPublish.NAME -> CommandOnFCPublish(second, others)
+      CommandCreateStream.NAME -> CommandCreateStream(second, others)
+      CommandCheckBW.NAME -> CommandCheckBW(second, others)
+      CommandPublish.NAME -> CommandPublish(second, others)
+      CommandDeleteStream.NAME -> CommandDeleteStream(second, others)
+      CommandClose.NAME -> CommandClose(second, others)
       else -> {
-        logger.warn("unknown command name: {}", cmd)
+        logger.warn("unknown command name: {}", first)
         UnknownPayload(type)
       }
     }

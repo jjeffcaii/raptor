@@ -1,18 +1,12 @@
 package `as`.leap.raptor.core
 
 import `as`.leap.raptor.api.NamespaceManager
-import `as`.leap.raptor.core.model.ChunkType
-import `as`.leap.raptor.core.model.Handshake
-import `as`.leap.raptor.core.model.Message
-import `as`.leap.raptor.core.model.SimpleMessage
-import `as`.leap.raptor.core.model.msg.payload.CommandConnect
-import `as`.leap.raptor.core.model.msg.payload.ProtocolChunkSize
-import `as`.leap.raptor.core.utils.CodecHelper
+import `as`.leap.raptor.core.model.*
+import `as`.leap.raptor.core.model.payload.*
 import `as`.leap.raptor.core.utils.VertxHelper
 import com.google.common.base.Preconditions
 import flex.messaging.io.amf.ASObject
 import io.vertx.core.buffer.Buffer
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 import java.util.*
@@ -22,7 +16,7 @@ class Swapper {
   private var chunkSize: Long = 128
   private val front: Endpoint
   private val income: MessageFliper
-  private var s1: Triple<Long, Long, String>? = null
+  private var hashForS1: Int? = null
 
   private val namespaces: NamespaceManager = NamespaceManager.INSTANCE
 
@@ -38,7 +32,7 @@ class Swapper {
           this.handleFrontCommand(it)
         }
         else -> {
-
+          //TODO
         }
       }
     }
@@ -60,11 +54,38 @@ class Swapper {
         logger.info("rcv connect: {}", cmd)
         val app = (cmd.getCmdObj() as ASObject)["app"] as String
         if (this.namespaces.exists(app)) {
-          // send
-          
+          // send ack window size
+          val b = Buffer.buffer()
+          var header: Header = Header.getProtocolHeader(ChunkType.CTRL_ACK_WINDOW_SIZE)
+          var payload: Payload = ProtocolAckWindowSize()
+          b.appendBuffer(header.toBuffer()).appendBuffer(payload.toBuffer())
+          // send set peer band width.
+          header = Header.getProtocolHeader(ChunkType.CTRL_SET_PEER_BANDWIDTH, 5)
+          payload = ProtocolBandWidth(limit = 2)
+          b.appendBuffer(header.toBuffer()).appendBuffer(payload.toBuffer())
+          // send set chunk size 1024
+          header = Header.getProtocolHeader(ChunkType.CTRL_SET_CHUNK_SIZE)
+          payload = ProtocolChunkSize(1024)
+          b.appendBuffer(header.toBuffer()).appendBuffer(payload.toBuffer())
+          // send _result
+          val cmdObj = mapOf(
+              "fmsVer" to "FMS/3,0,1,123",
+              "capabilities" to 31
+          )
+          val cmdInfo = mapOf(
+              "level" to "status",
+              "code" to "NetConnection.Connect.Success",
+              "description" to "Connection successed.",
+              "objectEncoding" to 0
+          )
+          payload = CommandResult(1, listOf(cmdObj, cmdInfo))
+          val cmdBuffer = payload.toBuffer()
+          header = Header(FMT.F0, 3, 0L, 0L, ChunkType.COMMAND_AMF0, cmdBuffer.length())
+          b.appendBuffer(header.toBuffer()).appendBuffer(cmdBuffer)
 
-
-
+          this.rcv(b)
+        } else {
+          //TODO
         }
       }
       else -> {
@@ -92,19 +113,15 @@ class Swapper {
                 .appendBuffer(s0.toBuffer())
                 .appendBuffer(s1.toBuffer())
                 .appendBuffer(handshake.toBuffer())
-            this.s1 = Triple(s1.v1, s1.v2, CodecHelper.murmur32(random.bytes))
+            this.hashForS1 = s1.hash()
             this.rcv(b)
           }
           else -> {
-            val actual = this.s1!!
-            Preconditions.checkArgument(hs.v1 == actual.first, "Not valid handshake: C2.time=${hs.v1}, S1.time=${actual.first}.")
-            Preconditions.checkArgument(hs.v2 == actual.second, "Not valid handshake: C2.time2=${hs.v2}, S1.time2=${actual.second}.")
-            val c2random = CodecHelper.murmur32(hs.random.bytes)
-            Preconditions.checkArgument(StringUtils.equals(c2random, actual.third), "Not valid handshake: C2.random=$c2random, S1.random=${actual.third}.")
+            Preconditions.checkArgument(hs.hash() == this.hashForS1, "Not valid handshake: C2 <> S1.")
+            this.hashForS1 = null
             if (logger.isDebugEnabled) {
               logger.debug("handshake with front success!")
             }
-            this.s1 = null
           }
         }
       }
