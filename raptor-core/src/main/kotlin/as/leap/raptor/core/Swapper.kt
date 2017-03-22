@@ -17,15 +17,13 @@ class Swapper : Closeable {
   private var chunkSize: Long = 128
   private var namespace: String = StringUtils.EMPTY
   private val front: Endpoint
-  private val income: MessageFliper
   private val namespaces: NamespaceManager = NamespaceManager.INSTANCE
   private val adaptors: MutableList<Adaptor> = mutableListOf()
-  private var tidForReleaseStream: Int? = null
 
   constructor(front: Endpoint) {
     this.front = front
-    this.income = MessageFliper()
-    this.income.onMessage {
+    val income = MessageFliper()
+    income.onMessage {
       when (it.header.type) {
         ChunkType.CTRL_SET_CHUNK_SIZE -> {
           this.chunkSize = (it.toModel() as ProtocolChunkSize).chunkSize
@@ -44,7 +42,13 @@ class Swapper : Closeable {
           hc.check(it)
         }
         .onChunk {
-          this.income.append(it)
+          if (it.header.type.isData()) {
+            this.adaptors.forEach { adaptor ->
+              adaptor.write(it.toBuffer())
+            }
+          } else {
+            income.append(it)
+          }
         }
   }
 
@@ -55,7 +59,6 @@ class Swapper : Closeable {
     val cmd = msg.toModel()
     when (cmd) {
       is CommandConnect -> {
-        logger.info("rcv connect: {}", cmd)
         this.namespace = (cmd.getCmdObj() as ASObject)["app"] as String
         if (this.namespaces.exists(this.namespace)) {
           // send ack window size
@@ -98,16 +101,13 @@ class Swapper : Closeable {
         if (addresses.isEmpty()) {
           this.close()
         } else {
-          this.tidForReleaseStream = cmd.transId
           addresses.forEach {
             this.establish(it)
           }
-/*
           val payload = CommandResult(cmd.transId, arrayOfNulls<Any>(1))
           val payloadBuffer = payload.toBuffer()
           val header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, payloadBuffer.length())
           this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
-*/
         }
       }
       is CommandFCPublish -> {
@@ -136,6 +136,7 @@ class Swapper : Closeable {
         this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
       }
       is CommandPublish -> {
+        /*
         val infoObj = mapOf(
             "level" to "status",
             "code" to "NetStream.Publish.Start",
@@ -146,6 +147,8 @@ class Swapper : Closeable {
         val b = payload.toBuffer()
         val header = Header(FMT.F0, msg.header.csid, 0, msg.header.streamId, ChunkType.COMMAND_AMF0, b.length())
         this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
+        */
+        logger.info("**** waiting for adaptors connect... ****")
       }
       else -> {
         //TODO process other commands.
@@ -163,17 +166,21 @@ class Swapper : Closeable {
   }
 
   private fun establish(address: Address) {
-    //TODO
     val adaptor = when (address.provider) {
       Address.Provider.QINIU -> {
         QiniuAdaptor(address, this.chunkSize, {
-          logger.info("-----------------> qiniu connected!")
           if (this.isAllAdaptorConnected()) {
-            val payload = CommandResult(this.tidForReleaseStream!!, arrayOfNulls<Any>(1))
-            val payloadBuffer = payload.toBuffer()
-            val header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, payloadBuffer.length())
-            this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
-            this.tidForReleaseStream = null
+            val infoObj = mapOf(
+                "level" to "status",
+                "code" to "NetStream.Publish.Start",
+                "description" to "Start Publishing",
+                "objectEncoding" to 0
+            )
+            val payload = CommandOnStatus(5, arrayOf(null, infoObj))
+            val b = payload.toBuffer()
+            val header = Header(FMT.F0, 4, 0, 0, ChunkType.COMMAND_AMF0, b.length())
+            this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
+            logger.info("**** start publishing! ****")
           }
         })
       }

@@ -6,6 +6,7 @@ import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.model.payload.CommandConnect
 import `as`.leap.raptor.core.model.payload.ProtocolChunkSize
 import `as`.leap.raptor.core.utils.Do
+import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
 import org.slf4j.LoggerFactory
 import java.io.Closeable
@@ -77,6 +78,7 @@ abstract class Adaptor : Closeable {
   abstract fun onCommand(msg: Message)
 
   fun write(buffer: Buffer): Adaptor {
+    Preconditions.checkArgument(this.connected(), "cannot write buffer because adaptor is disconnected.")
     this.backend.write(buffer)
     return this
   }

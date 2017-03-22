@@ -16,7 +16,6 @@ class QiniuAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null) : A
 
   override fun onCommand(msg: Message) {
     val cmd = msg.toModel()
-    logger.info("<--- rcv from backend: {}", cmd)
     when (cmd) {
       is CommandResult -> {
         val c = cmd.getInfo("code")
@@ -54,7 +53,6 @@ class QiniuAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null) : A
             }
           }
           else -> {
-            logger.warn("//TODO code: {}", code)
             when (cmd.transId) {
               this.tidOfCreateStream -> {
                 val payload = CommandPublish(this.tidOfCreateStream + 1, arrayOf(null, this.address.key, "live"))
