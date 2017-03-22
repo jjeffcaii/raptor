@@ -21,12 +21,11 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
       ChunkType.CTRL_SET_WINDOW_SIZE -> ProtocolWindowSize(this.payload.getUnsignedInt(0))
       ChunkType.CTRL_ACK_WINDOW_SIZE -> ProtocolAckWindowSize(this.payload.getUnsignedInt(0))
       ChunkType.CTRL_SET_PEER_BANDWIDTH -> {
-        val bandWidth = this.payload.getUnsignedInt(0)
-        val limitType = when {
-          this.payload.length() > 4 -> this.payload.getUnsignedByte(4)
-          else -> 0
-        }
-        ProtocolBandWidth(bandWidth, limitType)
+        ProtocolBandWidth(this.payload.getUnsignedInt(0), if (this.payload.length() > 4) {
+          this.payload.getUnsignedByte(4)
+        } else {
+          0
+        })
       }
       ChunkType.COMMAND_AMF0 -> toCommand(CodecHelper.decodeAMF0(this.payload.bytes), this.header.type)
       ChunkType.COMMAND_AMF3 -> toCommand(CodecHelper.decodeAMF3(this.payload.bytes), this.header.type)
@@ -49,36 +48,37 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
     return Buffer.buffer().appendBuffer(headerCopy.toBuffer()).appendBuffer(this.payload)
   }
 
-  private fun toCommand(values: Array<Any?>, type: ChunkType): Payload {
-    Preconditions.checkArgument(values.size > 2, "Not valid AMF objects length: ${values.size}")
-    Preconditions.checkArgument(values[0] is String, "Not valid cmd type: ${values[0]!!::class}")
-    Preconditions.checkArgument(values[1] is Number, "Not valid transId type: ${values[1]!!::class}")
-    val first = values[0] as String
-    val second = (values[1] as Number).toInt()
-    val others = values.slice(2 until values.size).toTypedArray()
-    return when (first) {
-      CommandResult.NAME -> CommandResult(second, others)
-      CommandError.NAME -> CommandError(second, others)
-      CommandOnStatus.NAME -> CommandOnStatus(second, others)
-      CommandReleaseStream.NAME -> CommandReleaseStream(second, others)
-      CommandConnect.NAME -> CommandConnect(second, others)
-      CommandFCPublish.NAME -> CommandFCPublish(second, others)
-      CommandOnFCPublish.NAME -> CommandOnFCPublish(second, others)
-      CommandCreateStream.NAME -> CommandCreateStream(second, others)
-      CommandCheckBW.NAME -> CommandCheckBW(second, others)
-      CommandPublish.NAME -> CommandPublish(second, others)
-      CommandDeleteStream.NAME -> CommandDeleteStream(second, others)
-      CommandClose.NAME -> CommandClose(second, others)
-      else -> {
-        logger.warn("unknown command name: {}", first)
-        UnknownPayload(type)
+  companion object {
+
+    private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
+
+    private fun toCommand(values: Array<Any?>, type: ChunkType): Payload {
+      Preconditions.checkArgument(values.size > 2, "Not valid AMF objects length: ${values.size}")
+      Preconditions.checkArgument(values[0] is String, "Not valid cmd type: ${values[0]!!::class}")
+      Preconditions.checkArgument(values[1] is Number, "Not valid transId type: ${values[1]!!::class}")
+      val first = values[0] as String
+      val second = (values[1] as Number).toInt()
+      val others = values.slice(2 until values.size).toTypedArray()
+      return when (first) {
+        CommandResult.NAME -> CommandResult(second, others)
+        CommandError.NAME -> CommandError(second, others)
+        CommandOnStatus.NAME -> CommandOnStatus(second, others)
+        CommandReleaseStream.NAME -> CommandReleaseStream(second, others)
+        CommandConnect.NAME -> CommandConnect(second, others)
+        CommandFCPublish.NAME -> CommandFCPublish(second, others)
+        CommandOnFCPublish.NAME -> CommandOnFCPublish(second, others)
+        CommandCreateStream.NAME -> CommandCreateStream(second, others)
+        CommandCheckBW.NAME -> CommandCheckBW(second, others)
+        CommandPublish.NAME -> CommandPublish(second, others)
+        CommandDeleteStream.NAME -> CommandDeleteStream(second, others)
+        CommandClose.NAME -> CommandClose(second, others)
+        else -> {
+          logger.warn("unknown command name: {}", first)
+          UnknownPayload(type)
+        }
       }
     }
-  }
 
-  companion object {
-    private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
   }
-
 
 }

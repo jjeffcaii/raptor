@@ -17,7 +17,7 @@ abstract class Endpoint : Closeable {
 
   fun onHandshake(consumer: Callback<Handshake>): Endpoint {
     synchronized(this) {
-      Preconditions.checkArgument(this.onChunk == null, "handshake handler exists already!")
+      Preconditions.checkArgument(this.onHandshake == null, "handshake handler exists already!")
       this.onHandshake = consumer
       return this
     }
