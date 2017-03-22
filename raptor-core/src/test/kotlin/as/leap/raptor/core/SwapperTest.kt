@@ -14,7 +14,7 @@ object SwapperTest {
     server.connectHandler({ socket ->
       socket.pause()
       val client: Endpoint = Frontend(socket)
-      val swapper = Swapper(client)
+      Swapper(client)
       socket.resume()
     })
     server.listen {

@@ -49,11 +49,13 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
     return Buffer.buffer().appendBuffer(headerCopy.toBuffer()).appendBuffer(this.payload)
   }
 
-  private fun toCommand(values: List<Any>, type: ChunkType): Payload {
+  private fun toCommand(values: Array<Any?>, type: ChunkType): Payload {
     Preconditions.checkArgument(values.size > 2, "Not valid AMF objects length: ${values.size}")
+    Preconditions.checkArgument(values[0] is String, "Not valid cmd type: ${values[0]!!::class}")
+    Preconditions.checkArgument(values[1] is Number, "Not valid transId type: ${values[1]!!::class}")
     val first = values[0] as String
     val second = (values[1] as Number).toInt()
-    val others = values.slice(2 until values.size)
+    val others = values.slice(2 until values.size).toTypedArray()
     return when (first) {
       CommandResult.NAME -> CommandResult(second, others)
       CommandError.NAME -> CommandError(second, others)

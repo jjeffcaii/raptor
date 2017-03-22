@@ -1,6 +1,6 @@
 package `as`.leap.raptor.core.model.payload
 
-class CommandPublish(transId: Int, objects: List<Any>) : AbstractCommand(NAME, transId, objects) {
+class CommandPublish(transId: Int, values: Array<Any?>) : AbstractCommand(NAME, transId, values) {
 
   companion object {
     val NAME = "publish"

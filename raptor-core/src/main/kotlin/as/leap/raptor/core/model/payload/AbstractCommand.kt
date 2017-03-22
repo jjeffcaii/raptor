@@ -5,12 +5,16 @@ import `as`.leap.raptor.core.utils.CodecHelper
 import com.google.common.base.MoreObjects
 import io.vertx.core.buffer.Buffer
 
-abstract class AbstractCommand(val cmd: String, val transId: Int, protected val values: List<Any>) : Payload {
+abstract class AbstractCommand(val cmd: String, val transId: Int, protected val values: Array<Any?>) : Payload {
 
   override fun toBuffer(): Buffer {
-    val li = mutableListOf(cmd, transId)
-    li.addAll(values)
-    return Buffer.buffer(CodecHelper.encodeAMF0(li))
+    val arr = arrayOfNulls<Any>(2 + this.values.size)
+    arr[0] = this.cmd
+    arr[1] = this.transId
+    for (i in 0 until values.size) {
+      arr[i + 2] = values[i]
+    }
+    return Buffer.buffer(CodecHelper.encodeAMF0(arr))
   }
 
   open fun getCmdObj(): Any? {
@@ -19,10 +23,6 @@ abstract class AbstractCommand(val cmd: String, val transId: Int, protected val 
       is Unit -> null
       else -> obj
     }
-  }
-
-  open fun getInfo(): Any? {
-    return null
   }
 
   protected fun toStringHelper(): MoreObjects.ToStringHelper {

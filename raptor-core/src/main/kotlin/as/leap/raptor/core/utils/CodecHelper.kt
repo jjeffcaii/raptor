@@ -79,27 +79,27 @@ object CodecHelper {
         .toString()
   }
 
-  fun encodeAMF0(values: List<Any>): ByteArray {
+  fun encodeAMF0(values: Array<Any?>): ByteArray {
     ByteArrayOutputStream().use {
       val serializer = Amf0Output(AMF_CONTEXT)
       serializer.setOutputStream(it)
-      values.forEach(serializer::writeObject)
+      values.forEach { serializer.writeObject(it) }
       it.flush()
       return it.toByteArray()
     }
   }
 
-  fun encodeAMF3(values: List<Any>): ByteArray {
+  fun encodeAMF3(values: Array<Any?>): ByteArray {
     ByteArrayOutputStream().use {
       val serializer = Amf3Output(AMF_CONTEXT)
       serializer.setOutputStream(it)
-      values.forEach(serializer::writeObject)
+      values.forEach { serializer.writeObject(it) }
       it.flush()
       return it.toByteArray()
     }
   }
 
-  fun decodeAMF0(bytes: ByteArray): List<Any> {
+  fun decodeAMF0(bytes: ByteArray): Array<Any?> {
     try {
       return this.decodeAMF(Amf0Input(AMF_CONTEXT), bytes)
     } catch (e: Throwable) {
@@ -108,19 +108,18 @@ object CodecHelper {
     }
   }
 
-  fun decodeAMF3(bytes: ByteArray): List<Any> {
+  fun decodeAMF3(bytes: ByteArray): Array<Any?> {
     return this.decodeAMF(Amf3Input(AMF_CONTEXT), bytes)
   }
 
-  private fun decodeAMF(deserializer: AbstractAmfInput, bytes: ByteArray): List<Any> {
+  private fun decodeAMF(deserializer: AbstractAmfInput, bytes: ByteArray): Array<Any?> {
     ByteArrayInputStream(bytes).use {
       deserializer.setInputStream(it)
-      val li = mutableListOf<Any>()
+      val li = mutableListOf<Any?>()
       do {
-        val obj = deserializer.readObject()
-        li.add(obj ?: Unit)
+        li.add(deserializer.readObject())
       } while (deserializer.available() > 0)
-      return li
+      return li.toTypedArray()
     }
   }
 }

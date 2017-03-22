@@ -65,7 +65,7 @@ class Swapper {
           b.appendBuffer(header.toBuffer()).appendBuffer(payload.toBuffer())
           // send set chunk size 1024
           header = Header.getProtocolHeader(ChunkType.CTRL_SET_CHUNK_SIZE)
-          payload = ProtocolChunkSize(1024)
+          payload = ProtocolChunkSize(SND_CHUNK_SIZE)
           b.appendBuffer(header.toBuffer()).appendBuffer(payload.toBuffer())
           // send _result
           val cmdObj = mapOf(
@@ -78,20 +78,67 @@ class Swapper {
               "description" to "Connection successed.",
               "objectEncoding" to 0
           )
-          payload = CommandResult(1, listOf(cmdObj, cmdInfo))
+          payload = CommandResult(1, arrayOf(cmdObj, cmdInfo))
           val cmdBuffer = payload.toBuffer()
           header = Header(FMT.F0, 3, 0L, 0L, ChunkType.COMMAND_AMF0, cmdBuffer.length())
           b.appendBuffer(header.toBuffer()).appendBuffer(cmdBuffer)
-
           this.rcv(b)
         } else {
-          //TODO
+          //TODO invalid app
+          this.disconnect()
         }
       }
+      is CommandReleaseStream -> {
+        val payload = CommandResult(cmd.transId, arrayOfNulls<Any>(1))
+        val payloadBuffer = payload.toBuffer()
+        val header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, payloadBuffer.length())
+        this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
+      }
+      is CommandFCPublish -> {
+        val streamKey = cmd.getStreamKey()
+        val infoObj = mapOf(
+            "code" to "NetStream.Publish.Start",
+            "description" to streamKey,
+            "details" to streamKey,
+            "clientid" to "0"
+        )
+        val payload = CommandOnFCPublish(0, arrayOf(null, infoObj))
+        val buffer = payload.toBuffer()
+        val header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, buffer.length())
+        this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(buffer))
+      }
+      is CommandCreateStream -> {
+        val payload = CommandResult(cmd.transId, arrayOfNulls<Any>(1))
+        val payloadBuffer = payload.toBuffer()
+        val header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, payloadBuffer.length())
+        this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
+      }
+      is CommandCheckBW -> {
+        val payload = CommandResult(cmd.transId, arrayOfNulls<Any>(1))
+        val payloadBuffer = payload.toBuffer()
+        val header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, payloadBuffer.length())
+        this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
+      }
+      is CommandPublish -> {
+        val infoObj = mapOf(
+            "level" to "status",
+            "code" to "NetStream.Publish.Start",
+            "description" to "Start Publishing",
+            "objectEncoding" to 0
+        )
+        val payload = CommandOnStatus(cmd.transId, arrayOf(null, infoObj))
+        val b = payload.toBuffer()
+        val header = Header(FMT.F0, msg.header.csid, 0, msg.header.streamId, ChunkType.COMMAND_AMF0, b.length())
+        this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
+      }
       else -> {
-
+        //TODO process other commands.
       }
     }
+  }
+
+  private fun disconnect() {
+    this.front.close()
   }
 
   private fun handshakeWithFront(handshake: Handshake) {
@@ -134,7 +181,7 @@ class Swapper {
 
   companion object {
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
-
+    private val SND_CHUNK_SIZE = 1024L
   }
 
 }
