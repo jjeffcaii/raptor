@@ -52,4 +52,8 @@ data class Handshake(val buffer: Buffer) {
 
   }
 
+  companion object {
+    val C0_INSTANCE = C0()
+  }
+
 }

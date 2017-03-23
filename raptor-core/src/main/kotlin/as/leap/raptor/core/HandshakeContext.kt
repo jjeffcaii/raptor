@@ -16,15 +16,12 @@ class HandshakeContext(
 ) {
 
   private var hash: Triple<Long, Long, Long>? = null
-  private var ts: Long? = null
 
   init {
     if (!this.passive) {
       val c0 = Handshake.C0()
       val random = makeRandom(1528)
-      val t = System.currentTimeMillis() / 1000
-      this.ts = t
-      val c1 = Handshake.C12(t, 0, random)
+      val c1 = Handshake.C12(System.currentTimeMillis() / 1000, 0, random)
       val b = Buffer.buffer()
           .appendBuffer(c0.toBuffer())
           .appendBuffer(c1.toBuffer())
@@ -34,32 +31,33 @@ class HandshakeContext(
   }
 
   // 主动模式
+  // YOU -- C* -> SERVER
+  // YOU <- S* -- SERVER
   private fun initiative(handshake: Handshake) {
-    val hs = handshake.toModel()
-    when (hs) {
+    val sx = handshake.toModel()
+    when (sx) {
       is Handshake.C0 -> {
-        val s0 = Handshake.C0()
-        if (s0.version != 3.toShort()) {
-          logger.error("Not valid RTMP version: {}.", s0.version)
+        if (sx.version != Handshake.C0_INSTANCE.version) {
+          logger.error("invalid handshake: illegal S0 version {}.", sx.version)
           this.failed?.invoke()
         }
       }
       is Handshake.C12 -> {
-        when (hs.v2) {
+        when (sx.v2) {
           0L -> {
-            // s2 = c1
-            val s2Hash = hs.hash()
-            if (s2Hash != this.hash) {
-              logger.error("Not valid handshake: C1={}, S2={}", s2Hash, this.hash)
+            // recieve s2, validate s2=c1
+            val hashForS2 = sx.hash()
+            if (hashForS2 != this.hash) {
+              logger.error("invalid handshake: C1(cached)={}, S2(recieved)={}", this.hash, hashForS2)
               this.failed?.invoke()
             } else {
               this.success?.invoke()
             }
           }
           else -> {
-            // s1
-            if (hs.v2 != this.ts) {
-              logger.error("Not valid S1: time2={}, should={}.", hs.v2, this.ts)
+            // recieve s1, validate s1.time2 == c1.time
+            if (sx.v2 != this.hash!!.first) {
+              logger.error("Not valid S1: time2={}, should={}.", sx.v2, this.hash!!.first)
               this.failed?.invoke()
             } else {
               this.endpoint.write(handshake.toBuffer())
@@ -71,22 +69,24 @@ class HandshakeContext(
   }
 
   // 被动模式
+  // CLIENT -- C* -> YOU
+  // CLIENT <- S* -- YOU
   private fun passive(handshake: Handshake) {
-    val hs = handshake.toModel()
-    when (hs) {
+    val cx = handshake.toModel()
+    when (cx) {
       is Handshake.C0 -> {
-        val c0 = Handshake.C0()
-        if (c0.version != 3.toShort()) {
-          logger.error("Not valid RTMP version: {}.", c0.version)
+        if (cx.version != Handshake.C0_INSTANCE.version) {
+          logger.error("invalid handshake: illegal C0 version {}.", cx.version)
           this.failed?.invoke()
         }
       }
       is Handshake.C12 -> {
-        when (hs.v2) {
+        when (cx.v2) {
           0L -> {
-            val s0 = Handshake.C0()
+            // recieve c1, send s0+s1+s2
+            val s0 = Handshake.C0_INSTANCE
             val random = makeRandom(1528)
-            val s1 = Handshake.C12(System.currentTimeMillis() / 1000, hs.v1, random)
+            val s1 = Handshake.C12(System.currentTimeMillis() / 1000, cx.v1, random)
             val b = Buffer.buffer(3073)
                 .appendBuffer(s0.toBuffer())
                 .appendBuffer(s1.toBuffer())
@@ -95,9 +95,10 @@ class HandshakeContext(
             this.endpoint.write(b)
           }
           else -> {
-            val hash2 = hs.hash()
-            if (hash2 != this.hash) {
-              logger.error("Not valid handshake: C2={}, S1={}", hash2, this.hash)
+            // recieve c2
+            val hashForC2 = cx.hash()
+            if (hashForC2 != this.hash!!) {
+              logger.error("invalid handshake: C2(recieved)={}, S1(cached)={}.", hashForC2, this.hash!!)
               this.failed?.invoke()
             } else {
               this.hash = null
@@ -113,10 +114,12 @@ class HandshakeContext(
   }
 
   fun check(handshake: Handshake) {
-    if (this.passive) {
-      this.passive(handshake)
-    } else {
-      this.initiative(handshake)
+    synchronized(this) {
+      if (this.passive) {
+        this.passive(handshake)
+      } else {
+        this.initiative(handshake)
+      }
     }
   }
 

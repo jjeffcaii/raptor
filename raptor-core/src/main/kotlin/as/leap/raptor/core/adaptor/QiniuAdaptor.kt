@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-class QiniuAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null) : Adaptor(address, chunkSize, onConnect) {
+class QiniuAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, onClose: Do?) : Adaptor(address, chunkSize, onConnect, onClose) {
 
   private var tidOfCreateStream: Int = -1
 

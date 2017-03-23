@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.lang.invoke.MethodHandles
+import java.util.concurrent.atomic.AtomicInteger
 
 abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceManager) : Closeable {
 
@@ -21,6 +22,8 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
   protected var namespace: String = StringUtils.EMPTY
   protected var streamKey: String = StringUtils.EMPTY
   protected val adaptors: MutableList<Adaptor> = mutableListOf()
+
+  private val connects = AtomicInteger(0)
 
   abstract protected fun onCommand(msg: Message)
 
@@ -31,10 +34,13 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
       Address.Provider.QINIU -> {
         QiniuAdaptor(address, this.chunkSize, {
           logger.info("establish success: {}", address)
-          if (this.isConnected()) {
+          if (this.connects.incrementAndGet() == this.adaptors.size) {
             this.connect()
             logger.info("**** start publishing! ****")
           }
+        }, {
+          logger.warn("some backend closed. close all endpoints.")
+          this.close()
         })
       }
       else -> {
@@ -42,14 +48,6 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
       }
     }
     this.adaptors.add(adaptor)
-  }
-
-  private fun isConnected(): Boolean {
-    synchronized(this) {
-      return this.adaptors.all {
-        return it.connected()
-      }
-    }
   }
 
   override fun close() {

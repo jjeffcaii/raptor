@@ -19,12 +19,14 @@ abstract class Adaptor : Closeable {
   protected val chunkSize: Long
   protected val backend: Endpoint
   protected val onConnect: Do?
+  protected val onClose: Do?
   protected val connected = AtomicBoolean(false)
 
-  constructor(address: Address, chunkSize: Long, onConnect: Do?) {
+  constructor(address: Address, chunkSize: Long, onConnect: Do?, onClose: Do?) {
     this.address = address
     this.chunkSize = chunkSize
     this.onConnect = onConnect
+    this.onClose = onClose
     this.backend = Backend(this.address.host, this.address.port)
     val messages = MessageFliper()
     val hc = HandshakeContext(backend, {
@@ -50,6 +52,9 @@ abstract class Adaptor : Closeable {
       b = payload.toBuffer()
       header = Header(FMT.F0, 3, 0L, 0L, MessageType.COMMAND_AMF0, b.length())
       backend.write(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
+      backend.onClose {
+        this.onClose?.invoke()
+      }
     }, {
       this.close()
     })
