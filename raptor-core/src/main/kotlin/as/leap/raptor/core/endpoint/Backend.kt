@@ -2,7 +2,7 @@ package `as`.leap.raptor.core.endpoint
 
 import `as`.leap.raptor.core.ChunkFliper
 import `as`.leap.raptor.core.Endpoint
-import `as`.leap.raptor.core.utils.VertxHelper
+import `as`.leap.raptor.core.utils.Vertxes
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
 import io.vertx.core.parsetools.RecordParser
@@ -16,7 +16,7 @@ class Backend(host: String, port: Int = 1935) : Endpoint() {
   private var queue: MutableList<Buffer> = mutableListOf()
 
   init {
-    VertxHelper.netClient.connect(port, host, {
+    Vertxes.netClient.connect(port, host, {
       if (it.succeeded()) {
         val socket = it.result()
         val parser = RecordParser.newFixed(1, null)

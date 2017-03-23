@@ -2,7 +2,6 @@ package `as`.leap.raptor.core
 
 import `as`.leap.raptor.core.model.Handshake
 import `as`.leap.raptor.core.utils.Do
-import `as`.leap.raptor.core.utils.VertxHelper
 import io.vertx.core.buffer.Buffer
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
@@ -128,7 +127,9 @@ class Handshaker(
 
     private fun makeRandom(len: Int): Buffer {
       val b = Buffer.buffer().appendString(UUID.randomUUID().toString())
-      VertxHelper.fillZero(b, len)
+      do {
+        b.appendUnsignedByte(0)
+      } while (b.length() < len)
       return b
     }
   }
