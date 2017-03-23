@@ -24,21 +24,12 @@ class CoroutinesTest {
     var i = 0
     val iter = fib.iterator()
     for (v in iter) {
-      if (++i > 500000) {
+      if (++i > 100) {
         break
       }
       println("fib $i: $v")
     }
     println("cost: ${System.currentTimeMillis() - begin} ms")
   }
-
-  fun <T> async(block: suspend () -> T) {
-  }
-
-  fun test() {
-
-
-  }
-
 
 }
