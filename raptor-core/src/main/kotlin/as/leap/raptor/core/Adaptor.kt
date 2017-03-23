@@ -54,7 +54,7 @@ abstract class Adaptor : Closeable {
       this.close()
     })
 
-    backend.onChunk(messages::append).onHandshake(hc::check)
+    backend.onChunk { messages.append(it) }.onHandshake { hc.check(it) }
 
     messages.onMessage {
       //TODO 处理来自backend的消息

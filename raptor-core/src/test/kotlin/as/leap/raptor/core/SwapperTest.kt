@@ -1,11 +1,12 @@
 package `as`.leap.raptor.core
 
+import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.core.endpoint.Frontend
+import `as`.leap.raptor.core.rocket.OBSSwapper
 import `as`.leap.raptor.core.utils.VertxHelper
 import io.vertx.kotlin.core.net.NetServerOptions
 
 object SwapperTest {
-
 
   @JvmStatic
   fun main(args: Array<String>) {
@@ -14,7 +15,7 @@ object SwapperTest {
     server.connectHandler({ socket ->
       socket.pause()
       val client: Endpoint = Frontend(socket)
-      Swapper(client)
+      OBSSwapper(client, NamespaceManager.INSTANCE)
       socket.resume()
     })
     server.listen {

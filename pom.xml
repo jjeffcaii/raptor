@@ -13,6 +13,7 @@
     <module>raptor-core</module>
     <module>raptor-commons</module>
     <module>raptor-api</module>
+    <module>raptor-service</module>
   </modules>
 
   <properties>
@@ -89,6 +90,11 @@
       <dependency>
         <groupId>as.leap</groupId>
         <artifactId>raptor-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>as.leap</groupId>
+        <artifactId>raptor-service</artifactId>
         <version>${project.version}</version>
       </dependency>
 

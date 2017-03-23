@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>raptor</artifactId>
+    <groupId>as.leap</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>raptor-service</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>as.leap</groupId>
+      <artifactId>raptor-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>as.leap</groupId>
+      <artifactId>raptor-commons</artifactId>
+      <type>test-jar</type>
+    </dependency>
+    <dependency>
+      <groupId>com.qiniu.pili</groupId>
+      <artifactId>pili-sdk-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+  </dependencies>
+
+
+</project>

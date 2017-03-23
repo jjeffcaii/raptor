@@ -34,6 +34,10 @@
       <artifactId>raptor-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>as.leap</groupId>
+      <artifactId>raptor-service</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-lang-kotlin</artifactId>
     </dependency>
