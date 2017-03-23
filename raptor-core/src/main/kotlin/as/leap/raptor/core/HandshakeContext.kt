@@ -15,7 +15,7 @@ class HandshakeContext(
     private val passive: Boolean = false
 ) {
 
-  private var hash: Int? = null
+  private var hash: Triple<Long, Long, Long>? = null
   private var ts: Long? = null
 
   init {
@@ -48,8 +48,9 @@ class HandshakeContext(
         when (hs.v2) {
           0L -> {
             // s2 = c1
-            if (hs.hash() != this.hash) {
-              logger.error("Not valid handshake: C1 <> S2.")
+            val s2Hash = hs.hash()
+            if (s2Hash != this.hash) {
+              logger.error("Not valid handshake: C1={}, S2={}", s2Hash, this.hash)
               this.failed?.invoke()
             } else {
               this.success?.invoke()
@@ -94,8 +95,9 @@ class HandshakeContext(
             this.endpoint.write(b)
           }
           else -> {
-            if (hs.hash() != this.hash) {
-              logger.error("Not valid handshake: C2 <> S1.")
+            val hash2 = hs.hash()
+            if (hash2 != this.hash) {
+              logger.error("Not valid handshake: C2={}, S1={}", hash2, this.hash)
               this.failed?.invoke()
             } else {
               this.hash = null

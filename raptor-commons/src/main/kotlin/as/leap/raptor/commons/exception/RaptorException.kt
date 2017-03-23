@@ -1,9 +1,8 @@
 package `as`.leap.raptor.commons.exception
 
 open class RaptorException(
-    code: Int?,
-    message: String?,
-    cause: Throwable?,
+    message: String? = null,
+    cause: Throwable? = null,
     enableSuppression: Boolean,
     writableStackTrace: Boolean) : Exception(message, cause, enableSuppression, writableStackTrace) {
 }

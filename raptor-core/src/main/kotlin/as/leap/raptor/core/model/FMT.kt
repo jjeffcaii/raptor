@@ -14,7 +14,7 @@ enum class FMT(val code: Int) {
         1 -> F1
         2 -> F2
         3 -> F3
-        else -> throw UnsupportedOperationException("Not valid FMT: byte=$code, fmt=$c.")
+        else -> throw IllegalArgumentException("Not valid FMT: byte=$code, fmt=$c.")
       }
     }
   }

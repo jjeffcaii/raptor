@@ -64,7 +64,6 @@ abstract class Adaptor : Closeable {
 
     messages.onMessage {
       //TODO 处理来自backend的消息
-      logger.info("<<< rcv: {}", it.header.type)
       when (it.header.type) {
         MessageType.COMMAND_AMF0, MessageType.COMMAND_AMF3 -> {
           this.onCommand(it)

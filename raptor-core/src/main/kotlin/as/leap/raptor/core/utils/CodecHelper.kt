@@ -103,7 +103,7 @@ object CodecHelper {
     try {
       return this.decodeAMF(Amf0Input(AMF_CONTEXT), bytes)
     } catch (e: Throwable) {
-      logger.error("decode as amf0 failed: \n{}", encodeHex(bytes, true))
+      logger.error("decode as amf0 failed.", e)
       throw e
     }
   }

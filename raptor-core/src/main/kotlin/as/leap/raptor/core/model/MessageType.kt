@@ -69,7 +69,7 @@ enum class MessageType(val code: Byte) {
         8 -> MEDIA_AUDIO
         9 -> MEDIA_VIDEO
         22 -> AGGREGATE
-        else -> throw UnsupportedOperationException("Not valid chunk type: byte=$code.")
+        else -> throw IllegalArgumentException("Not valid chunk type: byte=$code.")
       }
     }
   }

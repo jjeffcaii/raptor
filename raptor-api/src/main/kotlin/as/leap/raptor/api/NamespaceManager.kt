@@ -15,9 +15,15 @@ interface NamespaceManager {
             Address.Provider.QINIU,
             "pili-publish.maxwon.cn",
             "maxwon-live",
-            "/foobar?e=1490244546&token=3z_CkMd7_hhzf8XSYTmAtLM7FP0Nldr_lyleI-X9:eroFC1dccr8bwmYXxdpI4BsrZFI="
+            "/foobar?e=1490255986&token=3z_CkMd7_hhzf8XSYTmAtLM7FP0Nldr_lyleI-X9:2XyRhwzMmneaeX3QUh5vR1Sfx48="
         )
-        return arrayOf(qiniu)
+        val qiniu2 = Address(
+            Address.Provider.QINIU,
+            "pili-publish.maxwon.cn",
+            "maxwon-live",
+            "/foo?e=1490256107&token=3z_CkMd7_hhzf8XSYTmAtLM7FP0Nldr_lyleI-X9:7zFsc0WRVObFNQMDJ3KzucVcMT0="
+        )
+        return arrayOf(qiniu, qiniu2)
       }
 
       override fun exists(namespace: String): Boolean {

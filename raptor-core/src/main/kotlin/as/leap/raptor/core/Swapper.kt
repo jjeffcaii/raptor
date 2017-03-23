@@ -50,7 +50,6 @@ class Swapper : Closeable {
           when {
             it.header.type.isMedia() -> {
               val buffer = it.toBuffer()
-              logger.info("==> write media: header={}, totals={}bytes, payload={}bytes", it.header, buffer.length(), it.payload.length())
               this.adaptors.forEach {
                 it.write(buffer)
               }
@@ -115,7 +114,7 @@ class Swapper : Closeable {
           addresses.forEach {
             this.establish(it)
           }
-          val payload = CommandResult(cmd.transId, arrayOfNulls<Any>(1))
+          val payload = CommandResult(cmd.transId, arrayOf(null, 1))
           val payloadBuffer = payload.toBuffer()
           val header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, payloadBuffer.length())
           this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
@@ -135,13 +134,13 @@ class Swapper : Closeable {
         this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(buffer))
       }
       is CommandCreateStream -> {
-        val payload = CommandResult(cmd.transId, arrayOfNulls<Any>(1))
+        val payload = CommandResult(cmd.transId, arrayOf(null, 1))
         val payloadBuffer = payload.toBuffer()
         val header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, payloadBuffer.length())
         this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
       }
       is CommandCheckBW -> {
-        val payload = CommandResult(cmd.transId, arrayOfNulls<Any>(1))
+        val payload = CommandResult(cmd.transId, arrayOf(null, 1))
         val payloadBuffer = payload.toBuffer()
         val header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, payloadBuffer.length())
         this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
