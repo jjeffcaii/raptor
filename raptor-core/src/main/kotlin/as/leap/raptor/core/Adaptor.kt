@@ -68,7 +68,6 @@ abstract class Adaptor : Closeable {
           this.onCommand(it)
         }
         else -> {
-          logger.info("<--- rcv from backend: {}", it.toModel())
         }
       }
     }

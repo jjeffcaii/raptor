@@ -13,7 +13,6 @@
     <module>raptor-core</module>
     <module>raptor-commons</module>
     <module>raptor-api</module>
-    <module>raptor-metadata</module>
   </modules>
 
   <properties>
