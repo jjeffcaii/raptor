@@ -48,6 +48,7 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
       }
     }
     this.adaptors.add(adaptor)
+    logger.info("establish to {}......", address)
   }
 
   override fun close() {

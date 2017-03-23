@@ -57,6 +57,7 @@ abstract class Adaptor : Closeable {
       }
     }, {
       this.close()
+      this.onClose?.invoke()
     })
 
     backend.onChunk { messages.append(it) }.onHandshake { hc.check(it) }
