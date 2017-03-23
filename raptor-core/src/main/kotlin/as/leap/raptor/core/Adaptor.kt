@@ -29,7 +29,7 @@ abstract class Adaptor : Closeable {
     this.onClose = onClose
     this.backend = Backend(this.address.host, this.address.port)
     val messages = MessageFliper()
-    val hc = HandshakeContext(backend, {
+    val hc = Handshaker(backend, {
       if (logger.isDebugEnabled) {
         logger.debug("handshake with {}:{} succes!", this.address.host, this.address.port)
       }

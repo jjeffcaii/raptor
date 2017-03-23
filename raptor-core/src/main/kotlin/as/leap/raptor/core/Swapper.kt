@@ -69,7 +69,7 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
         }
       }
     }
-    val handshaker = HandshakeContext(this.endpoint, failed = { this.close() }, passive = true)
+    val handshaker = Handshaker(this.endpoint, failed = { this.close() }, passive = true)
     this.endpoint
         .onHandshake { handshaker.check(it) }
         .onChunk {

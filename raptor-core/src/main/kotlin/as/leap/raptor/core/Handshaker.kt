@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 import java.util.*
 
-class HandshakeContext(
+class Handshaker(
     private val endpoint: Endpoint,
     val success: Do? = null,
     val failed: Do? = null,
