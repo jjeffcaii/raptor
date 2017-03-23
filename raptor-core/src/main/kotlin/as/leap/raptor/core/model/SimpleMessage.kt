@@ -7,7 +7,6 @@ import io.vertx.core.buffer.Buffer
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-
 class SimpleMessage(header: Header, private val payload: Buffer) : Message(header) {
 
   override fun toChunks(chunkSize: Int): Array<Chunk> {
@@ -17,22 +16,22 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
   override fun toModel(): Payload {
     val type = this.header.type
     return when (type) {
-      ChunkType.CTRL_SET_CHUNK_SIZE -> ProtocolChunkSize(this.payload.getUnsignedInt(0))
-      ChunkType.CTRL_ABORT_MESSAGE -> ProtocolAbortMessage(this.payload.getUnsignedInt(0))
-      ChunkType.CTRL_SET_WINDOW_SIZE -> ProtocolWindowSize(this.payload.getUnsignedInt(0))
-      ChunkType.CTRL_ACK_WINDOW_SIZE -> ProtocolAckWindowSize(this.payload.getUnsignedInt(0))
-      ChunkType.CTRL_SET_PEER_BANDWIDTH -> toProtocolBandWidth(this.payload)
-      ChunkType.COMMAND_AMF0 -> toCommand(CodecHelper.decodeAMF0(this.payload.bytes), type)
-      ChunkType.COMMAND_AMF3 -> toCommand(CodecHelper.decodeAMF3(this.payload.bytes), type)
-      ChunkType.DATA_AMF0 -> SimpleAMFPayload(CodecHelper.decodeAMF0(this.payload.bytes), type)
-      ChunkType.DATA_AMF3 -> SimpleAMFPayload(CodecHelper.decodeAMF0(this.payload.bytes), type)
+      MessageType.CTRL_SET_CHUNK_SIZE -> ProtocolChunkSize(this.payload.getUnsignedInt(0))
+      MessageType.CTRL_ABORT_MESSAGE -> ProtocolAbortMessage(this.payload.getUnsignedInt(0))
+      MessageType.CTRL_SET_WINDOW_SIZE -> ProtocolWindowSize(this.payload.getUnsignedInt(0))
+      MessageType.CTRL_ACK_WINDOW_SIZE -> ProtocolAckWindowSize(this.payload.getUnsignedInt(0))
+      MessageType.CTRL_SET_PEER_BANDWIDTH -> toProtocolBandWidth(this.payload)
+      MessageType.COMMAND_AMF0 -> toCommand(CodecHelper.decodeAMF0(this.payload.bytes), type)
+      MessageType.COMMAND_AMF3 -> toCommand(CodecHelper.decodeAMF3(this.payload.bytes), type)
+      MessageType.DATA_AMF0 -> SimpleAMFPayload(CodecHelper.decodeAMF0(this.payload.bytes), type)
+      MessageType.DATA_AMF3 -> SimpleAMFPayload(CodecHelper.decodeAMF0(this.payload.bytes), type)
 /*
-      ChunkType.USER_CONTROL -> TODO()
-      ChunkType.SHARE_OBJECT_AMF0 -> TODO()
-      ChunkType.SHARE_OBJECT_AMF3 -> TODO()
-      ChunkType.MEDIA_AUDIO -> TODO()
-      ChunkType.MEDIA_VIDEO -> TODO()
-      ChunkType.AGGREGATE -> TODO()
+      MessageType.USER_CONTROL -> TODO()
+      MessageType.SHARE_OBJECT_AMF0 -> TODO()
+      MessageType.SHARE_OBJECT_AMF3 -> TODO()
+      MessageType.MEDIA_AUDIO -> TODO()
+      MessageType.MEDIA_VIDEO -> TODO()
+      MessageType.AGGREGATE -> TODO()
 */
       else -> SimpleBinaryPayload(this.payload.bytes, type)
     }
@@ -48,7 +47,7 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
 
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
 
-    private fun toCommand(values: Array<Any?>, type: ChunkType): Payload {
+    private fun toCommand(values: Array<Any?>, type: MessageType): Payload {
       Preconditions.checkArgument(values.size > 2, "Not valid AMF objects length: ${values.size}")
       Preconditions.checkArgument(values[0] is String, "Not valid cmd type: ${values[0]!!::class}")
       Preconditions.checkArgument(values[1] is Number, "Not valid transId type: ${values[1]!!::class}")
@@ -76,11 +75,11 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
     }
 
     private fun toProtocolBandWidth(payload: Buffer): ProtocolBandWidth {
-      return ProtocolBandWidth(payload.getUnsignedInt(0), if (payload.length() > 4) {
-        payload.getUnsignedByte(4)
-      } else {
-        0
-      })
+      val limitType = when {
+        payload.length() > 4 -> payload.getUnsignedByte(4)
+        else -> 0
+      }
+      return ProtocolBandWidth(payload.getUnsignedInt(0), limitType)
     }
 
   }

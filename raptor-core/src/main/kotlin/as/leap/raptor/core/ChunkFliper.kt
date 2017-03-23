@@ -28,7 +28,7 @@ class ChunkFliper(
   private var timestamp: Int = 0
   private var extendTimestamp: Long? = null
   private var length: Int = 0
-  private var type: ChunkType? = null
+  private var type: MessageType? = null
   private var streamid: Long = 0
 
   private var buffer1 = Buffer.buffer()
@@ -85,7 +85,7 @@ class ChunkFliper(
         this.already = 0
         this.timestamp = buffer.getUnsignedMedium(0)
         this.length = buffer.getUnsignedMedium(3)
-        this.type = ChunkType.toChunkType(buffer.getUnsignedByte(6))
+        this.type = MessageType.toChunkType(buffer.getUnsignedByte(6))
         this.streamid = buffer.getUnsignedIntLE(7)
         if (this.timestamp == 0x7FFFFF) {
           this.state = ReadState.CHUNK_EXT_TS
@@ -100,7 +100,7 @@ class ChunkFliper(
         this.already = 0
         this.timestamp = buffer.getUnsignedMedium(0)
         this.length = buffer.getUnsignedMedium(3)
-        this.type = ChunkType.toChunkType(buffer.getUnsignedByte(6))
+        this.type = MessageType.toChunkType(buffer.getUnsignedByte(6))
         if (this.timestamp == 0x7FFFFF) {
           this.state = ReadState.CHUNK_EXT_TS
           this.parser.fixedSizeMode(4)
@@ -139,7 +139,7 @@ class ChunkFliper(
       }
       ReadState.CHUNK_BODY -> {
         // 1. reset chunk size if rcv set_chunk_size.
-        if (this.fmt == FMT.F0 && this.csid == 2 && this.type == ChunkType.CTRL_SET_CHUNK_SIZE) {
+        if (this.fmt == FMT.F0 && this.csid == 2 && this.type == MessageType.CTRL_SET_CHUNK_SIZE) {
           this.chunkSize = buffer.getUnsignedInt(0).toInt()
           if (logger.isDebugEnabled) {
             logger.debug("reset chunk size: {}", this.chunkSize)

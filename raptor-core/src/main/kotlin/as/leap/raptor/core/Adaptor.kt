@@ -33,7 +33,7 @@ abstract class Adaptor : Closeable {
       }
       //TODO 处理握手成功后续响应
       // send set chunk size.
-      var header: Header = Header.getProtocolHeader(ChunkType.CTRL_SET_CHUNK_SIZE)
+      var header: Header = Header.getProtocolHeader(MessageType.CTRL_SET_CHUNK_SIZE)
       var payload: Payload = ProtocolChunkSize(this.chunkSize)
       var b: Buffer = payload.toBuffer()
       backend.write(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
@@ -48,7 +48,7 @@ abstract class Adaptor : Closeable {
       )
       payload = CommandConnect(1, arrayOf(cmdObj))
       b = payload.toBuffer()
-      header = Header(FMT.F0, 3, 0L, 0L, ChunkType.COMMAND_AMF0, b.length())
+      header = Header(FMT.F0, 3, 0L, 0L, MessageType.COMMAND_AMF0, b.length())
       backend.write(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
     }, {
       this.close()
@@ -66,7 +66,7 @@ abstract class Adaptor : Closeable {
       //TODO 处理来自backend的消息
       logger.info("<<< rcv: {}", it.header.type)
       when (it.header.type) {
-        ChunkType.COMMAND_AMF0, ChunkType.COMMAND_AMF3 -> {
+        MessageType.COMMAND_AMF0, MessageType.COMMAND_AMF3 -> {
           this.onCommand(it)
         }
         else -> {

@@ -1,6 +1,6 @@
 package `as`.leap.raptor.core.model
 
-enum class ChunkType(val code: Byte) {
+enum class MessageType(val code: Byte) {
   // protocol control
   CTRL_SET_CHUNK_SIZE(0x01),
   CTRL_ABORT_MESSAGE(0x02),
@@ -52,7 +52,7 @@ enum class ChunkType(val code: Byte) {
   }
 
   companion object {
-    fun toChunkType(code: Short): ChunkType? {
+    fun toChunkType(code: Short): MessageType? {
       return when (code.toInt()) {
         1 -> CTRL_SET_CHUNK_SIZE
         2 -> CTRL_ABORT_MESSAGE

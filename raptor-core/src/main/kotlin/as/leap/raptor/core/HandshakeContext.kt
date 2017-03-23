@@ -21,8 +21,7 @@ class HandshakeContext(
   init {
     if (!this.passive) {
       val c0 = Handshake.C0()
-      val random = Buffer.buffer().appendString(UUID.randomUUID().toString())
-      VertxHelper.fillZero(random, 1528)
+      val random = makeRandom(1528)
       val t = System.currentTimeMillis() / 1000
       this.ts = t
       val c1 = Handshake.C12(t, 0, random)
@@ -34,6 +33,7 @@ class HandshakeContext(
     }
   }
 
+  // 主动模式
   private fun initiative(handshake: Handshake) {
     val hs = handshake.toModel()
     when (hs) {
@@ -69,6 +69,7 @@ class HandshakeContext(
     }
   }
 
+  // 被动模式
   private fun passive(handshake: Handshake) {
     val hs = handshake.toModel()
     when (hs) {
@@ -83,9 +84,7 @@ class HandshakeContext(
         when (hs.v2) {
           0L -> {
             val s0 = Handshake.C0()
-            val random = Buffer.buffer().appendString(UUID.randomUUID().toString())
-            // fill with zero
-            VertxHelper.fillZero(random, 1528)
+            val random = makeRandom(1528)
             val s1 = Handshake.C12(System.currentTimeMillis() / 1000, hs.v1, random)
             val b = Buffer.buffer(3073)
                 .appendBuffer(s0.toBuffer())
@@ -121,6 +120,12 @@ class HandshakeContext(
 
   companion object {
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
+
+    private fun makeRandom(len: Int): Buffer {
+      val b = Buffer.buffer().appendString(UUID.randomUUID().toString())
+      VertxHelper.fillZero(b, len)
+      return b
+    }
   }
 
 }

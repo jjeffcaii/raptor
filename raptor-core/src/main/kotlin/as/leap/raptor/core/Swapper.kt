@@ -26,9 +26,9 @@ class Swapper : Closeable {
     val messages = MessageFliper()
     messages.onMessage { msg ->
       when (msg.header.type) {
-        ChunkType.CTRL_SET_CHUNK_SIZE -> this.chunkSize = (msg.toModel() as ProtocolChunkSize).chunkSize
-        ChunkType.COMMAND_AMF3, ChunkType.COMMAND_AMF0 -> this.handleFrontCommand(msg)
-        ChunkType.DATA_AMF0, ChunkType.DATA_AMF3 -> {
+        MessageType.CTRL_SET_CHUNK_SIZE -> this.chunkSize = (msg.toModel() as ProtocolChunkSize).chunkSize
+        MessageType.COMMAND_AMF3, MessageType.COMMAND_AMF0 -> this.handleFrontCommand(msg)
+        MessageType.DATA_AMF0, MessageType.DATA_AMF3 -> {
           val payload = msg.toModel() as SimpleAMFPayload
           when (payload.body[0]) {
             "@setDataFrame" -> {
@@ -73,15 +73,15 @@ class Swapper : Closeable {
         if (this.namespaces.exists(this.namespace)) {
           // send ack window size
           val b = Buffer.buffer()
-          var header: Header = Header.getProtocolHeader(ChunkType.CTRL_ACK_WINDOW_SIZE)
+          var header: Header = Header.getProtocolHeader(MessageType.CTRL_ACK_WINDOW_SIZE)
           var payload: Payload = ProtocolAckWindowSize()
           b.appendBuffer(header.toBuffer()).appendBuffer(payload.toBuffer())
           // send set peer band width.
-          header = Header.getProtocolHeader(ChunkType.CTRL_SET_PEER_BANDWIDTH, 5)
+          header = Header.getProtocolHeader(MessageType.CTRL_SET_PEER_BANDWIDTH, 5)
           payload = ProtocolBandWidth(limit = 2)
           b.appendBuffer(header.toBuffer()).appendBuffer(payload.toBuffer())
           // send set chunk size 1024
-          header = Header.getProtocolHeader(ChunkType.CTRL_SET_CHUNK_SIZE)
+          header = Header.getProtocolHeader(MessageType.CTRL_SET_CHUNK_SIZE)
           payload = ProtocolChunkSize(SND_CHUNK_SIZE)
           b.appendBuffer(header.toBuffer()).appendBuffer(payload.toBuffer())
           // send _result
@@ -97,7 +97,7 @@ class Swapper : Closeable {
           )
           payload = CommandResult(1, arrayOf(cmdObj, infoObj))
           val cmdBuffer = payload.toBuffer()
-          header = Header(FMT.F0, 3, 0L, 0L, ChunkType.COMMAND_AMF0, cmdBuffer.length())
+          header = Header(FMT.F0, 3, 0L, 0L, MessageType.COMMAND_AMF0, cmdBuffer.length())
           b.appendBuffer(header.toBuffer()).appendBuffer(cmdBuffer)
           this.rcv(b)
         } else {
@@ -117,7 +117,7 @@ class Swapper : Closeable {
           }
           val payload = CommandResult(cmd.transId, arrayOfNulls<Any>(1))
           val payloadBuffer = payload.toBuffer()
-          val header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, payloadBuffer.length())
+          val header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, payloadBuffer.length())
           this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
         }
       }
@@ -131,19 +131,19 @@ class Swapper : Closeable {
         )
         val payload = CommandOnFCPublish(0, arrayOf(null, infoObj))
         val buffer = payload.toBuffer()
-        val header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, buffer.length())
+        val header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, buffer.length())
         this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(buffer))
       }
       is CommandCreateStream -> {
         val payload = CommandResult(cmd.transId, arrayOfNulls<Any>(1))
         val payloadBuffer = payload.toBuffer()
-        val header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, payloadBuffer.length())
+        val header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, payloadBuffer.length())
         this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
       }
       is CommandCheckBW -> {
         val payload = CommandResult(cmd.transId, arrayOfNulls<Any>(1))
         val payloadBuffer = payload.toBuffer()
-        val header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, payloadBuffer.length())
+        val header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, payloadBuffer.length())
         this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(payloadBuffer))
       }
       is CommandPublish -> {
@@ -156,7 +156,7 @@ class Swapper : Closeable {
         )
         val payload = CommandOnStatus(cmd.transId, arrayOf(null, infoObj))
         val b = payload.toBuffer()
-        val header = Header(FMT.F0, msg.header.csid, 0, msg.header.streamId, ChunkType.COMMAND_AMF0, b.length())
+        val header = Header(FMT.F0, msg.header.csid, 0, msg.header.streamId, MessageType.COMMAND_AMF0, b.length())
         this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
         */
         logger.info("**** waiting for adaptors connect... ****")
@@ -189,7 +189,7 @@ class Swapper : Closeable {
                 "clientid" to "0"
             )))
             var b: Buffer = payload.toBuffer()
-            var header: Header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, b.length())
+            var header: Header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, b.length())
             buff.appendBuffer(header.toBuffer()).appendBuffer(b)
             val infoObj = mapOf(
                 "level" to "status",
@@ -199,7 +199,7 @@ class Swapper : Closeable {
             )
             payload = CommandOnStatus(5, arrayOf(null, infoObj))
             b = payload.toBuffer()
-            header = Header(FMT.F0, 4, 0, 0, ChunkType.COMMAND_AMF0, b.length())
+            header = Header(FMT.F0, 4, 0, 0, MessageType.COMMAND_AMF0, b.length())
             buff.appendBuffer(header.toBuffer()).appendBuffer(b)
             this.rcv(buff)
             logger.info("**** start publishing! ****")

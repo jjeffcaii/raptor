@@ -1,4 +1,4 @@
-package `as`.leap.raptor.core.model
+package `as`.leap.raptor.core.utils
 
 import io.vertx.core.buffer.Buffer
 

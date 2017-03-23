@@ -1,5 +1,6 @@
 package `as`.leap.raptor.core.model
 
+import `as`.leap.raptor.core.utils.Buffered
 import com.google.common.hash.Hashing
 import io.vertx.core.buffer.Buffer
 

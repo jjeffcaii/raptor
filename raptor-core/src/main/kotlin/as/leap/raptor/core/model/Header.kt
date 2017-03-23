@@ -1,5 +1,6 @@
 package `as`.leap.raptor.core.model
 
+import `as`.leap.raptor.core.utils.Buffered
 import com.google.common.base.MoreObjects
 import io.vertx.core.buffer.Buffer
 
@@ -8,7 +9,7 @@ data class Header(
     var csid: Int,
     var timestamp: Long = 0,
     var streamId: Long = 0L,
-    var type: ChunkType,
+    var type: MessageType,
     var length: Int = 0
 ) : Buffered {
 
@@ -68,7 +69,7 @@ data class Header(
 
   companion object {
 
-    fun getProtocolHeader(type: ChunkType, len: Int = 4): Header {
+    fun getProtocolHeader(type: MessageType, len: Int = 4): Header {
       return Header(FMT.F0, 2, 0L, 0L, type, len)
     }
   }
