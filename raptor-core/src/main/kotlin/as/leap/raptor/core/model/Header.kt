@@ -7,10 +7,10 @@ import io.vertx.core.buffer.Buffer
 data class Header(
     var fmt: FMT,
     var csid: Int,
-    var timestamp: Long = 0,
-    var streamId: Long = 0L,
     var type: MessageType,
-    var length: Int = 0
+    var length: Int = 0,
+    var timestamp: Long = 0,
+    var streamId: Long = 0L
 ) : Buffered {
 
   override fun toBuffer(): Buffer {
@@ -70,7 +70,7 @@ data class Header(
   companion object {
 
     fun getProtocolHeader(type: MessageType, len: Int = 4): Header {
-      return Header(FMT.F0, 2, 0L, 0L, type, len)
+      return Header(FMT.F0, 2, type, len)
     }
   }
 

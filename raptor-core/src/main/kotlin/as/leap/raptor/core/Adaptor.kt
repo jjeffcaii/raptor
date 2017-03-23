@@ -50,7 +50,7 @@ abstract class Adaptor : Closeable {
       )
       payload = CommandConnect(1, arrayOf(cmdObj))
       b = payload.toBuffer()
-      header = Header(FMT.F0, 3, 0L, 0L, MessageType.COMMAND_AMF0, b.length())
+      header = Header(FMT.F0, 3, MessageType.COMMAND_AMF0, b.length())
       backend.write(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
       backend.onClose {
         this.onClose?.invoke()

@@ -19,7 +19,9 @@ class Frontend(private val socket: NetSocket) : Endpoint() {
     this.socket.handler(parser)
     this.socket.closeHandler {
       this.onClose?.invoke(Unit)
-      logger.info("endpoint closed.")
+      if (logger.isDebugEnabled) {
+        logger.debug("endpoint closed.")
+      }
     }
     this.socket.exceptionHandler {
       logger.error("endpoint socket error.", it)
@@ -34,7 +36,6 @@ class Frontend(private val socket: NetSocket) : Endpoint() {
     this.socket.write(buffer)
     return this
   }
-
 
   override fun close() {
     synchronized(this) {

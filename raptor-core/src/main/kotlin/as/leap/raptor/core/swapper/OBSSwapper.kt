@@ -14,7 +14,7 @@ class OBSSwapper(socket: NetSocket, namespaces: NamespaceManager) : Swapper(sock
 
   override fun connect() {
     // 1. send onFCPublish command.
-    val header: Header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, 0)
+    val header: Header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0)
     var payload: Payload = CommandOnFCPublish(0, arrayOf(null, mapOf(
         "code" to "NetStream.Publish.Start",
         "description" to this.streamKey,
@@ -25,8 +25,9 @@ class OBSSwapper(socket: NetSocket, namespaces: NamespaceManager) : Swapper(sock
     header.length = buffer.length()
     this.endpoint.write(header.toBuffer().appendBuffer(buffer))
 
-    logger.info("<<<< send onFCPublish success!")
-
+    if (logger.isDebugEnabled) {
+      logger.debug("<<<< send onFCPublish success!")
+    }
     // 2. send onStatus command.
     payload = CommandOnStatus(5, arrayOf(null, ON_STATUS_CMD))
     buffer = payload.toBuffer()
@@ -34,7 +35,9 @@ class OBSSwapper(socket: NetSocket, namespaces: NamespaceManager) : Swapper(sock
     header.csid = 4
     header.length = buffer.length()
     this.endpoint.write(header.toBuffer().appendBuffer(buffer))
-    logger.info("<<<< send onStatus success!")
+    if (logger.isDebugEnabled) {
+      logger.debug("<<<< send onStatus success!")
+    }
   }
 
   override fun onCommand(msg: Message) {
@@ -69,6 +72,7 @@ class OBSSwapper(socket: NetSocket, namespaces: NamespaceManager) : Swapper(sock
           this.endpoint.write(b)
         } else {
           //TODO invalid app
+          logger.error("invalid application: {}", this.namespace)
           this.close()
         }
       }
@@ -84,7 +88,7 @@ class OBSSwapper(socket: NetSocket, namespaces: NamespaceManager) : Swapper(sock
           }
           val payload = CommandResult(cmd.transId, arrayOf(null, 1))
           val payloadBuffer = payload.toBuffer()
-          val header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, payloadBuffer.length())
+          val header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0, payloadBuffer.length())
           this.endpoint.write(header.toBuffer().appendBuffer(payloadBuffer))
         }
       }
@@ -98,19 +102,19 @@ class OBSSwapper(socket: NetSocket, namespaces: NamespaceManager) : Swapper(sock
         )
         val payload = CommandOnFCPublish(0, arrayOf(null, infoObj))
         val buffer = payload.toBuffer()
-        val header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, buffer.length())
+        val header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0, buffer.length())
         this.endpoint.write(header.toBuffer().appendBuffer(buffer))
       }
       is CommandCreateStream -> {
         val payload = CommandResult(cmd.transId, arrayOf(null, 1))
         val payloadBuffer = payload.toBuffer()
-        val header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, payloadBuffer.length())
+        val header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0, payloadBuffer.length())
         this.endpoint.write(header.toBuffer().appendBuffer(payloadBuffer))
       }
       is CommandCheckBW -> {
         val payload = CommandResult(cmd.transId, arrayOf(null, 1))
         val payloadBuffer = payload.toBuffer()
-        val header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, payloadBuffer.length())
+        val header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0, payloadBuffer.length())
         this.endpoint.write(header.toBuffer().appendBuffer(payloadBuffer))
       }
       is CommandPublish -> {

@@ -21,7 +21,7 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
   protected var chunkSize: Long = 128
   protected var namespace: String = StringUtils.EMPTY
   protected var streamKey: String = StringUtils.EMPTY
-  protected val adaptors: MutableList<Adaptor> = mutableListOf()
+  private val adaptors: MutableList<Adaptor> = mutableListOf()
 
   private val connects = AtomicInteger(0)
 

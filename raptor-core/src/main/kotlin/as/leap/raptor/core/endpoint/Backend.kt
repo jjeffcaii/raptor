@@ -28,7 +28,9 @@ class Backend(host: String, port: Int = 1935) : Endpoint() {
           this.onError?.invoke(it)
         }
         socket.closeHandler {
-          logger.info("endpoint closed.")
+          if (logger.isDebugEnabled) {
+            logger.debug("endpoint closed.")
+          }
           this.onClose?.invoke(Unit)
           this.socket = null
         }

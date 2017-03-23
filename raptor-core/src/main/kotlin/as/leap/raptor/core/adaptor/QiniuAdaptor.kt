@@ -29,7 +29,7 @@ class QiniuAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, onC
             // snd release stream
             var payload: Payload = CommandReleaseStream(cmd.transId + 1, arrayOf(null, address.key))
             var b: Buffer = payload.toBuffer()
-            var header: Header = Header(FMT.F1, 3, 0L, 0L, MessageType.COMMAND_AMF0, b.length())
+            var header: Header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0, b.length())
             backend.write(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
             if (logger.isDebugEnabled) {
               logger.debug(">>> release stream.")
@@ -37,7 +37,7 @@ class QiniuAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, onC
             // snd FCPublish
             payload = CommandFCPublish(cmd.transId + 2, arrayOf(null, address.key))
             b = payload.toBuffer()
-            header = Header(FMT.F1, msg.header.csid, 0L, 0L, MessageType.COMMAND_AMF0, b.length())
+            header = Header(FMT.F1, msg.header.csid, MessageType.COMMAND_AMF0, b.length())
             backend.write(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
             if (logger.isDebugEnabled) {
               logger.debug(">>> FCPublish.")
@@ -46,7 +46,7 @@ class QiniuAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, onC
             this.tidOfCreateStream = cmd.transId + 3
             payload = CommandCreateStream(this.tidOfCreateStream, arrayOfNulls(1))
             b = payload.toBuffer()
-            header = Header(FMT.F1, msg.header.csid, 0L, 0L, MessageType.COMMAND_AMF0, b.length())
+            header = Header(FMT.F1, msg.header.csid, MessageType.COMMAND_AMF0, b.length())
             backend.write(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
             if (logger.isDebugEnabled) {
               logger.debug(">>> create stream.")
@@ -57,7 +57,7 @@ class QiniuAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, onC
               this.tidOfCreateStream -> {
                 val payload = CommandPublish(this.tidOfCreateStream + 1, arrayOf(null, this.address.key, "live"))
                 val b = payload.toBuffer()
-                val header = Header(FMT.F0, msg.header.csid + 1, 0L, 1L, MessageType.COMMAND_AMF0, b.length())
+                val header = Header(FMT.F0, msg.header.csid + 1, MessageType.COMMAND_AMF0, b.length(), 0L, 1L)
                 backend.write(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
               }
               else -> {

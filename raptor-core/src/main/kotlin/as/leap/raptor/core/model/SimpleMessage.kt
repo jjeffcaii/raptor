@@ -39,8 +39,9 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
 
 
   override fun toBuffer(): Buffer {
-    val headerCopy = Header(this.header.fmt, this.header.csid, this.header.timestamp, this.header.streamId, this.header.type, this.payload.length())
-    return Buffer.buffer().appendBuffer(headerCopy.toBuffer()).appendBuffer(this.payload)
+    val headerCopy = Header(this.header.fmt, this.header.csid, this.header.type, this.payload.length(),
+        this.header.timestamp, this.header.streamId)
+    return headerCopy.toBuffer().appendBuffer(this.payload)
   }
 
   companion object {

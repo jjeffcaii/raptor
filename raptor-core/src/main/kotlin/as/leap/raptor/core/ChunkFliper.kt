@@ -152,7 +152,7 @@ class ChunkFliper(
           this.timestamp.toLong()
         }
         // 3. emit chunk
-        val header = Header(this.fmt, this.csid, timestamp, this.streamid, this.type!!, this.length)
+        val header = Header(this.fmt, this.csid, this.type!!, this.length, timestamp, this.streamid)
         this.emit(Chunk(header, this.buffer1, this.buffer2, buffer))
 
         // 4. cleanup and next turn.
