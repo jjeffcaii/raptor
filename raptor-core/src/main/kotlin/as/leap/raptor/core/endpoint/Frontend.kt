@@ -23,7 +23,9 @@ class Frontend(private val socket: NetSocket) : Endpoint() {
       logger.error("endpoint socket error.", it)
       this.onError?.invoke(it)
     }
-    logger.info("initialize endpoint success.")
+    if (logger.isDebugEnabled) {
+      logger.debug("initialize endpoint success.")
+    }
   }
 
   override fun write(buffer: Buffer): Endpoint {

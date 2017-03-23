@@ -39,7 +39,10 @@ class Backend(host: String, port: Int = 1935) : Endpoint() {
           this.queue = Collections.emptyList()
         }
         this.socket = socket
-        logger.info("initialize endpoint success.")
+
+        if (logger.isDebugEnabled) {
+          logger.debug("initialize endpoint success.")
+        }
       } else {
         logger.error("initialize endpoint failed.", it.cause())
         this.onError?.invoke(it.cause())
