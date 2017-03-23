@@ -1,16 +1,16 @@
-package `as`.leap.raptor.core.rocket
+package `as`.leap.raptor.core.swapper
 
 import `as`.leap.raptor.api.NamespaceManager
-import `as`.leap.raptor.core.Endpoint
 import `as`.leap.raptor.core.Swapper
 import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.model.payload.*
 import flex.messaging.io.amf.ASObject
 import io.vertx.core.buffer.Buffer
+import io.vertx.core.net.NetSocket
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-class OBSSwapper(endpoint: Endpoint, namespaces: NamespaceManager) : Swapper(endpoint, namespaces) {
+class OBSSwapper(socket: NetSocket, namespaces: NamespaceManager) : Swapper(socket, namespaces) {
 
   override fun connect() {
     // 1. send onFCPublish command.
@@ -25,26 +25,16 @@ class OBSSwapper(endpoint: Endpoint, namespaces: NamespaceManager) : Swapper(end
     header.length = buffer.length()
     this.endpoint.write(header.toBuffer().appendBuffer(buffer))
 
-    if (logger.isDebugEnabled) {
-      logger.debug("<<<< onFCPublish")
-    }
+    logger.info("<<<< send onFCPublish success!")
 
     // 2. send onStatus command.
-    val infoObj = mapOf(
-        "level" to "status",
-        "code" to "NetStream.Publish.Start",
-        "description" to "Start Publishing",
-        "objectEncoding" to 0
-    )
-    payload = CommandOnStatus(5, arrayOf(null, infoObj))
+    payload = CommandOnStatus(5, arrayOf(null, ON_STATUS_CMD))
     buffer = payload.toBuffer()
     header.fmt = FMT.F0
     header.csid = 4
     header.length = buffer.length()
     this.endpoint.write(header.toBuffer().appendBuffer(buffer))
-    if (logger.isDebugEnabled) {
-      logger.debug("<<<< onStatus")
-    }
+    logger.info("<<<< send onStatus success!")
   }
 
   override fun onCommand(msg: Message) {
@@ -146,6 +136,13 @@ class OBSSwapper(endpoint: Endpoint, namespaces: NamespaceManager) : Swapper(end
         "description" to "Connection successed.",
         "objectEncoding" to 0
     )
+    private val ON_STATUS_CMD = mapOf(
+        "level" to "status",
+        "code" to "NetStream.Publish.Start",
+        "description" to "Start Publishing",
+        "objectEncoding" to 0
+    )
+
   }
 
 }

@@ -10,6 +10,8 @@ import java.lang.invoke.MethodHandles
 
 class Frontend(private val socket: NetSocket) : Endpoint() {
 
+  private var closed = false
+
   init {
     val parser = RecordParser.newFixed(1, null)
     val fliper = ChunkFliper(parser, { this.onHandshake!!.invoke(it) }, { this.onChunk!!.invoke(it) })
@@ -33,8 +35,14 @@ class Frontend(private val socket: NetSocket) : Endpoint() {
     return this
   }
 
+
   override fun close() {
-    this.socket.close()
+    synchronized(this) {
+      if (!closed) {
+        this.socket.close()
+        closed = true
+      }
+    }
   }
 
   companion object {

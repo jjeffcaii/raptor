@@ -65,7 +65,12 @@ class Backend(host: String, port: Int = 1935) : Endpoint() {
   }
 
   override fun close() {
-    this.socket?.close()
+    synchronized(this) {
+      if (this.socket != null) {
+        this.socket!!.close()
+        this.socket = null
+      }
+    }
   }
 
   companion object {

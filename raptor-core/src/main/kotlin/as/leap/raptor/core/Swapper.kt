@@ -3,17 +3,20 @@ package `as`.leap.raptor.core
 import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.core.adaptor.QiniuAdaptor
+import `as`.leap.raptor.core.endpoint.Frontend
 import `as`.leap.raptor.core.model.Message
 import `as`.leap.raptor.core.model.MessageType
 import `as`.leap.raptor.core.model.payload.ProtocolChunkSize
 import `as`.leap.raptor.core.model.payload.SimpleAMFPayload
+import io.vertx.core.net.NetSocket
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.lang.invoke.MethodHandles
 
-abstract class Swapper(protected val endpoint: Endpoint, protected val namespaces: NamespaceManager) : Closeable {
+abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceManager) : Closeable {
 
+  protected val endpoint: Endpoint
   protected var chunkSize: Long = 128
   protected var namespace: String = StringUtils.EMPTY
   protected var streamKey: String = StringUtils.EMPTY
@@ -27,7 +30,9 @@ abstract class Swapper(protected val endpoint: Endpoint, protected val namespace
     val adaptor = when (address.provider) {
       Address.Provider.QINIU -> {
         QiniuAdaptor(address, this.chunkSize, {
+          logger.info("establish success: {}", address)
           if (this.isConnected()) {
+            this.connect()
             logger.info("**** start publishing! ****")
           }
         })
@@ -53,6 +58,8 @@ abstract class Swapper(protected val endpoint: Endpoint, protected val namespace
   }
 
   init {
+    socket.pause()
+    this.endpoint = Frontend(socket)
     val messages = MessageFliper()
     messages.onMessage {
       when (it.header.type) {
@@ -75,6 +82,10 @@ abstract class Swapper(protected val endpoint: Endpoint, protected val namespace
             messages.append(it)
           }
         }
+        .onClose {
+          this.close()
+        }
+    socket.resume()
   }
 
   private fun trySetDataFrame(msg: Message) {
