@@ -15,7 +15,7 @@ interface NamespaceManager {
             Address.Provider.QINIU,
             "pili-publish.maxwon.cn",
             "maxwon-live",
-            "/foobar?e=1490184723&token=3z_CkMd7_hhzf8XSYTmAtLM7FP0Nldr_lyleI-X9:yfY0GpfK7fIEHJmqdV9bpO6nyX4="
+            "/foobar?e=1490244546&token=3z_CkMd7_hhzf8XSYTmAtLM7FP0Nldr_lyleI-X9:eroFC1dccr8bwmYXxdpI4BsrZFI="
         )
         return arrayOf(qiniu)
       }

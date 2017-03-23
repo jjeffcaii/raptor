@@ -3,7 +3,14 @@ package `as`.leap.raptor.core.model
 import com.google.common.base.MoreObjects
 import io.vertx.core.buffer.Buffer
 
-data class Header(val fmt: FMT, val csid: Int, val timestamp: Long = 0, val streamId: Long, val type: ChunkType, val length: Int = 0) : Buffered {
+data class Header(
+    var fmt: FMT,
+    var csid: Int,
+    var timestamp: Long = 0,
+    var streamId: Long = 0L,
+    var type: ChunkType,
+    var length: Int = 0
+) : Buffered {
 
   override fun toBuffer(): Buffer {
     val b = Buffer.buffer()
@@ -22,7 +29,6 @@ data class Header(val fmt: FMT, val csid: Int, val timestamp: Long = 0, val stre
 
     val hasExtendedTimestamp = this.timestamp > 0xFFFFFF
     val ts: Int = if (hasExtendedTimestamp) 0x7FFFFF else this.timestamp.toInt()
-
     when (this.fmt) {
       FMT.F0 -> {
         b.appendMedium(ts)
@@ -39,7 +45,7 @@ data class Header(val fmt: FMT, val csid: Int, val timestamp: Long = 0, val stre
         b.appendMedium(ts)
       }
       else -> {
-        // do nothing
+        // ignore
       }
     }
     if (hasExtendedTimestamp) {

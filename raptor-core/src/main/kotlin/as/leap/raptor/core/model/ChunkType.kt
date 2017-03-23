@@ -12,11 +12,12 @@ enum class ChunkType(val code: Byte) {
   // commands
   COMMAND_AMF0(0x14),
   COMMAND_AMF3(0x11),
-  // data
-  DATA_AMF0(0x12),
-  DATA_AMF3(0x0f),
+  // media data
   MEDIA_AUDIO(0x08),
   MEDIA_VIDEO(0x09),
+  // other data
+  DATA_AMF0(0x12),
+  DATA_AMF3(0x0f),
   // others
   SHARE_OBJECT_AMF0(0x13),
   SHARE_OBJECT_AMF3(0x10),
@@ -25,6 +26,13 @@ enum class ChunkType(val code: Byte) {
   fun isProtocol(): Boolean {
     return when (this) {
       CTRL_SET_CHUNK_SIZE, CTRL_SET_WINDOW_SIZE, CTRL_ABORT_MESSAGE, CTRL_ACK_WINDOW_SIZE, CTRL_SET_PEER_BANDWIDTH -> true
+      else -> false
+    }
+  }
+
+  fun isMedia(): Boolean {
+    return when (this) {
+      MEDIA_AUDIO, MEDIA_VIDEO -> true
       else -> false
     }
   }

@@ -16,20 +16,27 @@ class Swapper : Closeable {
 
   private var chunkSize: Long = 128
   private var namespace: String = StringUtils.EMPTY
+  private var streamKey: String = StringUtils.EMPTY
   private val front: Endpoint
   private val namespaces: NamespaceManager = NamespaceManager.INSTANCE
   private val adaptors: MutableList<Adaptor> = mutableListOf()
 
   constructor(front: Endpoint) {
     this.front = front
-    val income = MessageFliper()
-    income.onMessage {
-      when (it.header.type) {
-        ChunkType.CTRL_SET_CHUNK_SIZE -> {
-          this.chunkSize = (it.toModel() as ProtocolChunkSize).chunkSize
-        }
-        ChunkType.COMMAND_AMF3, ChunkType.COMMAND_AMF0 -> {
-          this.handleFrontCommand(it)
+    val messages = MessageFliper()
+    messages.onMessage { msg ->
+      when (msg.header.type) {
+        ChunkType.CTRL_SET_CHUNK_SIZE -> this.chunkSize = (msg.toModel() as ProtocolChunkSize).chunkSize
+        ChunkType.COMMAND_AMF3, ChunkType.COMMAND_AMF0 -> this.handleFrontCommand(msg)
+        ChunkType.DATA_AMF0, ChunkType.DATA_AMF3 -> {
+          val payload = msg.toModel() as SimpleAMFPayload
+          when (payload.body[0]) {
+            "@setDataFrame" -> {
+              this.adaptors.forEach {
+                it.write(msg.toBuffer())
+              }
+            }
+          }
         }
         else -> {
           //TODO handle other message
@@ -38,16 +45,19 @@ class Swapper : Closeable {
     }
     val hc = HandshakeContext(this.front, failed = { this.close() }, passive = true)
     this.front
-        .onHandshake {
-          hc.check(it)
-        }
+        .onHandshake(hc::check)
         .onChunk {
-          if (it.header.type.isData()) {
-            this.adaptors.forEach { adaptor ->
-              adaptor.write(it.toBuffer())
+          when {
+            it.header.type.isMedia() -> {
+              val buffer = it.toBuffer()
+              logger.info("==> write media: header={}, totals={}bytes, payload={}bytes", it.header, buffer.length(), it.payload.length())
+              this.adaptors.forEach {
+                it.write(buffer)
+              }
             }
-          } else {
-            income.append(it)
+            else -> {
+              messages.append(it)
+            }
           }
         }
   }
@@ -96,9 +106,10 @@ class Swapper : Closeable {
         }
       }
       is CommandReleaseStream -> {
-        val streamKey = cmd.getStreamKey()
+        this.streamKey = cmd.getStreamKey()
         val addresses = this.namespaces.address(this.namespace, streamKey)
         if (addresses.isEmpty()) {
+          logger.error("cannot find any RTMP stream address!")
           this.close()
         } else {
           addresses.forEach {
@@ -170,16 +181,27 @@ class Swapper : Closeable {
       Address.Provider.QINIU -> {
         QiniuAdaptor(address, this.chunkSize, {
           if (this.isAllAdaptorConnected()) {
+            val buff = Buffer.buffer()
+            var payload: Payload = CommandOnFCPublish(0, arrayOf(null, mapOf(
+                "code" to "NetStream.Publish.Start",
+                "description" to this.streamKey,
+                "details" to this.streamKey,
+                "clientid" to "0"
+            )))
+            var b: Buffer = payload.toBuffer()
+            var header: Header = Header(FMT.F1, 3, 0L, 0L, ChunkType.COMMAND_AMF0, b.length())
+            buff.appendBuffer(header.toBuffer()).appendBuffer(b)
             val infoObj = mapOf(
                 "level" to "status",
                 "code" to "NetStream.Publish.Start",
                 "description" to "Start Publishing",
                 "objectEncoding" to 0
             )
-            val payload = CommandOnStatus(5, arrayOf(null, infoObj))
-            val b = payload.toBuffer()
-            val header = Header(FMT.F0, 4, 0, 0, ChunkType.COMMAND_AMF0, b.length())
-            this.rcv(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
+            payload = CommandOnStatus(5, arrayOf(null, infoObj))
+            b = payload.toBuffer()
+            header = Header(FMT.F0, 4, 0, 0, ChunkType.COMMAND_AMF0, b.length())
+            buff.appendBuffer(header.toBuffer()).appendBuffer(b)
+            this.rcv(buff)
             logger.info("**** start publishing! ****")
           }
         })

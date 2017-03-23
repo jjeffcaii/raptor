@@ -28,9 +28,10 @@ abstract class Adaptor : Closeable {
     this.backend = Backend(this.address.host, this.address.port)
     val messages = MessageFliper()
     val hc = HandshakeContext(backend, {
-      logger.info("handshake with backend succes!")
+      if (logger.isDebugEnabled) {
+        logger.debug("handshake with {}:{} succes!", this.address.host, this.address.port)
+      }
       //TODO 处理握手成功后续响应
-
       // send set chunk size.
       var header: Header = Header.getProtocolHeader(ChunkType.CTRL_SET_CHUNK_SIZE)
       var payload: Payload = ProtocolChunkSize(this.chunkSize)
@@ -63,6 +64,7 @@ abstract class Adaptor : Closeable {
 
     messages.onMessage {
       //TODO 处理来自backend的消息
+      logger.info("<<< rcv: {}", it.header.type)
       when (it.header.type) {
         ChunkType.COMMAND_AMF0, ChunkType.COMMAND_AMF3 -> {
           this.onCommand(it)

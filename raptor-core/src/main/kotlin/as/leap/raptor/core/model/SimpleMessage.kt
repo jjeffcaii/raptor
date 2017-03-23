@@ -15,33 +15,29 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
   }
 
   override fun toModel(): Payload {
-    return when (this.header.type) {
+    val type = this.header.type
+    return when (type) {
       ChunkType.CTRL_SET_CHUNK_SIZE -> ProtocolChunkSize(this.payload.getUnsignedInt(0))
       ChunkType.CTRL_ABORT_MESSAGE -> ProtocolAbortMessage(this.payload.getUnsignedInt(0))
       ChunkType.CTRL_SET_WINDOW_SIZE -> ProtocolWindowSize(this.payload.getUnsignedInt(0))
       ChunkType.CTRL_ACK_WINDOW_SIZE -> ProtocolAckWindowSize(this.payload.getUnsignedInt(0))
-      ChunkType.CTRL_SET_PEER_BANDWIDTH -> {
-        ProtocolBandWidth(this.payload.getUnsignedInt(0), if (this.payload.length() > 4) {
-          this.payload.getUnsignedByte(4)
-        } else {
-          0
-        })
-      }
-      ChunkType.COMMAND_AMF0 -> toCommand(CodecHelper.decodeAMF0(this.payload.bytes), this.header.type)
-      ChunkType.COMMAND_AMF3 -> toCommand(CodecHelper.decodeAMF3(this.payload.bytes), this.header.type)
+      ChunkType.CTRL_SET_PEER_BANDWIDTH -> toProtocolBandWidth(this.payload)
+      ChunkType.COMMAND_AMF0 -> toCommand(CodecHelper.decodeAMF0(this.payload.bytes), type)
+      ChunkType.COMMAND_AMF3 -> toCommand(CodecHelper.decodeAMF3(this.payload.bytes), type)
+      ChunkType.DATA_AMF0 -> SimpleAMFPayload(CodecHelper.decodeAMF0(this.payload.bytes), type)
+      ChunkType.DATA_AMF3 -> SimpleAMFPayload(CodecHelper.decodeAMF0(this.payload.bytes), type)
 /*
       ChunkType.USER_CONTROL -> TODO()
-      ChunkType.DATA_AMF0 -> TODO()
-      ChunkType.DATA_AMF3 -> TODO()
       ChunkType.SHARE_OBJECT_AMF0 -> TODO()
       ChunkType.SHARE_OBJECT_AMF3 -> TODO()
       ChunkType.MEDIA_AUDIO -> TODO()
       ChunkType.MEDIA_VIDEO -> TODO()
       ChunkType.AGGREGATE -> TODO()
 */
-      else -> UnknownPayload(this.header.type)
+      else -> SimpleBinaryPayload(this.payload.bytes, type)
     }
   }
+
 
   override fun toBuffer(): Buffer {
     val headerCopy = Header(this.header.fmt, this.header.csid, this.header.timestamp, this.header.streamId, this.header.type, this.payload.length())
@@ -73,10 +69,18 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
         CommandDeleteStream.NAME -> CommandDeleteStream(second, others)
         CommandClose.NAME -> CommandClose(second, others)
         else -> {
-          logger.warn("unknown command name: {}", first)
-          UnknownPayload(type)
+          logger.warn("unsupported command name: {}", first)
+          SimpleAMFPayload(values, type)
         }
       }
+    }
+
+    private fun toProtocolBandWidth(payload: Buffer): ProtocolBandWidth {
+      return ProtocolBandWidth(payload.getUnsignedInt(0), if (payload.length() > 4) {
+        payload.getUnsignedByte(4)
+      } else {
+        0
+      })
     }
 
   }
