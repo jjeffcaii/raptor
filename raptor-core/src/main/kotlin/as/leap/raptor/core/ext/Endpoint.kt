@@ -1,4 +1,4 @@
-package `as`.leap.raptor.core
+package `as`.leap.raptor.core.ext
 
 import `as`.leap.raptor.core.model.Chunk
 import `as`.leap.raptor.core.model.Handshake

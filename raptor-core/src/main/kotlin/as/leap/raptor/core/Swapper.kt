@@ -4,6 +4,9 @@ import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.core.adaptor.QiniuAdaptor
 import `as`.leap.raptor.core.endpoint.Frontend
+import `as`.leap.raptor.core.ext.Endpoint
+import `as`.leap.raptor.core.ext.Handshaker
+import `as`.leap.raptor.core.ext.MessageFliper
 import `as`.leap.raptor.core.model.Message
 import `as`.leap.raptor.core.model.MessageType
 import `as`.leap.raptor.core.model.payload.ProtocolChunkSize
@@ -64,7 +67,7 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
       when (it.header.type) {
         MessageType.CTRL_SET_CHUNK_SIZE -> this.chunkSize = (it.toModel() as ProtocolChunkSize).chunkSize
         MessageType.COMMAND_AMF3, MessageType.COMMAND_AMF0 -> this.onCommand(it)
-        MessageType.DATA_AMF0, MessageType.DATA_AMF3 -> this.trySetDataFrame(it)
+        MessageType.DATA_AMF0, MessageType.DATA_AMF3 -> this.sndSetDataFrame(it)
         else -> {
           // ignore
         }
@@ -87,7 +90,7 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
     socket.resume()
   }
 
-  private fun trySetDataFrame(msg: Message) {
+  private fun sndSetDataFrame(msg: Message) {
     val payload = msg.toModel() as SimpleAMFPayload
     val first = payload.body[0]
     if (first is String && StringUtils.equals(SET_DATA_FRAME, first)) {
