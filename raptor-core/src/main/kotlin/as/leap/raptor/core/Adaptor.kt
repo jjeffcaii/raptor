@@ -1,7 +1,7 @@
 package `as`.leap.raptor.core
 
 import `as`.leap.raptor.api.Address
-import `as`.leap.raptor.core.endpoint.Backend
+import `as`.leap.raptor.core.endpoint.LazyEndpoint
 import `as`.leap.raptor.core.ext.Endpoint
 import `as`.leap.raptor.core.ext.Handshaker
 import `as`.leap.raptor.core.ext.MessageFliper
@@ -30,7 +30,7 @@ abstract class Adaptor : Closeable {
     this.chunkSize = chunkSize
     this.onConnect = onConnect
     this.onClose = onClose
-    this.backend = Backend(this.address.host, this.address.port)
+    this.backend = LazyEndpoint(this.address.host, this.address.port)
     val messages = MessageFliper()
     val hc = Handshaker(backend, {
       if (logger.isDebugEnabled) {
@@ -63,7 +63,7 @@ abstract class Adaptor : Closeable {
       this.onClose?.invoke()
     })
 
-    backend.onChunk { messages.append(it) }.onHandshake { hc.check(it) }
+    backend.onChunk { messages.append(it) }.onHandshake { hc.validate(it) }
 
     messages.onMessage {
       //TODO 处理来自backend的消息

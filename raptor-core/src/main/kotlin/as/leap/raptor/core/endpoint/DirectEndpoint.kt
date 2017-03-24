@@ -8,7 +8,7 @@ import io.vertx.core.parsetools.RecordParser
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-class Frontend(private val socket: NetSocket) : Endpoint() {
+class DirectEndpoint(private val socket: NetSocket) : Endpoint() {
 
   private var closed = false
 

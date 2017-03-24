@@ -3,7 +3,7 @@ package `as`.leap.raptor.core
 import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.core.adaptor.QiniuAdaptor
-import `as`.leap.raptor.core.endpoint.Frontend
+import `as`.leap.raptor.core.endpoint.DirectEndpoint
 import `as`.leap.raptor.core.ext.Endpoint
 import `as`.leap.raptor.core.ext.Handshaker
 import `as`.leap.raptor.core.ext.MessageFliper
@@ -61,7 +61,7 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
 
   init {
     socket.pause()
-    this.endpoint = Frontend(socket)
+    this.endpoint = DirectEndpoint(socket)
     val messages = MessageFliper()
     messages.onMessage {
       when (it.header.type) {
@@ -75,7 +75,7 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
     }
     val handshaker = Handshaker(this.endpoint, failed = { this.close() }, passive = true)
     this.endpoint
-        .onHandshake { handshaker.check(it) }
+        .onHandshake { handshaker.validate(it) }
         .onChunk {
           if (it.header.type.isMedia()) {
             val buffer = it.toBuffer()

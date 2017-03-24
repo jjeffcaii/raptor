@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 import java.util.*
 
-class Backend(host: String, port: Int = 1935) : Endpoint() {
+class LazyEndpoint(host: String, port: Int = 1935) : Endpoint() {
 
   private var socket: NetSocket? = null
   private var queue: MutableList<Buffer> = mutableListOf()

@@ -15,11 +15,6 @@ class ChunkFliper(
     private var chunkSize: Int = 128
 ) : Handler<Buffer> {
 
-  companion object {
-    private val EMPTY_BUFFER = Buffer.buffer(0)
-    private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
-  }
-
   private var state: ReadState = ReadState.HANDSHAKE0
   private var already: Int = 0
   // default chunk size
@@ -145,7 +140,7 @@ class ChunkFliper(
             logger.debug("reset chunk size: {}", this.chunkSize)
           }
         }
-        // 2. check extended timestamp.
+        // 2. validate extended timestamp.
         val timestamp: Long = if (this.timestamp == 0x7FFFFF) {
           this.extendTimestamp!!
         } else {
@@ -184,9 +179,6 @@ class ChunkFliper(
       FMT.F3 -> {
         this.state = ReadState.CHUNK_HEADER_MSG_0
         this.handle(EMPTY_BUFFER)
-      }
-      else -> {
-        throw UnsupportedOperationException("Not valid FMT: ${this.fmt}")
       }
     }
   }
@@ -230,4 +222,10 @@ class ChunkFliper(
     CHUNK_EXT_TS,
     CHUNK_BODY
   }
+
+  companion object {
+    private val EMPTY_BUFFER = Buffer.buffer(0)
+    private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
+  }
+
 }

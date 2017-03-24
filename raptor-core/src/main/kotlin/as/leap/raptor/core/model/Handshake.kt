@@ -42,11 +42,11 @@ data class Handshake(val buffer: Buffer) {
           .appendBuffer(this.random)
     }
 
-    fun hash(): Triple<Long, Long, Long> {
-      val third = Hashing.murmur3_128().newHasher()
+    fun hash(): Triple<Long, Long, String> {
+      val third = Hashing.murmur3_32().newHasher()
           .putBytes(this.random.bytes)
           .hash()
-          .asLong()
+          .toString()
       return Triple(this.v1, this.v2, third)
     }
 
