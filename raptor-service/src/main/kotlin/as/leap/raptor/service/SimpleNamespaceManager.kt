@@ -14,7 +14,7 @@ class SimpleNamespaceManager : NamespaceManager {
     return Splitter.on(",").split(StringUtils.stripStart(streamKey, "/"))
         .map {
           val s = this.client.RTMPPublishURL(domain, namespace, it, 60)
-          Address(Address.Provider.QINIU, domain, namespace, s.substring(s.lastIndexOf("/")))
+          Address(domain, namespace, s.substring(s.lastIndexOf("/")))
         }
         .toTypedArray()
   }

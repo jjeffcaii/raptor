@@ -9,7 +9,6 @@ import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.model.payload.CommandConnect
 import `as`.leap.raptor.core.model.payload.ProtocolChunkSize
 import `as`.leap.raptor.core.utils.Do
-import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
 import org.slf4j.LoggerFactory
 import java.io.Closeable
@@ -28,8 +27,7 @@ abstract class Adaptor : Closeable {
   private fun sndChunkSize(newSize: Long) {
     val header = Header.getProtocolHeader(MessageType.CTRL_SET_CHUNK_SIZE)
     val payload = ProtocolChunkSize(newSize)
-    this.backend.write(header.toBuffer().appendBuffer(payload.toBuffer()))
-    logger.info(">>> snd set chunksize {}.", this.chunkSize)
+    this.write(header.toBuffer().appendBuffer(payload.toBuffer()))
   }
 
   constructor(address: Address, chunkSize: Long, onConnect: Do?, onClose: Do?) {
@@ -40,6 +38,7 @@ abstract class Adaptor : Closeable {
     this.backend = LazyEndpoint(this.address.host, this.address.port)
     val messages = MessageFliper()
     val hc = Handshaker(backend, {
+
       if (logger.isDebugEnabled) {
         logger.debug("handshake with {}:{} succes!", this.address.host, this.address.port)
       }
@@ -59,7 +58,6 @@ abstract class Adaptor : Closeable {
       val payload = CommandConnect(1, arrayOf(cmdObj))
       val header = Header(FMT.F0, 3, MessageType.COMMAND_AMF0)
       this.write(header, payload)
-      logger.info(">>> snd connect command.")
 
       // bind close event.
       backend.onClose {
@@ -74,13 +72,12 @@ abstract class Adaptor : Closeable {
     backend.onChunk { messages.append(it) }.onHandshake { hc.validate(it) }
 
     messages.onMessage {
-      //TODO 处理来自backend的消息
       when (it.header.type) {
         MessageType.COMMAND_AMF0, MessageType.COMMAND_AMF3 -> {
           this.onCommand(it)
         }
         else -> {
-          logger.info("<<< rcv other message from backend: {}", it.header.type)
+          //TODO 处理其他形式的消息体
         }
       }
     }
@@ -90,9 +87,10 @@ abstract class Adaptor : Closeable {
   abstract fun onCommand(msg: Message)
 
   fun write(buffer: Buffer): Adaptor {
-    //TODO
-    Preconditions.checkArgument(this.connected(), "cannot write buffer because adaptor is disconnected.")
-    this.backend.write(buffer)
+    //Preconditions.checkArgument(this.connected(), "cannot write buffer because adaptor is disconnected.")
+    if (this.connected()) {
+      this.backend.write(buffer)
+    }
     return this
   }
 
@@ -112,6 +110,11 @@ abstract class Adaptor : Closeable {
 
   fun connected(): Boolean {
     return this.connected.get()
+  }
+
+  protected fun ok() {
+    this.connected.set(true)
+    this.onConnect?.invoke()
   }
 
   override fun close() {

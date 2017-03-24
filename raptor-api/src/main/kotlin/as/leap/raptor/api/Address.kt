@@ -1,6 +1,6 @@
 package `as`.leap.raptor.api
 
-data class Address(val provider: Address.Provider, val host: String, val context: String, val key: String, val port: Int = 1935) {
+data class Address(val host: String, val context: String, val key: String, val port: Int = 1935, val provider: Address.Provider = Address.Provider.DEFAULT) {
 
   private val base: String by lazy {
     when (this.port) {
@@ -14,7 +14,7 @@ data class Address(val provider: Address.Provider, val host: String, val context
   }
 
   enum class Provider {
-    QINIU, BILIBILI, DOUYU
+    DEFAULT, QINIU, BILIBILI, DOUYU
   }
 
   override fun toString(): String {

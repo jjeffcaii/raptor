@@ -2,7 +2,7 @@ package `as`.leap.raptor.core
 
 import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
-import `as`.leap.raptor.core.adaptor.QiniuAdaptor
+import `as`.leap.raptor.core.adaptor.DefaultAdaptor
 import `as`.leap.raptor.core.endpoint.DirectEndpoint
 import `as`.leap.raptor.core.ext.Endpoint
 import `as`.leap.raptor.core.ext.Handshaker
@@ -34,8 +34,8 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
 
   protected fun establish(address: Address) {
     val adaptor = when (address.provider) {
-      Address.Provider.QINIU -> {
-        QiniuAdaptor(address, this.chunkSize, {
+      Address.Provider.DEFAULT -> {
+        DefaultAdaptor(address, this.chunkSize, {
           logger.info("establish success: {}", address)
           if (this.connects.incrementAndGet() == this.adaptors.size) {
             this.connect()
@@ -47,7 +47,8 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
         })
       }
       else -> {
-        TODO("other provider adaptor")
+        //TODO other platform support.
+        throw UnsupportedOperationException("unsupported RTMP provider: ${address.provider}.")
       }
     }
     this.adaptors.add(adaptor)

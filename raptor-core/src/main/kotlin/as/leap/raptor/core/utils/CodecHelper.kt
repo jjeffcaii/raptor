@@ -6,6 +6,7 @@ import flex.messaging.io.SerializationContext
 import flex.messaging.io.amf.*
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.codec.binary.Hex
+import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
@@ -25,6 +26,9 @@ object CodecHelper {
     Pattern.compile("\\s+")
   }
 
+  fun md5(bytes: ByteArray): String {
+    return DigestUtils.md5Hex(bytes)
+  }
 
   fun decodeHex(str: String, removeSpace: Boolean = false): ByteArray {
     if (!removeSpace) {

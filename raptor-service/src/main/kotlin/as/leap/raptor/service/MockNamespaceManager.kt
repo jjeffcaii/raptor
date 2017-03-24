@@ -11,8 +11,9 @@ class MockNamespaceManager : NamespaceManager {
   override fun address(namespace: String, streamKey: String): Array<Address> {
     val s = this.client.RTMPPublishURL("pili-publish.maxwon.cn", "maxwon-live", "foobar", 60)
     return arrayOf(
-        Address(Address.Provider.QINIU, "send3.douyu.com", namespace, streamKey),
-        Address(Address.Provider.QINIU, "pili-publish.maxwon.cn", "maxwon-live", s.substring(s.lastIndexOf("/")))
+        Address("send3.douyu.com", namespace, streamKey),
+        Address("pili-publish.maxwon.cn", "maxwon-live", s.substring(s.lastIndexOf("/"))),
+        Address("dl.live-send.acg.tv", "live-dl", "?streamname=live_94338558_9096008&key=b7e4081cbfb773a2d45d43888fcacb16")
     )
   }
 

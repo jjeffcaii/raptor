@@ -6,7 +6,7 @@ import com.google.common.base.MoreObjects
 import com.google.common.hash.Hashing
 import io.vertx.core.buffer.Buffer
 
-data class Handshake(val buffer: Buffer) {
+data class Handshake(val buffer: Buffer) : Buffered {
 
   fun toModel(): Any {
     return when (buffer.length()) {
@@ -21,7 +21,7 @@ data class Handshake(val buffer: Buffer) {
     }
   }
 
-  fun toBuffer(): Buffer {
+  override fun toBuffer(): Buffer {
     return this.buffer
   }
 
@@ -59,10 +59,11 @@ data class Handshake(val buffer: Buffer) {
     }
 
     override fun toString(): String {
-      /*MoreObjects.toStringHelper(this)
-          .add("v1",this.v1)
-          .add("v2",this.v2)*/
-      return super.toString()
+      return MoreObjects.toStringHelper(this)
+          .add("v1", this.v1)
+          .add("v2", this.v2)
+          .add("random", "MD5(${CodecHelper.md5(this.random.bytes)})")
+          .toString()
     }
 
   }
