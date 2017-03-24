@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils
 
 class SimpleNamespaceManager : NamespaceManager {
 
-  private val client: Client = Client("3z_CkMd7_hhzf8XSYTmAtLM7FP0Nldr_lyleI-X9", "jhR7vMVMGZmrYS5SGNBbMCYCvpfd8cE7GdT61mVS")
+  private val client: Client = Client("Thphesb5UQHYEMKQspI4LrUUKO3gWd47rEvGdHcK", "qms507cIEplAN85Phul_EincA0Jatp1l0BdBNFRJ")
 
   override fun address(namespace: String, streamKey: String): Array<Address> {
     return Splitter.on(",").split(StringUtils.stripStart(streamKey, "/"))

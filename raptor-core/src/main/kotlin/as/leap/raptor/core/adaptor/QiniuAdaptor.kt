@@ -5,7 +5,6 @@ import `as`.leap.raptor.core.Adaptor
 import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.model.payload.*
 import `as`.leap.raptor.core.utils.Do
-import io.vertx.core.buffer.Buffer
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
@@ -27,29 +26,24 @@ class QiniuAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, onC
         when (code) {
           "NetConnection.Connect.Success" -> {
             // snd release stream
+            val header: Header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0)
             var payload: Payload = CommandReleaseStream(cmd.transId + 1, arrayOf(null, address.key))
-            var b: Buffer = payload.toBuffer()
-            val header: Header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0, b.length())
-            backend.write(header.toBuffer().appendBuffer(b))
+            this.write(header, payload)
             if (logger.isDebugEnabled) {
               logger.debug(">>> release stream.")
             }
             // snd FCPublish
             payload = CommandFCPublish(cmd.transId + 2, arrayOf(null, address.key))
-            b = payload.toBuffer()
             header.fmt = FMT.F1
             header.csid = msg.header.csid
-            header.length = b.length()
-            backend.write(header.toBuffer().appendBuffer(b))
+            this.write(header, payload)
             if (logger.isDebugEnabled) {
               logger.debug(">>> FCPublish.")
             }
             // snd create stream
             this.tidOfCreateStream = cmd.transId + 3
             payload = CommandCreateStream(this.tidOfCreateStream, arrayOfNulls(1))
-            b = payload.toBuffer()
-            header.length = b.length()
-            backend.write(header.toBuffer().appendBuffer(b))
+            this.write(header, payload)
             if (logger.isDebugEnabled) {
               logger.debug(">>> create stream.")
             }
@@ -58,9 +52,8 @@ class QiniuAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, onC
             when (cmd.transId) {
               this.tidOfCreateStream -> {
                 val payload = CommandPublish(this.tidOfCreateStream + 1, arrayOf(null, this.address.key, "live"))
-                val b = payload.toBuffer()
-                val header = Header(FMT.F0, msg.header.csid + 1, MessageType.COMMAND_AMF0, b.length(), 0L, 1L)
-                backend.write(header.toBuffer().appendBuffer(b))
+                val header = Header(FMT.F0, msg.header.csid + 1, MessageType.COMMAND_AMF0, 0, 0L, 1L)
+                this.write(header, payload)
               }
               else -> {
                 //TODO

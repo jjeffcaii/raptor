@@ -1,5 +1,6 @@
 package `as`.leap.raptor.core
 
+import `as`.leap.raptor.core.utils.CodecHelper
 import `as`.leap.raptor.core.utils.Vertxes
 import io.vertx.kotlin.core.net.NetServerOptions
 
@@ -18,9 +19,19 @@ object PureProxyTest {
           remote
               .closeHandler { println("close2.") }
               .exceptionHandler { println("error2.") }
-              .handler { socket.write(it) }
+              .handler {
+                println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<${it.length()} bytes")
+                println(CodecHelper.encodeHex(it.bytes, true))
+                println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<${it.length()} bytes")
+                socket.write(it)
+              }
           socket
-              .handler { remote.write(it) }
+              .handler {
+                println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${it.length()} bytes")
+                println(CodecHelper.encodeHex(it.bytes, true))
+                println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${it.length()} bytes")
+                remote.write(it)
+              }
               .closeHandler { println("close.") }
               .exceptionHandler { println("error.") }
           socket.resume()

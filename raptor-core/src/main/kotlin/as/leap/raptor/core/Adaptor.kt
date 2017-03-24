@@ -20,10 +20,17 @@ abstract class Adaptor : Closeable {
 
   protected val address: Address
   protected val chunkSize: Long
-  protected val backend: Endpoint
+  private val backend: Endpoint
   protected val onConnect: Do?
   protected val onClose: Do?
   protected val connected = AtomicBoolean(false)
+
+  private fun sndChunkSize(newSize: Long) {
+    val header = Header.getProtocolHeader(MessageType.CTRL_SET_CHUNK_SIZE)
+    val payload = ProtocolChunkSize(newSize)
+    this.backend.write(header.toBuffer().appendBuffer(payload.toBuffer()))
+    logger.info(">>> snd set chunksize {}.", this.chunkSize)
+  }
 
   constructor(address: Address, chunkSize: Long, onConnect: Do?, onClose: Do?) {
     this.address = address
@@ -36,12 +43,10 @@ abstract class Adaptor : Closeable {
       if (logger.isDebugEnabled) {
         logger.debug("handshake with {}:{} succes!", this.address.host, this.address.port)
       }
-      //TODO 处理握手成功后续响应
-      // send set chunk size.
-      var header: Header = Header.getProtocolHeader(MessageType.CTRL_SET_CHUNK_SIZE)
-      var payload: Payload = ProtocolChunkSize(this.chunkSize)
-      var b: Buffer = payload.toBuffer()
-      backend.write(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
+
+      if (this.chunkSize != 128L) {
+        this.sndChunkSize(this.chunkSize)
+      }
 
       // send connect command.
       val cmdObj = mapOf(
@@ -51,14 +56,17 @@ abstract class Adaptor : Closeable {
           "swfUrl" to address.toBaseURL(),
           "tcUrl" to address.toBaseURL()
       )
-      payload = CommandConnect(1, arrayOf(cmdObj))
-      b = payload.toBuffer()
-      header = Header(FMT.F0, 3, MessageType.COMMAND_AMF0, b.length())
-      backend.write(Buffer.buffer().appendBuffer(header.toBuffer()).appendBuffer(b))
+      val payload = CommandConnect(1, arrayOf(cmdObj))
+      val header = Header(FMT.F0, 3, MessageType.COMMAND_AMF0)
+      this.write(header, payload)
+      logger.info(">>> snd connect command.")
+
+      // bind close event.
       backend.onClose {
         this.onClose?.invoke()
       }
     }, {
+      logger.error("handshake failed: close backend.")
       this.close()
       this.onClose?.invoke()
     })
@@ -72,6 +80,7 @@ abstract class Adaptor : Closeable {
           this.onCommand(it)
         }
         else -> {
+          logger.info("<<< rcv other message from backend: {}", it.header.type)
         }
       }
     }
@@ -81,8 +90,23 @@ abstract class Adaptor : Closeable {
   abstract fun onCommand(msg: Message)
 
   fun write(buffer: Buffer): Adaptor {
+    //TODO
     Preconditions.checkArgument(this.connected(), "cannot write buffer because adaptor is disconnected.")
     this.backend.write(buffer)
+    return this
+  }
+
+  fun write(header: Header, payload: Payload): Adaptor {
+    val foo = payload.toBuffer()
+    val bar = header.length
+    header.length = foo.length()
+    this.write(SimpleMessage(header, foo))
+    header.length = bar
+    return this
+  }
+
+  fun write(msg: Message): Adaptor {
+    this.backend.write(msg.toBuffer(this.chunkSize))
     return this
   }
 

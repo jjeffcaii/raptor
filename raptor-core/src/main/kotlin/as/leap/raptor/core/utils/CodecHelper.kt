@@ -25,6 +25,7 @@ object CodecHelper {
     Pattern.compile("\\s+")
   }
 
+
   fun decodeHex(str: String, removeSpace: Boolean = false): ByteArray {
     if (!removeSpace) {
       return Hex.decodeHex(str.toCharArray())

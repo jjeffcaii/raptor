@@ -9,8 +9,42 @@ import java.lang.invoke.MethodHandles
 
 class SimpleMessage(header: Header, private val payload: Buffer) : Message(header) {
 
-  override fun toChunks(chunkSize: Int): Array<Chunk> {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+  override fun toChunks(chunkSize: Long): List<Chunk> {
+    return this.toChunks(chunkSize.toInt())
+  }
+
+  override fun toBuffer(chunkSize: Long): Buffer {
+    return this.toBuffer(chunkSize.toInt())
+  }
+
+  private fun toBuffer(chunkSize: Int): Buffer {
+    return if (this.payload.length() > chunkSize) {
+      val b = Buffer.buffer()
+      this.toChunks(chunkSize).map(Chunk::toBuffer).forEach {
+        logger.info("----> chunk: \n{}", CodecHelper.encodeHex(it.bytes, true))
+        b.appendBuffer(it)
+      }
+      b
+    } else {
+      this.toBuffer()
+    }
+  }
+
+  private fun toChunks(chunkSize: Int): List<Chunk> {
+    val li = mutableListOf<Chunk>()
+    val totals = payload.length()
+    var offset = 0
+    do {
+      val h = Header.clone(this.header)
+      if (offset > 0) {
+        h.fmt = FMT.F3
+      }
+      val sub = payload.slice(offset, Math.min(offset + chunkSize, totals))
+      h.length = sub.length()
+      li.add(Chunk(h, h.toBasicHeader(), h.toMsgHeader(), sub))
+      offset += chunkSize
+    } while (offset < totals)
+    return li
   }
 
   override fun toModel(): Payload {
@@ -36,7 +70,6 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
       else -> SimpleBinaryPayload(this.payload.bytes, type)
     }
   }
-
 
   override fun toBuffer(): Buffer {
     val headerCopy = Header(this.header.fmt, this.header.csid, this.header.type, this.payload.length(),

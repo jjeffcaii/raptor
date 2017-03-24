@@ -95,7 +95,7 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
     val first = payload.body[0]
     if (first is String && StringUtils.equals(SET_DATA_FRAME, first)) {
       this.adaptors.forEach {
-        it.write(msg.toBuffer())
+        it.write(msg)
       }
     }
   }

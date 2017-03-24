@@ -1,6 +1,8 @@
 package `as`.leap.raptor.core.model
 
 import `as`.leap.raptor.core.utils.Buffered
+import `as`.leap.raptor.core.utils.CodecHelper
+import com.google.common.base.MoreObjects
 import com.google.common.hash.Hashing
 import io.vertx.core.buffer.Buffer
 
@@ -31,6 +33,12 @@ data class Handshake(val buffer: Buffer) {
       return b
     }
 
+    override fun toString(): String {
+      return MoreObjects.toStringHelper(this)
+          .add("version", this.version)
+          .toString()
+    }
+
   }
 
   class C12(val v1: Long, val v2: Long, val random: Buffer) : Buffered {
@@ -48,6 +56,13 @@ data class Handshake(val buffer: Buffer) {
           .hash()
           .toString()
       return Triple(this.v1, this.v2, third)
+    }
+
+    override fun toString(): String {
+      /*MoreObjects.toStringHelper(this)
+          .add("v1",this.v1)
+          .add("v2",this.v2)*/
+      return super.toString()
     }
 
   }
