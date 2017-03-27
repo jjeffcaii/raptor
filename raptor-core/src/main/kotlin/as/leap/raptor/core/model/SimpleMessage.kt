@@ -99,8 +99,9 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
         CommandCreateStream.NAME -> CommandCreateStream(second, others)
         CommandCheckBW.NAME -> CommandCheckBW(second, others)
         CommandPublish.NAME -> CommandPublish(second, others)
-        CommandDeleteStream.NAME -> CommandDeleteStream(second, others)
         CommandClose.NAME -> CommandClose(second, others)
+        CommandFCUnpublilsh.NAME -> CommandFCUnpublilsh(second, others)
+        CommandDeleteStream.NAME -> CommandDeleteStream(second, others)
         else -> {
           logger.warn("unsupported command name: {}", first)
           SimpleAMFPayload(values, type)

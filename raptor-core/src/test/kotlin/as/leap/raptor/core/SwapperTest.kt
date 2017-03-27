@@ -1,6 +1,6 @@
 package `as`.leap.raptor.core
 
-import `as`.leap.raptor.core.swapper.OBSSwapper
+import `as`.leap.raptor.core.impl.OBSSwapper
 import `as`.leap.raptor.core.utils.Vertxes
 import `as`.leap.raptor.service.MockNamespaceManager
 import `as`.leap.raptor.service.SimpleNamespaceManager

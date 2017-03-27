@@ -1,7 +1,7 @@
 package `as`.leap.raptor.core
 
-import `as`.leap.raptor.core.endpoint.LazyEndpoint
-import `as`.leap.raptor.core.ext.Handshaker
+import `as`.leap.raptor.core.impl.endpoint.LazyEndpoint
+import `as`.leap.raptor.core.impl.ext.Handshaker
 import `as`.leap.raptor.core.utils.CodecHelper
 import org.testng.Assert
 import org.testng.annotations.Test

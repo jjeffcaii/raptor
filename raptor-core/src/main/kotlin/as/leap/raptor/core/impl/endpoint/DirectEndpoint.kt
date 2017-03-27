@@ -1,7 +1,7 @@
-package `as`.leap.raptor.core.endpoint
+package `as`.leap.raptor.core.impl.endpoint
 
-import `as`.leap.raptor.core.ext.ChunkFliper
-import `as`.leap.raptor.core.ext.Endpoint
+import `as`.leap.raptor.core.impl.ext.ChunkFliper
+import `as`.leap.raptor.core.impl.ext.Endpoint
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
 import io.vertx.core.parsetools.RecordParser

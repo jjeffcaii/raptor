@@ -1,4 +1,4 @@
-package `as`.leap.raptor.core.adaptor
+package `as`.leap.raptor.core.impl
 
 import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.core.Adaptor

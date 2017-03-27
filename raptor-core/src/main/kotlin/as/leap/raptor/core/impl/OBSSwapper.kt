@@ -1,4 +1,4 @@
-package `as`.leap.raptor.core.swapper
+package `as`.leap.raptor.core.impl
 
 import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.core.Swapper

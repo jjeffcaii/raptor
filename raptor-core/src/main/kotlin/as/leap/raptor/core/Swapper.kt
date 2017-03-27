@@ -2,11 +2,11 @@ package `as`.leap.raptor.core
 
 import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
-import `as`.leap.raptor.core.adaptor.DefaultAdaptor
-import `as`.leap.raptor.core.endpoint.DirectEndpoint
-import `as`.leap.raptor.core.ext.Endpoint
-import `as`.leap.raptor.core.ext.Handshaker
-import `as`.leap.raptor.core.ext.MessageFliper
+import `as`.leap.raptor.core.impl.DefaultAdaptor
+import `as`.leap.raptor.core.impl.endpoint.DirectEndpoint
+import `as`.leap.raptor.core.impl.ext.Endpoint
+import `as`.leap.raptor.core.impl.ext.Handshaker
+import `as`.leap.raptor.core.impl.ext.MessageFliper
 import `as`.leap.raptor.core.model.Message
 import `as`.leap.raptor.core.model.MessageType
 import `as`.leap.raptor.core.model.payload.ProtocolChunkSize
@@ -24,8 +24,10 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
   protected var chunkSize: Long = 128
   protected var namespace: String = StringUtils.EMPTY
   protected var streamKey: String = StringUtils.EMPTY
-  private val adaptors: MutableList<Adaptor> = mutableListOf()
 
+  protected var transId: Int = 0
+
+  private val adaptors: MutableList<Adaptor> = mutableListOf()
   private val connects = AtomicInteger(0)
 
   abstract protected fun onCommand(msg: Message)

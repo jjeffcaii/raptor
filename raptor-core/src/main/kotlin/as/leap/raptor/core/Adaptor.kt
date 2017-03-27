@@ -1,10 +1,10 @@
 package `as`.leap.raptor.core
 
 import `as`.leap.raptor.api.Address
-import `as`.leap.raptor.core.endpoint.LazyEndpoint
-import `as`.leap.raptor.core.ext.Endpoint
-import `as`.leap.raptor.core.ext.Handshaker
-import `as`.leap.raptor.core.ext.MessageFliper
+import `as`.leap.raptor.core.impl.endpoint.LazyEndpoint
+import `as`.leap.raptor.core.impl.ext.Endpoint
+import `as`.leap.raptor.core.impl.ext.Handshaker
+import `as`.leap.raptor.core.impl.ext.MessageFliper
 import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.model.payload.CommandConnect
 import `as`.leap.raptor.core.model.payload.ProtocolChunkSize
