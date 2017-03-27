@@ -7,6 +7,8 @@ import `as`.leap.raptor.core.impl.ext.Handshaker
 import `as`.leap.raptor.core.impl.ext.MessageFliper
 import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.model.payload.CommandConnect
+import `as`.leap.raptor.core.model.payload.CommandDeleteStream
+import `as`.leap.raptor.core.model.payload.CommandFCUnpublilsh
 import `as`.leap.raptor.core.model.payload.ProtocolChunkSize
 import `as`.leap.raptor.core.utils.Do
 import com.google.common.base.Preconditions
@@ -24,6 +26,7 @@ abstract class Adaptor : Closeable {
   protected val onConnect: Do?
   protected val onClose: Do?
   protected val connected = AtomicBoolean(false)
+  protected var transId: Int = 0
 
   constructor(address: Address, chunkSize: Long, onConnect: Do?, onClose: Do?) {
     this.address = address
@@ -50,7 +53,7 @@ abstract class Adaptor : Closeable {
           "swfUrl" to address.toBaseURL(),
           "tcUrl" to address.toBaseURL()
       )
-      val payload = CommandConnect(1, arrayOf(cmdObj))
+      val payload = CommandConnect(this.transId++, arrayOf(cmdObj))
       val header = Header(FMT.F0, 3, MessageType.COMMAND_AMF0)
       this.write(header, payload)
       // bind close event.
@@ -102,6 +105,20 @@ abstract class Adaptor : Closeable {
 
   fun connected(): Boolean {
     return this.connected.get()
+  }
+
+  fun fireFCUnpublish(): Adaptor {
+    val payload = CommandFCUnpublilsh(this.transId++, arrayOf(null, this.address.key))
+    val header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0)
+    this.write(header, payload)
+    return this
+  }
+
+  fun fireDeleteStream(): Adaptor {
+    val payload = CommandDeleteStream(this.transId++, arrayOf(null, 1))
+    val header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0)
+    this.write(header, payload)
+    return this
   }
 
   protected fun ok() {

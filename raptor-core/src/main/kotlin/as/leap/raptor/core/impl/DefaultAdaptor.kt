@@ -11,7 +11,7 @@ import java.lang.invoke.MethodHandles
 
 class DefaultAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, onClose: Do?) : Adaptor(address, chunkSize, onConnect, onClose) {
 
-  private var tidOfCreateStream: Int = -1
+  private var vipTransId: Int = -1
 
   private fun handleResultCommand(msg: Message, cmd: CommandResult) {
     val c = cmd.getInfo("code")
@@ -20,17 +20,18 @@ class DefaultAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, o
     } else {
       c as String
     }
+
     when (code) {
-      "NetConnection.Connect.Success" -> {
+      CONNECT_SUCCESS -> {
         // snd release stream
         val header: Header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0)
-        var payload: Payload = CommandReleaseStream(cmd.transId + 1, arrayOf(null, address.key))
+        var payload: Payload = CommandReleaseStream(this.transId++, arrayOf(null, address.key))
         this.write(header, payload)
         if (logger.isDebugEnabled) {
           logger.debug(">>> release stream.")
         }
         // snd FCPublish
-        payload = CommandFCPublish(cmd.transId + 2, arrayOf(null, address.key))
+        payload = CommandFCPublish(this.transId++, arrayOf(null, address.key))
         header.fmt = FMT.F1
         header.csid = msg.header.csid
         this.write(header, payload)
@@ -38,8 +39,8 @@ class DefaultAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, o
           logger.debug(">>> FCPublish.")
         }
         // snd create stream
-        this.tidOfCreateStream = cmd.transId + 3
-        payload = CommandCreateStream(this.tidOfCreateStream, arrayOfNulls(1))
+        this.vipTransId = this.transId++
+        payload = CommandCreateStream(this.vipTransId, arrayOfNulls(1))
         this.write(header, payload)
         if (logger.isDebugEnabled) {
           logger.debug(">>> create stream.")
@@ -47,13 +48,13 @@ class DefaultAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, o
       }
       else -> {
         when (cmd.transId) {
-          this.tidOfCreateStream -> {
-            val payload = CommandPublish(this.tidOfCreateStream + 1, arrayOf(null, this.address.key, "live"))
+          this.vipTransId -> {
+            val payload = CommandPublish(this.transId++, arrayOf(null, this.address.key, "live"))
             val header = Header(FMT.F0, msg.header.csid + 1, MessageType.COMMAND_AMF0, 0, 0L, 1L)
             this.write(header, payload)
           }
           else -> {
-            //TODO
+            // ignore other results
           }
         }
       }
@@ -66,12 +67,14 @@ class DefaultAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, o
       is CommandResult -> this.handleResultCommand(msg, cmd)
       is CommandOnStatus -> this.ok()
       else -> {
+        logger.info("rcv other commands: {}", cmd)
         //TODO handle other commands.
       }
     }
   }
 
   companion object {
+    private val CONNECT_SUCCESS = "NetConnection.Connect.Success"
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
   }
 
