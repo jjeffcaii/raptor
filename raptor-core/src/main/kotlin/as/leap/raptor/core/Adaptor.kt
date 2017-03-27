@@ -9,6 +9,7 @@ import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.model.payload.CommandConnect
 import `as`.leap.raptor.core.model.payload.ProtocolChunkSize
 import `as`.leap.raptor.core.utils.Do
+import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
 import org.slf4j.LoggerFactory
 import java.io.Closeable
@@ -23,12 +24,6 @@ abstract class Adaptor : Closeable {
   protected val onConnect: Do?
   protected val onClose: Do?
   protected val connected = AtomicBoolean(false)
-
-  private fun sndChunkSize(newSize: Long) {
-    val header = Header.getProtocolHeader(MessageType.CTRL_SET_CHUNK_SIZE)
-    val payload = ProtocolChunkSize(newSize)
-    this.write(header.toBuffer().appendBuffer(payload.toBuffer()))
-  }
 
   constructor(address: Address, chunkSize: Long, onConnect: Do?, onClose: Do?) {
     this.address = address
@@ -58,11 +53,8 @@ abstract class Adaptor : Closeable {
       val payload = CommandConnect(1, arrayOf(cmdObj))
       val header = Header(FMT.F0, 3, MessageType.COMMAND_AMF0)
       this.write(header, payload)
-
       // bind close event.
-      backend.onClose {
-        this.onClose?.invoke()
-      }
+      backend.onClose { this.onClose?.invoke() }
     }, {
       logger.error("handshake failed: close backend.")
       this.close()
@@ -86,11 +78,11 @@ abstract class Adaptor : Closeable {
 
   abstract fun onCommand(msg: Message)
 
-  fun write(buffer: Buffer): Adaptor {
-    //Preconditions.checkArgument(this.connected(), "cannot write buffer because adaptor is disconnected.")
-    if (this.connected()) {
-      this.backend.write(buffer)
+  fun write(buffer: Buffer, strict: Boolean = true): Adaptor {
+    if (strict) {
+      Preconditions.checkArgument(this.connected(), "cannot write buffer because adaptor is disconnected.")
     }
+    this.backend.write(buffer)
     return this
   }
 
@@ -119,6 +111,12 @@ abstract class Adaptor : Closeable {
 
   override fun close() {
     this.backend.close()
+  }
+
+  private fun sndChunkSize(newSize: Long) {
+    val header = Header.getProtocolHeader(MessageType.CTRL_SET_CHUNK_SIZE)
+    val payload = ProtocolChunkSize(newSize)
+    this.write(header.toBuffer().appendBuffer(payload.toBuffer()), false)
   }
 
   companion object {
