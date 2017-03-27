@@ -20,10 +20,7 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
   private fun toBuffer(chunkSize: Int): Buffer {
     return if (this.payload.length() > chunkSize) {
       val b = Buffer.buffer()
-      this.toChunks(chunkSize).map(Chunk::toBuffer).forEach {
-        logger.info("----> chunk: \n{}", CodecHelper.encodeHex(it.bytes, true))
-        b.appendBuffer(it)
-      }
+      this.toChunks(chunkSize).map(Chunk::toBuffer).forEach { b.appendBuffer(it) }
       b
     } else {
       this.toBuffer()
