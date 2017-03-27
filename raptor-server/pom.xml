@@ -9,13 +9,9 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>raptor-service</artifactId>
+  <artifactId>raptor-server</artifactId>
 
   <dependencies>
-    <dependency>
-      <groupId>as.leap</groupId>
-      <artifactId>raptor-api</artifactId>
-    </dependency>
     <dependency>
       <groupId>as.leap</groupId>
       <artifactId>raptor-commons</artifactId>
@@ -26,23 +22,31 @@
       <type>test-jar</type>
     </dependency>
     <dependency>
-      <groupId>com.qiniu.pili</groupId>
-      <artifactId>pili-sdk-java</artifactId>
+      <groupId>as.leap</groupId>
+      <artifactId>raptor-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
+      <groupId>as.leap</groupId>
+      <artifactId>raptor-service</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>redis.clients</groupId>
-      <artifactId>jedis</artifactId>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-lang-kotlin</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.reactivex.rxjava2</groupId>
+      <artifactId>rxjava</artifactId>
+    </dependency>
+
   </dependencies>
-
-
 </project>

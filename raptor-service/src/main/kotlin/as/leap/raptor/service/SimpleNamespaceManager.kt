@@ -7,11 +7,19 @@ import com.qiniu.pili.Client
 import org.apache.commons.lang3.StringUtils
 
 class SimpleNamespaceManager : NamespaceManager {
+  override fun clear(namespace: String, group: String) {
+    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+  }
+
+  override fun set(namespace: String, group: String, addresses: Array<Address>, expiresInSeconds: Int) {
+    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+  }
+
 
   private val client: Client = Client("Thphesb5UQHYEMKQspI4LrUUKO3gWd47rEvGdHcK", "qms507cIEplAN85Phul_EincA0Jatp1l0BdBNFRJ")
 
-  override fun address(namespace: String, streamKey: String): Array<Address> {
-    return Splitter.on(",").split(StringUtils.stripStart(streamKey, "/"))
+  override fun address(namespace: String, group: String): Array<Address> {
+    return Splitter.on(",").split(StringUtils.stripStart(group, "/"))
         .map {
           val s = this.client.RTMPPublishURL(domain, namespace, it, 60)
           Address(domain, namespace, s.substring(s.lastIndexOf("/")))
