@@ -40,7 +40,7 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
         h.fmt = FMT.F3
       }
       val sub = payload.slice(offset, Math.min(offset + chunkSize, totals))
-      h.length = sub.length()
+      h.length = totals
       li.add(Chunk(h, h.toBasicHeader(), h.toMsgHeader(), sub))
       offset += chunkSize
     } while (offset < totals)
