@@ -32,4 +32,15 @@ class CoroutinesTest {
     println("cost: ${System.currentTimeMillis() - begin} ms")
   }
 
+  suspend fun test1(): Int {
+    Thread.sleep(3000L)
+    return 1
+  }
+
+  @Test
+  fun foo() {
+
+
+  }
+
 }
