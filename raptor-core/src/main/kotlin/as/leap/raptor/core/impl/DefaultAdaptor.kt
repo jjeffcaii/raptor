@@ -5,13 +5,20 @@ import `as`.leap.raptor.core.Adaptor
 import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.model.payload.*
 import `as`.leap.raptor.core.utils.Do
+import io.vertx.core.net.NetClient
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-class DefaultAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, onClose: Do?) : Adaptor(address, chunkSize, onConnect, onClose) {
+class DefaultAdaptor(
+    netClient: NetClient,
+    address: Address,
+    chunkSize: Long,
+    onConnect: Do? = null,
+    onClose: Do? = null
+) : Adaptor(netClient, address, chunkSize, onConnect, onClose) {
 
-  private var vipTransId: Int = -1
+  private var mark: Int = -1
 
   private fun handleResultCommand(msg: Message, cmd: CommandResult) {
     val c = cmd.getInfo("code")
@@ -39,23 +46,18 @@ class DefaultAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, o
           logger.debug(">>> FCPublish.")
         }
         // snd create stream
-        this.vipTransId = this.transId++
-        payload = CommandCreateStream(this.vipTransId, arrayOfNulls(1))
+        this.mark = this.transId++
+        payload = CommandCreateStream(this.mark, arrayOfNulls(1))
         this.write(header, payload)
         if (logger.isDebugEnabled) {
           logger.debug(">>> create stream.")
         }
       }
       else -> {
-        when (cmd.transId) {
-          this.vipTransId -> {
-            val payload = CommandPublish(this.transId++, arrayOf(null, this.address.key, "live"))
-            val header = Header(FMT.F0, msg.header.csid + 1, MessageType.COMMAND_AMF0, 0, 0L, 1L)
-            this.write(header, payload)
-          }
-          else -> {
-            // ignore other results
-          }
+        if (cmd.transId == this.mark) {
+          val payload = CommandPublish(this.transId++, arrayOf(null, this.address.key, "live"))
+          val header = Header(FMT.F0, msg.header.csid + 1, MessageType.COMMAND_AMF0, 0, 0L, 1L)
+          this.write(header, payload)
         }
       }
     }
@@ -77,6 +79,5 @@ class DefaultAdaptor(address: Address, chunkSize: Long, onConnect: Do? = null, o
     private val CONNECT_SUCCESS = "NetConnection.Connect.Success"
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
   }
-
 
 }

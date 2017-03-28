@@ -13,27 +13,26 @@ import `as`.leap.raptor.core.model.payload.ProtocolChunkSize
 import `as`.leap.raptor.core.utils.Do
 import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
+import io.vertx.core.net.NetClient
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.lang.invoke.MethodHandles
 import java.util.concurrent.atomic.AtomicBoolean
 
-abstract class Adaptor : Closeable {
+abstract class Adaptor(
+    netClient: NetClient,
+    protected val address: Address,
+    protected val chunkSize: Long,
+    protected val onConnect: Do?,
+    protected val onClose: Do?) : Closeable {
 
-  protected val address: Address
-  protected val chunkSize: Long
   private val backend: Endpoint
-  protected val onConnect: Do?
-  protected val onClose: Do?
+
   protected val connected = AtomicBoolean(false)
   protected var transId: Int = 0
 
-  constructor(address: Address, chunkSize: Long, onConnect: Do?, onClose: Do?) {
-    this.address = address
-    this.chunkSize = chunkSize
-    this.onConnect = onConnect
-    this.onClose = onClose
-    this.backend = LazyEndpoint(this.address.host, this.address.port)
+  init {
+    this.backend = LazyEndpoint(netClient, this.address.host, this.address.port)
     val messages = MessageFliper()
     val hc = Handshaker(backend, {
 

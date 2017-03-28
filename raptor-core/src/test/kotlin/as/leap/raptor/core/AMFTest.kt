@@ -13,10 +13,8 @@ class AMFTest {
 
   private val context = SerializationContext()
 
-
   @Test
   fun test() {
-
     var bytes: ByteArray? = null
     val arr = arrayOf("_result", 1, mapOf("foo" to "bar"), mapOf("bar" to "foo"))
     ByteArrayOutputStream().use {

@@ -2,12 +2,15 @@ package `as`.leap.raptor.core
 
 import `as`.leap.raptor.core.impl.endpoint.LazyEndpoint
 import `as`.leap.raptor.core.impl.ext.Handshaker
-import `as`.leap.raptor.core.utils.CodecHelper
+import io.vertx.core.Vertx
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.util.concurrent.CountDownLatch
 
 class HandshakerTest {
+
+  private val vertx = Vertx.vertx()
+  private val netClient = vertx.createNetClient()
 
   @Test
   fun testInitiative() {
@@ -17,7 +20,7 @@ class HandshakerTest {
   }
 
   private fun testInitiative(host: String): Boolean {
-    val endpoint = LazyEndpoint(host)
+    val endpoint = LazyEndpoint(netClient, host)
     val cdl = CountDownLatch(1)
     var connected: Boolean = false
     val handshaker = Handshaker(endpoint, {
@@ -26,16 +29,7 @@ class HandshakerTest {
     }, {
       cdl.countDown()
     })
-    endpoint.onHandshake {
-      val buffer = it.toBuffer()
-      if (buffer.length() < 64) {
-        println(CodecHelper.encodeHex(buffer.bytes, true))
-      } else {
-        println(CodecHelper.encodeHex(buffer.slice(0, 64).bytes, true))
-      }
-      println("$host--------------------------------------")
-      handshaker.validate(it)
-    }
+    endpoint.onHandshake { handshaker.validate(it) }
     cdl.await()
     endpoint.close()
     return connected

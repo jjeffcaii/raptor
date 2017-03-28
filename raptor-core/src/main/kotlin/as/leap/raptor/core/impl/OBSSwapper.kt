@@ -8,11 +8,16 @@ import `as`.leap.raptor.core.model.MessageType
 import `as`.leap.raptor.core.model.Payload
 import `as`.leap.raptor.core.model.payload.*
 import io.vertx.core.buffer.Buffer
+import io.vertx.core.net.NetClient
 import io.vertx.core.net.NetSocket
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-class OBSSwapper(socket: NetSocket, namespaces: NamespaceManager) : Swapper(socket, namespaces) {
+class OBSSwapper(
+    socket: NetSocket,
+    netClient: NetClient,
+    namespaces: NamespaceManager
+) : Swapper(socket, netClient, namespaces) {
 
   override fun connect() {
     // 1. send onFCPublish command.

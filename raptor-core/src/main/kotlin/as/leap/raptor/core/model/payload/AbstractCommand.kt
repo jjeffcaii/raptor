@@ -17,23 +17,11 @@ abstract class AbstractCommand(val cmd: String, val transId: Int, protected val 
     return Buffer.buffer(CodecHelper.encodeAMF0(arr))
   }
 
-  open fun getCmdObj(): Any? {
-    val obj = this.values[0]
-    return when (obj) {
-      is Unit -> null
-      else -> obj
-    }
-  }
-
-  protected fun toStringHelper(): MoreObjects.ToStringHelper {
+  override fun toString(): String {
     return MoreObjects.toStringHelper(this)
         .add("cmd", this.cmd)
         .add("transId", this.transId)
         .add("others", this.values)
-  }
-
-  override fun toString(): String {
-    return this.toStringHelper()
         .omitNullValues()
         .toString()
   }

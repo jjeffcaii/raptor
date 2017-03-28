@@ -2,21 +2,21 @@ package `as`.leap.raptor.core.impl.endpoint
 
 import `as`.leap.raptor.core.impl.ext.ChunkFliper
 import `as`.leap.raptor.core.impl.ext.Endpoint
-import `as`.leap.raptor.core.utils.Vertxes
 import io.vertx.core.buffer.Buffer
+import io.vertx.core.net.NetClient
 import io.vertx.core.net.NetSocket
 import io.vertx.core.parsetools.RecordParser
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 import java.util.*
 
-class LazyEndpoint(host: String, port: Int = 1935) : Endpoint() {
+class LazyEndpoint(netClient: NetClient, host: String, port: Int = 1935) : Endpoint() {
 
   private var socket: NetSocket? = null
   private var queue: MutableList<Buffer> = mutableListOf()
 
   init {
-    Vertxes.netClient.connect(port, host, {
+    netClient.connect(port, host, {
       if (it.succeeded()) {
         val socket = it.result()
         val parser = RecordParser.newFixed(1, null)

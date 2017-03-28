@@ -10,6 +10,7 @@ import `as`.leap.raptor.core.impl.ext.MessageFliper
 import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.model.payload.*
 import io.vertx.core.buffer.Buffer
+import io.vertx.core.net.NetClient
 import io.vertx.core.net.NetSocket
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -17,7 +18,11 @@ import java.io.Closeable
 import java.lang.invoke.MethodHandles
 import java.util.concurrent.atomic.AtomicInteger
 
-abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceManager) : Closeable {
+abstract class Swapper(
+    socket: NetSocket,
+    private val netClient: NetClient,
+    protected val namespaces: NamespaceManager
+) : Closeable {
 
   private val endpoint: Endpoint
   protected var chunkSize: Long = 128
@@ -50,7 +55,7 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
   protected fun establish(address: Address) {
     val adaptor = when (address.provider) {
       Address.Provider.DEFAULT -> {
-        DefaultAdaptor(address, this.chunkSize, {
+        DefaultAdaptor(this.netClient, address, this.chunkSize, {
           logger.info("establish success: {}", address)
           if (this.connects.incrementAndGet() == this.adaptors.size) {
             this.connect()
@@ -67,7 +72,9 @@ abstract class Swapper(socket: NetSocket, protected val namespaces: NamespaceMan
       }
     }
     this.adaptors.add(adaptor)
-    logger.info("establish to {}......", address)
+    if (logger.isDebugEnabled) {
+      logger.debug("establish to {}......", address)
+    }
   }
 
   override fun close() {
