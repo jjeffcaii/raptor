@@ -1,7 +1,7 @@
 package `as`.leap.raptor.core.model
 
 import `as`.leap.raptor.core.model.payload.*
-import `as`.leap.raptor.core.utils.CodecHelper
+import `as`.leap.raptor.core.utils.Codecs
 import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
 import org.slf4j.LoggerFactory
@@ -52,10 +52,10 @@ class SimpleMessage(header: Header, private val payload: Buffer) : Message(heade
       MessageType.CTRL_SET_WINDOW_SIZE -> ProtocolWindowSize(this.payload.getUnsignedInt(0))
       MessageType.CTRL_ACK_WINDOW_SIZE -> ProtocolAckWindowSize(this.payload.getUnsignedInt(0))
       MessageType.CTRL_SET_PEER_BANDWIDTH -> toProtocolBandWidth(this.payload)
-      MessageType.COMMAND_AMF0 -> toCommand(CodecHelper.decodeAMF0(this.payload.bytes), type)
-      MessageType.COMMAND_AMF3 -> toCommand(CodecHelper.decodeAMF3(this.payload.bytes), type)
-      MessageType.DATA_AMF0 -> SimpleAMFPayload(CodecHelper.decodeAMF0(this.payload.bytes), type)
-      MessageType.DATA_AMF3 -> SimpleAMFPayload(CodecHelper.decodeAMF0(this.payload.bytes), type)
+      MessageType.COMMAND_AMF0 -> toCommand(Codecs.decodeAMF0(this.payload.bytes), type)
+      MessageType.COMMAND_AMF3 -> toCommand(Codecs.decodeAMF3(this.payload.bytes), type)
+      MessageType.DATA_AMF0 -> SimpleAMFPayload(Codecs.decodeAMF0(this.payload.bytes), type)
+      MessageType.DATA_AMF3 -> SimpleAMFPayload(Codecs.decodeAMF0(this.payload.bytes), type)
 /*
       MessageType.USER_CONTROL -> TODO()
       MessageType.SHARE_OBJECT_AMF0 -> TODO()

@@ -4,7 +4,7 @@ import `as`.leap.raptor.core.model.FMT
 import `as`.leap.raptor.core.model.Header
 import `as`.leap.raptor.core.model.MessageType
 import `as`.leap.raptor.core.model.SimpleMessage
-import `as`.leap.raptor.core.utils.CodecHelper
+import `as`.leap.raptor.core.utils.Codecs
 import io.vertx.core.buffer.Buffer
 import org.testng.Assert
 import org.testng.annotations.Test
@@ -27,14 +27,14 @@ class MessageTest {
     val b = Buffer.buffer()
     chunks3.forEach { b.appendBuffer(it.payload) }
     Assert.assertEquals(16, b.length())
-    Assert.assertEquals("00000001000000020000000300000004", CodecHelper.encodeHex(b.bytes))
+    Assert.assertEquals("00000001000000020000000300000004", Codecs.encodeHex(b.bytes))
     var ck = msg.toChunks(16)
     Assert.assertEquals(1, ck.size)
-    Assert.assertEquals("00000001000000020000000300000004", CodecHelper.encodeHex(ck.first().payload.bytes))
+    Assert.assertEquals("00000001000000020000000300000004", Codecs.encodeHex(ck.first().payload.bytes))
 
     ck = msg.toChunks(128)
     Assert.assertEquals(1, ck.size)
-    Assert.assertEquals("00000001000000020000000300000004", CodecHelper.encodeHex(ck.first().payload.bytes))
+    Assert.assertEquals("00000001000000020000000300000004", Codecs.encodeHex(ck.first().payload.bytes))
   }
 
 }

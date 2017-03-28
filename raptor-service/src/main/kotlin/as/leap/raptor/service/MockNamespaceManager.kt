@@ -12,11 +12,11 @@ class MockNamespaceManager : NamespaceManager {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
-  override fun set(namespace: String, group: String, addresses: Array<Address>, expiresInSeconds: Int) {
+  override fun save(namespace: String, group: String, addresses: Array<Address>, expiresInSeconds: Int) {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
-  override fun address(namespace: String, group: String): Array<Address> {
+  override fun load(namespace: String, group: String): Array<Address> {
     val s = this.client.RTMPPublishURL("pili-publish.maxwon.cn", "maxwon-live", "foobar", 60)
     return arrayOf(
         Address("send3.douyu.com", namespace, group),
@@ -25,7 +25,7 @@ class MockNamespaceManager : NamespaceManager {
     )
   }
 
-  override fun exists(namespace: String): Boolean {
+  override fun exists(namespace: String, group: String): Boolean {
     return true
   }
 }

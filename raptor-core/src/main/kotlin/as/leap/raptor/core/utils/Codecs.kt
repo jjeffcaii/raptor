@@ -14,7 +14,7 @@ import java.io.ByteArrayOutputStream
 import java.lang.invoke.MethodHandles
 import java.util.regex.Pattern
 
-object CodecHelper {
+object Codecs {
 
   private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
 

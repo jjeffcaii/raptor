@@ -20,7 +20,7 @@ class RaptorVerticle(private val vertx: Vertx, private val namespaces: Namespace
 
     router.post("/group/:group").handler { ctx ->
       val ob = Single.create<Array<Address>> {
-        it.onSuccess(this.namespaces.address(ctx.get(KEY_NS), ctx.request().getParam("group")))
+        it.onSuccess(this.namespaces.load(ctx.get(KEY_NS), ctx.request().getParam("group")))
       }
       toJSON(ctx, ob)
     }

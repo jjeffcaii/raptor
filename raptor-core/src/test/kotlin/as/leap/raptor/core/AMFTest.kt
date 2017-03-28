@@ -1,6 +1,6 @@
 package `as`.leap.raptor.core
 
-import `as`.leap.raptor.core.utils.CodecHelper
+import `as`.leap.raptor.core.utils.Codecs
 import flex.messaging.io.SerializationContext
 import flex.messaging.io.amf.Amf0Input
 import flex.messaging.io.amf.Amf0Output
@@ -27,7 +27,7 @@ class AMFTest {
       bytes = it.toByteArray()
     }
     Assert.assertNotNull(bytes)
-    println(CodecHelper.encodeHex(bytes!!, true))
+    println(Codecs.encodeHex(bytes!!, true))
     Assert.assertTrue(bytes!!.isNotEmpty())
 
     ByteArrayInputStream(bytes).use {

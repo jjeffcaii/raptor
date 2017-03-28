@@ -1,20 +1,14 @@
 package `as`.leap.raptor.api
 
-data class Address(val host: String, val context: String, val key: String, val port: Int = 1935, val provider: Address.Provider = Address.Provider.DEFAULT) {
+import java.util.regex.Pattern
 
-  private val base: String by lazy {
-    when (this.port) {
+data class Address(val host: String, val context: String, val key: String, val port: Int = 1935) {
+
+  fun toBaseURL(): String {
+    return when (this.port) {
       1935 -> "rtmp://$host/$context"
       else -> "rtmp://$host:$port/$context"
     }
-  }
-
-  fun toBaseURL(): String {
-    return this.base
-  }
-
-  enum class Provider {
-    DEFAULT, QINIU, BILIBILI, DOUYU
   }
 
   override fun toString(): String {
@@ -23,5 +17,27 @@ data class Address(val host: String, val context: String, val key: String, val p
       else -> "rtmp://$host:$port/$context$key"
     }
   }
+
+  companion object {
+
+    private val PATTERN_RTMP_URL = Pattern.compile("rtmp://([a-zA-Z0-9\\-_.]+)(:[1-9][0-9]*+)?/([a-zA-Z0-9_\\-]+)([/?].+)$")
+
+    fun from(url: String): Address? {
+      val matcher = PATTERN_RTMP_URL.matcher(url)
+      if (!matcher.matches()) {
+        return null
+      }
+      val host = matcher.group(1)
+      val port: String? = matcher.group(2)?.substring(1)
+      val context = matcher.group(3)
+      val key = matcher.group(4)
+      if (port == null) {
+        return Address(host, context, key)
+      } else {
+        return Address(host, context, key, port.toInt())
+      }
+    }
+  }
+
 
 }

@@ -1,7 +1,6 @@
 package `as`.leap.raptor.core
 
 import `as`.leap.raptor.api.Address
-import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.core.impl.DefaultAdaptor
 import `as`.leap.raptor.core.impl.endpoint.DirectEndpoint
 import `as`.leap.raptor.core.impl.ext.Endpoint
@@ -20,13 +19,14 @@ import java.util.concurrent.atomic.AtomicInteger
 
 abstract class Swapper(
     socket: NetSocket,
-    private val netClient: NetClient,
-    protected val namespaces: NamespaceManager
+    private val netClient: NetClient
 ) : Closeable {
 
   private val endpoint: Endpoint
   protected var chunkSize: Long = 128
   protected var namespace: String = StringUtils.EMPTY
+  protected var group: String = StringUtils.EMPTY
+
   protected var streamKey: String = StringUtils.EMPTY
 
   protected var transId: Int = 0
@@ -53,24 +53,16 @@ abstract class Swapper(
   }
 
   protected fun establish(address: Address) {
-    val adaptor = when (address.provider) {
-      Address.Provider.DEFAULT -> {
-        DefaultAdaptor(this.netClient, address, this.chunkSize, {
-          logger.info("establish success: {}", address)
-          if (this.connects.incrementAndGet() == this.adaptors.size) {
-            this.connect()
-            logger.info("**** start publishing! ****")
-          }
-        }, {
-          logger.warn("some backend closed. close all endpoints.")
-          this.close()
-        })
+    val adaptor = DefaultAdaptor(this.netClient, address, this.chunkSize, {
+      logger.info("establish success: {}", address)
+      if (this.connects.incrementAndGet() == this.adaptors.size) {
+        this.connect()
+        logger.info("**** start publishing! ****")
       }
-      else -> {
-        //TODO other platform support.
-        throw UnsupportedOperationException("unsupported RTMP provider: ${address.provider}.")
-      }
-    }
+    }, {
+      logger.warn("some backend closed. close all endpoints.")
+      this.close()
+    })
     this.adaptors.add(adaptor)
     if (logger.isDebugEnabled) {
       logger.debug("establish to {}......", address)
@@ -83,7 +75,6 @@ abstract class Swapper(
   }
 
   init {
-    socket.pause()
     this.endpoint = DirectEndpoint(socket)
     val messages = MessageFliper()
     messages.onMessage {
@@ -124,7 +115,6 @@ abstract class Swapper(
         .onClose {
           this.close()
         }
-    socket.resume()
   }
 
   private fun handleCMD(cmd: CommandFCUnpublilsh) {

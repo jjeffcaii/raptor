@@ -1,6 +1,7 @@
 package `as`.leap.raptor.core.impl
 
 import `as`.leap.raptor.api.NamespaceManager
+import `as`.leap.raptor.api.SecurityManager
 import `as`.leap.raptor.core.Swapper
 import `as`.leap.raptor.core.model.FMT
 import `as`.leap.raptor.core.model.Header
@@ -16,8 +17,9 @@ import java.lang.invoke.MethodHandles
 class OBSSwapper(
     socket: NetSocket,
     netClient: NetClient,
-    namespaces: NamespaceManager
-) : Swapper(socket, netClient, namespaces) {
+    private val namespaceManager: NamespaceManager,
+    private val securityManager: SecurityManager
+) : Swapper(socket, netClient) {
 
   override fun connect() {
     // 1. send onFCPublish command.
@@ -43,13 +45,13 @@ class OBSSwapper(
   }
 
   override fun handleCMD(cmd: CommandConnect) {
-    this.namespace = cmd.getConnectInfo().app
-    if (!this.namespaces.exists(this.namespace)) {
-      //TODO invalid app
-      logger.error("invalid application: {}.", this.namespace)
+    val app = cmd.getConnectInfo().app
+    if (!this.securityManager.exists(app)) {
+      logger.error("invalid application: {}.", app)
       this.close()
       return
     }
+    this.namespace = app
     // 1. send ack window size
     val b = Buffer.buffer()
     val header: Header = Header.getProtocolHeader(MessageType.CTRL_ACK_WINDOW_SIZE)
@@ -78,11 +80,18 @@ class OBSSwapper(
 
   override fun handleCMD(cmd: CommandReleaseStream) {
     this.streamKey = cmd.getStreamKey()
-    val addresses = this.namespaces.address(this.namespace, this.streamKey)
+    val result = this.securityManager.validate(this.namespace, streamKey)
+    if (!result.success) {
+      logger.error("illegal stream key: namespace={}, streamKey={}.", this.namespace, this.streamKey)
+      this.close()
+      return
+    }
 
+    this.group = result.group
+    val addresses = this.namespaceManager.load(this.namespace, this.group)
     // no address binding.
     if (addresses.isEmpty()) {
-      logger.error("cannot find any RTMP stream address: streamKey={}.", this.streamKey)
+      logger.error("missing addresses: namespace={}, group={}.", this.namespace, this.group)
       this.close()
       return
     }
@@ -112,7 +121,6 @@ class OBSSwapper(
         "description" to "Start Publishing",
         "objectEncoding" to 0
     )
-
   }
 
 }

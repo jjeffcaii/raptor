@@ -1,7 +1,7 @@
 package `as`.leap.raptor.core.model
 
 import `as`.leap.raptor.core.utils.Buffered
-import `as`.leap.raptor.core.utils.CodecHelper
+import `as`.leap.raptor.core.utils.Codecs
 import com.google.common.base.MoreObjects
 import com.google.common.hash.Hashing
 import io.vertx.core.buffer.Buffer
@@ -62,7 +62,7 @@ data class Handshake(val buffer: Buffer) : Buffered {
       return MoreObjects.toStringHelper(this)
           .add("v1", this.v1)
           .add("v2", this.v2)
-          .add("random", "MD5(${CodecHelper.md5(this.random.bytes)})")
+          .add("random", "MD5(${Codecs.md5(this.random.bytes)})")
           .toString()
     }
 

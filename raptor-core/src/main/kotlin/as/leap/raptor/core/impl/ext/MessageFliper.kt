@@ -5,7 +5,7 @@ import `as`.leap.raptor.core.model.FMT
 import `as`.leap.raptor.core.model.Message
 import `as`.leap.raptor.core.model.SimpleMessage
 import `as`.leap.raptor.core.utils.Callback
-import `as`.leap.raptor.core.utils.CodecHelper
+import `as`.leap.raptor.core.utils.Codecs
 import `as`.leap.raptor.core.utils.Filter
 import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
@@ -53,7 +53,7 @@ class MessageFliper(private val filter: Filter<Chunk>? = null) {
     first.messageHeader?.let { b.appendBuffer(it) }
     b.appendBuffer(payload)
     if (logger.isDebugEnabled) {
-      logger.debug("<<< pop({} bytes): \n{}\n<<<", b.length(), CodecHelper.encodeHex(b.bytes, true))
+      logger.debug("<<< pop({} bytes): \n{}\n<<<", b.length(), Codecs.encodeHex(b.bytes, true))
     }
     this.onMessage?.invoke(SimpleMessage(first.header, payload))
     this.queue.clear()

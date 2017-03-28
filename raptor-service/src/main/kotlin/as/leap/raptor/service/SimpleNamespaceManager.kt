@@ -11,14 +11,14 @@ class SimpleNamespaceManager : NamespaceManager {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
-  override fun set(namespace: String, group: String, addresses: Array<Address>, expiresInSeconds: Int) {
+  override fun save(namespace: String, group: String, addresses: Array<Address>, expiresInSeconds: Int) {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
 
   private val client: Client = Client("Thphesb5UQHYEMKQspI4LrUUKO3gWd47rEvGdHcK", "qms507cIEplAN85Phul_EincA0Jatp1l0BdBNFRJ")
 
-  override fun address(namespace: String, group: String): Array<Address> {
+  override fun load(namespace: String, group: String): Array<Address> {
     return Splitter.on(",").split(StringUtils.stripStart(group, "/"))
         .map {
           val s = this.client.RTMPPublishURL(domain, namespace, it, 60)
@@ -27,8 +27,8 @@ class SimpleNamespaceManager : NamespaceManager {
         .toTypedArray()
   }
 
-  override fun exists(namespace: String): Boolean {
-    return "maxwon-live" == namespace
+  override fun exists(namespace: String, group: String): Boolean {
+    return true
   }
 
   companion object {

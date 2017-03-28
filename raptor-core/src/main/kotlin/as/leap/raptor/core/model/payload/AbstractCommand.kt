@@ -1,7 +1,7 @@
 package `as`.leap.raptor.core.model.payload
 
 import `as`.leap.raptor.core.model.Payload
-import `as`.leap.raptor.core.utils.CodecHelper
+import `as`.leap.raptor.core.utils.Codecs
 import com.google.common.base.MoreObjects
 import io.vertx.core.buffer.Buffer
 
@@ -14,7 +14,7 @@ abstract class AbstractCommand(val cmd: String, val transId: Int, protected val 
     for (i in 0 until values.size) {
       arr[i + 2] = values[i]
     }
-    return Buffer.buffer(CodecHelper.encodeAMF0(arr))
+    return Buffer.buffer(Codecs.encodeAMF0(arr))
   }
 
   override fun toString(): String {
