@@ -19,7 +19,6 @@ import io.vertx.core.net.NetServer
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.JedisCluster
 import java.lang.invoke.MethodHandles
@@ -60,34 +59,8 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
       }
     }
 
-    router.post("/:ns/groups/:gp").consumes(CONTENT_TYPE_JSON).handler { ctx ->
-      val ob = Single.create<Int> {
-        val ns = ctx.request().getParam("ns")
-        val gp = ctx.request().getParam("gp")
-        if (this.namespaceManager.exists(ns, gp)) {
-          throw RaptorException("group $gp exists already!")
-        }
-        val addresses = Utils.fromJSONArray(ctx.bodyAsString, Address::class.java)
-        logger.info("got addresses: {}", addresses)
-        this.namespaceManager.save(ns, gp, addresses)
-        it.onSuccess(addresses.size)
-      }
-      toJSON(ctx, ob, 201)
-    }
-
-    router.put("/:ns/groups/:gp").consumes(CONTENT_TYPE_JSON).handler { ctx ->
-      val ob = Single.create<Int> {
-        val ns = ctx.request().getParam("ns")
-        val gp = ctx.request().getParam("gp")
-        if (!this.namespaceManager.exists(ns, gp)) {
-          throw RaptorException("group $gp doesn't exists!")
-        }
-        val addresses = Utils.fromJSONArray(ctx.bodyAsString, Address::class.java)
-        this.namespaceManager.save(ns, gp, addresses)
-        it.onSuccess(addresses.size)
-      }
-      toJSON(ctx, ob, 201)
-    }
+    router.post("/:ns/groups/:gp").consumes(CONTENT_TYPE_JSON).handler(this::saveGroup)
+    router.put("/:ns/groups/:gp").consumes(CONTENT_TYPE_JSON).handler(this::saveGroup)
 
     router.delete("/:ns/groups/:gp").handler { ctx ->
       val ob = Single.create<Int> {
@@ -108,17 +81,27 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
       toJSON(ctx, ob)
     }
 
-
     this.apiServer.requestHandler({ router.accept(it) })
-    this.rtmpServer = vertx.createNetServer()
 
     // 2. create rtmp server.
-    val nc = vertx.createNetClient()
+    this.rtmpServer = vertx.createNetServer()
+    val netClient = vertx.createNetClient()
     this.rtmpServer.connectHandler {
       it.pause()
-      DefaultSwapper(it, nc, namespaceManager, securityManager)
+      DefaultSwapper(it, netClient, namespaceManager, securityManager)
       it.resume()
     }
+  }
+
+  private fun saveGroup(ctx: RoutingContext) {
+    val ob = Single.create<Int> {
+      val ns = ctx.request().getParam("ns")
+      val gp = ctx.request().getParam("gp")
+      val addresses = Utils.fromJSONArray(ctx.bodyAsString, Address::class.java)
+      this.namespaceManager.save(ns, gp, addresses)
+      it.onSuccess(addresses.size)
+    }
+    toJSON(ctx, ob, 201)
   }
 
   override fun run() {
@@ -151,7 +134,6 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
     private val CONTENT_TYPE_JSON = "application/json"
     private val CONTENT_TYPE_JSON_UTF8 = "application/json; charset=utf-8"
 
-
     private fun toJSON(ctx: RoutingContext, ob: Single<*>, statusCode: Int = 200) {
       ob.subscribeOn(Schedulers.io()).subscribe({
         ctx.response()
@@ -163,7 +145,7 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
             .putHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON_UTF8)
         var code: Int = 500
         var ecode: Int = 5000
-        var msg: String = StringUtils.EMPTY
+        var msg: String? = null
 
         it.cause?.let { ex ->
           ex.message?.let { msg = it }
@@ -175,9 +157,6 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
             }
             is IllegalArgumentException -> {
               code = 400
-            }
-            else -> {
-              //ignore
             }
           }
         }
