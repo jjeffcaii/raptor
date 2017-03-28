@@ -16,24 +16,24 @@ class SecurityManagerTest {
     val k = "QXNJZnpNRDBZejhfbmpwRjlBVk5Bdw"
     val ts = System.currentTimeMillis() + 60000L
     val hash = DigestUtils.md5Hex("$ts$k")
-    Assert.assertTrue(manager.validate(this.namespace, "?k=$hash,$ts"))
-    Assert.assertTrue(manager.validate(this.namespace, "k=$hash,$ts"))
-    Assert.assertTrue(manager.validate(this.namespace, "/k=$hash,$ts"))
+    Assert.assertTrue(manager.validate(this.namespace, "?k=$hash,$ts").success)
+    Assert.assertTrue(manager.validate(this.namespace, "k=$hash,$ts").success)
+    Assert.assertTrue(manager.validate(this.namespace, "/k=$hash,$ts").success)
   }
 
   @Test
   fun testGod() {
-    Assert.assertTrue(manager.validate(this.namespace, "?k=${SecurityManager.GOD_KEY}"))
+    Assert.assertTrue(manager.validate(this.namespace, "?k=${SecurityManager.GOD_KEY}").success)
   }
 
   @Test
   fun testBad() {
-    Assert.assertFalse(manager.validate(this.namespace, "?k=1234,${Long.MAX_VALUE}"))
-    Assert.assertFalse(manager.validate(this.namespace, "?k="))
+    Assert.assertFalse(manager.validate(this.namespace, "?k=1234,${Long.MAX_VALUE}").success)
+    Assert.assertFalse(manager.validate(this.namespace, "?k=").success)
     val k = "QXNJZnpNRDBZejhfbmpwRjlBVk5Bdw"
     val ts = System.currentTimeMillis() - 3000L
     val hash = DigestUtils.md5Hex("$ts$k")
-    Assert.assertFalse(manager.validate(this.namespace, "?k=$hash,$ts"))
+    Assert.assertFalse(manager.validate(this.namespace, "?k=$hash,$ts").success)
   }
 
 

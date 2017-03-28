@@ -14,6 +14,7 @@ class SecurityManagerImpl(endpoint: String) : SecurityManager {
   private val base: String = "${StringUtils.strip(endpoint, "/")}/2.0/acl"
 
   override fun exists(namespace: String): Boolean {
+    //TODO validate appid exists.
     return PATTERN_NAMESPACE.matcher(namespace).matches()
   }
 
@@ -33,7 +34,7 @@ class SecurityManagerImpl(endpoint: String) : SecurityManager {
     }
 
     if (StringUtils.equals(sign, SecurityManager.GOD_KEY)) {
-      return FAILED
+      return SecurityManager.Result(true, q.getOrDefault("g", "default"))
     }
 
     val matcher = PATTERN_SIGN.matcher(sign)
@@ -59,7 +60,12 @@ class SecurityManagerImpl(endpoint: String) : SecurityManager {
         .get()
         .build()
     var success: Boolean = false
-    client.newCall(req).execute().use { success = it.isSuccessful }
+    client.newCall(req).execute().use {
+      if (logger.isDebugEnabled) {
+        logger.debug("maxleap acl response({}): {}.", it.code(), it.body().string())
+      }
+      success = it.isSuccessful
+    }
     return if (!success) {
       FAILED
     } else {
