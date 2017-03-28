@@ -11,6 +11,10 @@
 
   <artifactId>raptor-server</artifactId>
 
+  <properties>
+    <docker.registry>10.10.10.160:8010</docker.registry>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>as.leap</groupId>
@@ -49,4 +53,111 @@
     </dependency>
 
   </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>2.4.3</version>
+          <configuration>
+            <shadedArtifactAttached>false</shadedArtifactAttached>
+            <outputFile>
+              ${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar
+            </outputFile>
+            <artifactSet>
+              <includes>
+                <include>*:*</include>
+              </includes>
+            </artifactSet>
+            <filters>
+              <filter>
+                <artifact>*:*</artifact>
+                <excludes>
+                  <exclude>META-INF/*.SF</exclude>
+                  <exclude>META-INF/*.DSA</exclude>
+                  <exclude>META-INF/*.RSA</exclude>
+                </excludes>
+              </filter>
+            </filters>
+            <transformers>
+              <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
+              <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
+                <addHeader>false</addHeader>
+              </transformer>
+              <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                <resource>reference.conf</resource>
+              </transformer>
+            </transformers>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>com.spotify</groupId>
+          <artifactId>docker-maven-plugin</artifactId>
+          <version>0.4.13</version>
+          <configuration>
+            <imageName>${docker.registry}/maxleap/raptor:${project.version}</imageName>
+            <baseImage>openjdk:8-jdk-alpine</baseImage>
+            <workdir>/usr/local/lib/raptor</workdir>
+            <maintainer>wcai@maxleap.com</maintainer>
+            <exposes>
+              <expose>8080</expose>
+              <expose>1935</expose>
+            </exposes>
+            <entryPoint>
+              ["java","-XX:+UseG1GC","-Djava.net.preferIPv4Stack=true","-Dlog4j.configuration=file:log4j.properties","-cp","${project.build.finalName}-shaded.jar","as.leap.raptor.server.Bootstrap"]
+            </entryPoint>
+            <cmd>
+              ["-p","8080"]
+            </cmd>
+            <pushImageTag>true</pushImageTag>
+            <imageTags>
+              <imageTag>latest</imageTag>
+            </imageTags>
+            <resources>
+              <resource>
+                <targetPath>/usr/local/lib/raptor</targetPath>
+                <directory>${project.build.directory}</directory>
+                <include>${project.build.finalName}-shaded.jar</include>
+              </resource>
+              <resource>
+                <targetPath>/usr/local/lib/raptor</targetPath>
+                <directory>${project.build.directory}/test-classes/docker</directory>
+                <include>log4j.properties</include>
+              </resource>
+            </resources>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.spotify</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>deploy</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
