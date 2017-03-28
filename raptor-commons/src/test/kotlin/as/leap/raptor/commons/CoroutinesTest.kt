@@ -5,7 +5,7 @@ import kotlin.coroutines.experimental.buildSequence
 
 class CoroutinesTest {
 
-  @Test
+  @Test(enabled = false)
   fun testYield() {
     val fib = buildSequence {
       var first: Long = 0L
@@ -25,22 +25,11 @@ class CoroutinesTest {
     val iter = fib.iterator()
     for (v in iter) {
       if (++i > 100) {
+        println("fib $i: $v")
         break
       }
-      println("fib $i: $v")
     }
     println("cost: ${System.currentTimeMillis() - begin} ms")
-  }
-
-  suspend fun test1(): Int {
-    Thread.sleep(3000L)
-    return 1
-  }
-
-  @Test
-  fun foo() {
-
-
   }
 
 }

@@ -21,7 +21,7 @@
     <compile.level>1.8</compile.level>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <kotlin.version>1.1.1</kotlin.version>
-    <vertx.version>3.4.0</vertx.version>
+    <vertx.version>3.4.1</vertx.version>
     <slf4j.version>1.7.24</slf4j.version>
     <guava.version>19.0</guava.version>
     <flex.version>4.7.2</flex.version>
@@ -159,7 +159,7 @@
       <dependency>
         <groupId>io.reactivex.rxjava2</groupId>
         <artifactId>rxjava</artifactId>
-        <version>2.0.5</version>
+        <version>2.0.7</version>
       </dependency>
 
       <dependency>
