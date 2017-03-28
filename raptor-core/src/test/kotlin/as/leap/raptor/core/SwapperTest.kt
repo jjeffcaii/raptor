@@ -1,6 +1,7 @@
 package `as`.leap.raptor.core
 
-import `as`.leap.raptor.core.impl.OBSSwapper
+import `as`.leap.raptor.api.SecurityManager
+import `as`.leap.raptor.core.impl.DefaultSwapper
 import `as`.leap.raptor.service.SimpleNamespaceManager
 import io.vertx.core.Vertx
 import io.vertx.kotlin.core.net.NetServerOptions
@@ -17,7 +18,15 @@ object SwapperTest {
     val server = vertx.createNetServer(netServerOptions)
     server.connectHandler {
       it.pause()
-      OBSSwapper(it, netClient, manager)
+      DefaultSwapper(it, netClient, manager, object : SecurityManager {
+        override fun exists(namespace: String): Boolean {
+          TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun validate(namespace: String, streamKey: String): SecurityManager.Result {
+          TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+      })
       it.resume()
     }
     server.listen {

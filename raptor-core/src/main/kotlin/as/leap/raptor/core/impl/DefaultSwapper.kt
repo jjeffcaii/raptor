@@ -14,7 +14,7 @@ import io.vertx.core.net.NetSocket
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 
-class OBSSwapper(
+class DefaultSwapper(
     socket: NetSocket,
     netClient: NetClient,
     private val namespaceManager: NamespaceManager,

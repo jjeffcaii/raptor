@@ -56,7 +56,7 @@ class SecurityManagerImpl(endpoint: String) : SecurityManager {
     val req = Request.Builder().url(this.base)
         .header("X-ML-AppId", namespace)
         .header("X-ML-Request-Sign", sign)
-        .header("Content-Type", "application/json")
+        .header("Content-Type", "application/json; charset=utf-8")
         .get()
         .build()
     var success: Boolean = false
