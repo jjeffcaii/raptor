@@ -16,6 +16,7 @@
   </properties>
 
   <dependencies>
+
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
@@ -106,6 +107,7 @@
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.4.13</version>
           <configuration>
+            <env>RAPTOR_LOG_DIR=/mnt/sandbox</env>
             <imageName>${docker.registry}/maxleap/raptor:${project.version}</imageName>
             <baseImage>openjdk:8-jdk-alpine</baseImage>
             <workdir>/usr/local/lib/raptor</workdir>
@@ -115,7 +117,7 @@
               <expose>1935</expose>
             </exposes>
             <entryPoint>
-              ["java","-XX:+UseG1GC","-Djava.net.preferIPv4Stack=true","-cp","${project.build.finalName}-shaded.jar","as.leap.raptor.server.Bootstrap"]
+              ["java","-XX:+UseG1GC","-Djava.net.preferIPv4Stack=true","-Dlog4j.configurationFile=file:log4j.properties","-cp","${project.build.finalName}-shaded.jar","as.leap.raptor.server.Bootstrap"]
             </entryPoint>
             <pushImageTag>true</pushImageTag>
             <imageTags>
@@ -126,6 +128,11 @@
                 <targetPath>/usr/local/lib/raptor</targetPath>
                 <directory>${project.build.directory}</directory>
                 <include>${project.build.finalName}-shaded.jar</include>
+              </resource>
+              <resource>
+                <targetPath>/usr/local/lib/raptor</targetPath>
+                <directory>${project.build.directory}/test-classes</directory>
+                <include>log4j2.xml</include>
               </resource>
             </resources>
           </configuration>

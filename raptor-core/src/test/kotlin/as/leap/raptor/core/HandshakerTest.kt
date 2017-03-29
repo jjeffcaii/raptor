@@ -28,7 +28,7 @@ class HandshakerTest {
       cdl.countDown()
     }, {
       cdl.countDown()
-    })
+    }, printDetails = true)
     endpoint.onHandshake { handshaker.validate(it) }
     cdl.await()
     endpoint.close()
