@@ -6,8 +6,8 @@ ENV RAPTOR_HOME="/usr/local/lib/raptor" RAPTOR_LOG_DIR="/mnt/sandbox"
 
 WORKDIR ${RAPTOR_HOME}
 
-COPY ./* ./
+ADD ./ ./
 
 EXPOSE 8080 1935
 
-ENTRYPOINT ["java","-XX:+UseG1GC","-Djava.net.preferIPv4Stack=true","-Dlog4j.configurationFile=file:log4j2.xml","-jar","${project.build.finalName}-jar-with-dependencies.jar"]
+ENTRYPOINT ["java","-XX:+UseG1GC","-Djava.net.preferIPv4Stack=true","-Dlog4j.configurationFile=file:log4j2.xml","-jar","raptor-server-0.0.1-SNAPSHOT-jar-with-dependencies.jar"]

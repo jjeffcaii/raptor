@@ -55,7 +55,8 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
     System.getenv("RAPTOR_HOME")?.let {
       val f = File(it, "www")
       if (f.exists() && f.isDirectory) {
-        router.route("/*").handler(StaticHandler.create(f.absolutePath))
+        logger.info("page files found: {}.", f.absoluteFile)
+        router.route("/site/*").handler(StaticHandler.create(f.absolutePath))
       }
     }
 

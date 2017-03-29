@@ -83,11 +83,15 @@
                 <include>${project.build.finalName}-jar-with-dependencies.jar</include>
               </resource>
               <resource>
-                <targetPath>/www</targetPath>
+                <targetPath>www</targetPath>
                 <directory>${project.basedir}/src/main/www</directory>
                 <include>*</include>
               </resource>
             </resources>
+            <pushImageTag>false</pushImageTag>
+            <imageTags>
+              <imageTag>latest</imageTag>
+            </imageTags>
           </configuration>
 
           <!--
