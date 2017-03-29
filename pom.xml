@@ -10,10 +10,10 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>raptor-core</module>
     <module>raptor-commons</module>
     <module>raptor-api</module>
-    <module>raptor-service</module>
+    <module>raptor-api-impl</module>
+    <module>raptor-core</module>
     <module>raptor-server</module>
   </modules>
 
@@ -125,14 +125,15 @@
       </dependency>
       <dependency>
         <groupId>as.leap</groupId>
-        <artifactId>raptor-core</artifactId>
+        <artifactId>raptor-api-impl</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>as.leap</groupId>
-        <artifactId>raptor-service</artifactId>
+        <artifactId>raptor-core</artifactId>
         <version>${project.version}</version>
       </dependency>
+
 
       <!-- RTMP Provider SDK -->
       <dependency>

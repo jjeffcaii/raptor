@@ -6,8 +6,8 @@ import `as`.leap.raptor.api.SecurityManager
 import `as`.leap.raptor.api.exception.RaptorException
 import `as`.leap.raptor.commons.Utils
 import `as`.leap.raptor.core.impl.DefaultSwapper
-import `as`.leap.raptor.service.NamespaceManagerImpl
-import `as`.leap.raptor.service.SecurityManagerImpl
+import `as`.leap.raptor.api.impl.NamespaceManagerImpl
+import `as`.leap.raptor.api.impl.SecurityManagerImpl
 import com.google.common.base.Splitter
 import com.google.common.net.HostAndPort
 import io.reactivex.Single

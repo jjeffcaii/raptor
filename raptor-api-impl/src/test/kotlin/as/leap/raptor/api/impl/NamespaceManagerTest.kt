@@ -1,7 +1,8 @@
-package `as`.leap.raptor.service
+package `as`.leap.raptor.api.impl
 
 import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
+import `as`.leap.raptor.api.impl.NamespaceManagerImpl
 import `as`.leap.raptor.commons.Utils
 import com.google.common.base.Splitter
 import com.google.common.net.HostAndPort

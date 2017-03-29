@@ -1,13 +1,12 @@
-package `as`.leap.raptor.service
+package `as`.leap.raptor.api.impl
 
 import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
+import com.google.common.base.Splitter
 import com.qiniu.pili.Client
+import org.apache.commons.lang3.StringUtils
 
-class MockNamespaceManager : NamespaceManager {
-
-  private val client: Client = Client("Thphesb5UQHYEMKQspI4LrUUKO3gWd47rEvGdHcK", "qms507cIEplAN85Phul_EincA0Jatp1l0BdBNFRJ")
-
+class SimpleNamespaceManager : NamespaceManager {
   override fun clear(namespace: String, group: String) {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
@@ -16,16 +15,23 @@ class MockNamespaceManager : NamespaceManager {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
+
+  private val client: Client = Client("Thphesb5UQHYEMKQspI4LrUUKO3gWd47rEvGdHcK", "qms507cIEplAN85Phul_EincA0Jatp1l0BdBNFRJ")
+
   override fun load(namespace: String, group: String): Array<Address> {
-    val s = this.client.RTMPPublishURL("pili-publish.maxwon.cn", "maxwon-live", "foobar", 60)
-    return arrayOf(
-        Address("send3.douyu.com", namespace, group),
-        Address("pili-publish.maxwon.cn", "maxwon-live", s.substring(s.lastIndexOf("/"))),
-        Address("dl.live-send.acg.tv", "live-dl", "?streamname=live_94338558_9096008&key=b7e4081cbfb773a2d45d43888fcacb16")
-    )
+    return Splitter.on(",").split(StringUtils.stripStart(group, "/"))
+        .map {
+          val s = this.client.RTMPPublishURL(domain, namespace, it, 60)
+          Address(domain, namespace, s.substring(s.lastIndexOf("/")))
+        }
+        .toTypedArray()
   }
 
   override fun exists(namespace: String, group: String): Boolean {
     return true
+  }
+
+  companion object {
+    private val domain = "pili-publish.maxwon.cn"
   }
 }

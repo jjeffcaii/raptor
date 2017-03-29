@@ -1,4 +1,4 @@
-package `as`.leap.raptor.service
+package `as`.leap.raptor.api.impl
 
 import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager

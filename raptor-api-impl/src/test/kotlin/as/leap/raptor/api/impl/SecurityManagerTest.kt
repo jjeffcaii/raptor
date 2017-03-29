@@ -1,6 +1,7 @@
-package `as`.leap.raptor.service
+package `as`.leap.raptor.api.impl
 
 import `as`.leap.raptor.api.SecurityManager
+import `as`.leap.raptor.api.impl.SecurityManagerImpl
 import org.apache.commons.codec.digest.DigestUtils
 import org.testng.Assert
 import org.testng.annotations.Test
