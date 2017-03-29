@@ -12,6 +12,16 @@
   <artifactId>raptor-core</artifactId>
 
   <dependencies>
+
+    <dependency>
+      <groupId>as.leap</groupId>
+      <artifactId>raptor-commons</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>as.leap</groupId>
+      <artifactId>raptor-api</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -28,23 +38,16 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
+
     <dependency>
-      <groupId>as.leap</groupId>
-      <artifactId>raptor-commons</artifactId>
-      <type>test-jar</type>
-    </dependency>
-    <dependency>
-      <groupId>as.leap</groupId>
-      <artifactId>raptor-api</artifactId>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-lang-kotlin</artifactId>
     </dependency>
-    <dependency>
-      <groupId>net.engio</groupId>
-      <artifactId>mbassador</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>org.apache.flex.blazeds</groupId>
       <artifactId>flex-messaging-core</artifactId>
@@ -53,5 +56,6 @@
       <groupId>org.apache.flex.blazeds</groupId>
       <artifactId>flex-messaging-common</artifactId>
     </dependency>
+
   </dependencies>
 </project>

@@ -1,4 +1,4 @@
-package `as`.leap.raptor.commons.exception
+package `as`.leap.raptor.api.exception
 
 open class RaptorException(message: String? = null, cause: Throwable? = null) : Exception(message, cause) {
 

@@ -1,7 +1,11 @@
 package `as`.leap.raptor.service
 
 import `as`.leap.raptor.api.SecurityManager
+import `as`.leap.raptor.commons.Consts
 import com.google.common.base.Splitter
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.apache.commons.lang3.StringUtils
@@ -12,6 +16,25 @@ import java.util.regex.Pattern
 class SecurityManagerImpl(endpoint: String) : SecurityManager {
 
   private val base: String = "${StringUtils.strip(endpoint, "/")}/2.0/acl"
+  private val cache: LoadingCache<Pair<String, String>, Boolean> = CacheBuilder.newBuilder()
+      .maximumSize(1024)
+      .concurrencyLevel(4)
+      .build(CacheLoader.from { p ->
+        val req = Request.Builder().url(this.base)
+            .header(Consts.HEADER_MAXLEAP_APPID, p!!.first)
+            .header(Consts.HEADER_MAXLEAP_SIGN, p.second)
+            .header(Consts.HEADER_CONTENT_TYPE, Consts.CONTENT_TYPE_JSON_UTF8)
+            .get()
+            .build()
+        var success: Boolean = false
+        client.newCall(req).execute().use {
+          if (logger.isDebugEnabled) {
+            logger.debug("maxleap acl response({}): {}.", it.code(), it.body().string())
+          }
+          success = it.isSuccessful
+        }
+        success
+      })
 
   override fun exists(namespace: String): Boolean {
     //TODO validate appid exists.
@@ -25,8 +48,9 @@ class SecurityManagerImpl(endpoint: String) : SecurityManager {
       streamKey
     }
     val q: Map<String, String> = Splitter.on("&").withKeyValueSeparator("=").split(sk)
-    val sign = q["k"]
-    if (StringUtils.isBlank(sign)) {
+    val sign = q[Consts.KEY_FOR_SIGN]
+
+    if (sign.isNullOrBlank()) {
       if (logger.isDebugEnabled) {
         logger.debug("security validate failed: token is blank.")
       }
@@ -34,7 +58,7 @@ class SecurityManagerImpl(endpoint: String) : SecurityManager {
     }
 
     if (StringUtils.equals(sign, SecurityManager.GOD_KEY)) {
-      return SecurityManager.Result(true, q.getOrDefault("g", "default"))
+      return SecurityManager.Result(true, q.getOrDefault(Consts.KEY_FOR_GROUP, Consts.DEFAULT_GROUP_NAME))
     }
 
     val matcher = PATTERN_SIGN.matcher(sign)
@@ -53,23 +77,11 @@ class SecurityManagerImpl(endpoint: String) : SecurityManager {
       }
       return FAILED
     }
-    val req = Request.Builder().url(this.base)
-        .header("X-ML-AppId", namespace)
-        .header("X-ML-Request-Sign", sign)
-        .header("Content-Type", "application/json; charset=utf-8")
-        .get()
-        .build()
-    var success: Boolean = false
-    client.newCall(req).execute().use {
-      if (logger.isDebugEnabled) {
-        logger.debug("maxleap acl response({}): {}.", it.code(), it.body().string())
-      }
-      success = it.isSuccessful
-    }
-    return if (!success) {
-      FAILED
+
+    return if (this.cache.get(Pair(namespace, sign!!))) {
+      SecurityManager.Result(true, q.getOrDefault(Consts.KEY_FOR_GROUP, Consts.DEFAULT_GROUP_NAME))
     } else {
-      SecurityManager.Result(true, q.getOrDefault("g", "default"))
+      FAILED
     }
   }
 
