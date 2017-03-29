@@ -1,2 +1,4 @@
 {
+  "maxleap": "http://api.maxleap.cn/",
+  "redis": "1.cluster.redis.las:6399,2.cluster.redis.las:6399,3.cluster.redis.las:6399"
 }

@@ -16,4 +16,13 @@ class UtilsTest {
     Assert.assertEquals(map, map2)
   }
 
+  @Test
+  fun test() {
+    val str: String? = null
+
+    println(str.isNullOrBlank())
+
+
+  }
+
 }

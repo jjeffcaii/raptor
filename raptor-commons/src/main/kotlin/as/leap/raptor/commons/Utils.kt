@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.type.TypeFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 
 
 object Utils {
@@ -22,6 +23,11 @@ object Utils {
   fun <T> fromJSON(json: String, clazz: Class<T>): T {
     return mapper.readValue(json, clazz)
   }
+
+  fun <T> fromJSON(json: InputStream, clazz: Class<T>): T {
+    return mapper.readValue(json, clazz)
+  }
+
 
   fun <T> fromJSONArray(json: String, clazz: Class<T>): Array<T> {
     return mapper.readValue(json, TypeFactory.defaultInstance().constructArrayType(clazz))
