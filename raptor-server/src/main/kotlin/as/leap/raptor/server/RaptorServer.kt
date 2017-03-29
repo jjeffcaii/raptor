@@ -3,8 +3,8 @@ package `as`.leap.raptor.server
 import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.api.SecurityManager
-import `as`.leap.raptor.commons.Utils
 import `as`.leap.raptor.api.exception.RaptorException
+import `as`.leap.raptor.commons.Utils
 import `as`.leap.raptor.core.impl.DefaultSwapper
 import `as`.leap.raptor.service.NamespaceManagerImpl
 import `as`.leap.raptor.service.SecurityManagerImpl

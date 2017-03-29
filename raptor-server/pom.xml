@@ -98,7 +98,9 @@
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.4.13</version>
           <configuration>
-            <env>RAPTOR_LOG_DIR=/mnt/sandbox</env>
+            <env>
+              <RAPTOR_LOG_DIR>/mnt/sandbox</RAPTOR_LOG_DIR>
+            </env>
             <imageName>${docker.registry}/maxleap/raptor:${project.version}</imageName>
             <baseImage>openjdk:8-jdk-alpine</baseImage>
             <workdir>/usr/local/lib/raptor</workdir>
@@ -108,9 +110,9 @@
               <expose>1935</expose>
             </exposes>
             <entryPoint>
-              ["java","-XX:+UseG1GC","-Djava.net.preferIPv4Stack=true","-Dlog4j.configurationFile=file:log4j.properties","-cp","${project.build.finalName}-shaded.jar","as.leap.raptor.server.Bootstrap"]
+              ["java","-XX:+UseG1GC","-Djava.net.preferIPv4Stack=true","-Dlog4j.configurationFile=file:log4j2.xml","-cp","${project.build.finalName}-shaded.jar","as.leap.raptor.server.Bootstrap"]
             </entryPoint>
-            <pushImageTag>true</pushImageTag>
+            <pushImageTag>false</pushImageTag>
             <imageTags>
               <imageTag>latest</imageTag>
             </imageTags>
@@ -149,7 +151,7 @@
         <artifactId>docker-maven-plugin</artifactId>
         <executions>
           <execution>
-            <phase>deploy</phase>
+            <phase>install</phase>
             <goals>
               <goal>build</goal>
             </goals>
