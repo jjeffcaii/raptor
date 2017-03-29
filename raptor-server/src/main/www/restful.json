@@ -1,0 +1,64 @@
+FORMAT: 1A
+HOST: http://127.0.0.1:8080
+
+# raptor
+a restful document for project raptor.
+
+# Group groups
+
+## Groups By Namespace And Name [/{namespace}/groups/{name}]
+
++ Parameters
+    + namespace (string, required)
+
+        your namespace.
+
+    + name (string, required)
+
+        your group name.
+
+
+### Get Group [GET]
+get a group.
+
++ Response 200 (application/json)
+    + Attributes (Group)
+
+
+### Create Group [POST]
+save or update a group.
+
++ Request (application/json)
+    + Attributes (Group)
+
+
++ Response 200
+    + Attributes (number)
+
+
+### Delete Group [DELETE]
+delete a group.
+
++ Response 200
+    + Attributes (number)
+
+
+
+
+# Data Structures
+
+## Address (object)
+RTMP Address
+
+### Properties
++ `url` (string, required) - RTMP url.
++ `streamKey` (string, optional) - RTMP stream key.
+
+
+## Group (object)
+RTMP group.
+
+### Properties
++ `reconnect` (boolean, optional) - enable adaptor reconnect.
++ `expires` (number, optional) - group expire in seconds.
++ `addresses` (array[Address], required) - RTMP address list in group.

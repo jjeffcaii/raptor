@@ -72,6 +72,25 @@
           <groupId>com.spotify</groupId>
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.4.13</version>
+
+          <configuration>
+            <imageName>${docker.registry}/maxleap/raptor:${project.version}</imageName>
+            <dockerDirectory>${project.basedir}/src/main/docker</dockerDirectory>
+            <resources>
+              <resource>
+                <targetPath>/</targetPath>
+                <directory>${project.build.directory}</directory>
+                <include>${project.build.finalName}-jar-with-dependencies.jar</include>
+              </resource>
+              <resource>
+                <targetPath>/www</targetPath>
+                <directory>${project.basedir}/src/main/www</directory>
+                <include>*</include>
+              </resource>
+            </resources>
+          </configuration>
+
+          <!--
           <configuration>
             <env>
               <RAPTOR_LOG_DIR>/mnt/sandbox</RAPTOR_LOG_DIR>
@@ -102,8 +121,14 @@
                 <directory>${project.build.directory}/test-classes</directory>
                 <include>log4j2.xml</include>
               </resource>
+              <resource>
+                <targetPath>/usr/local/lib/raptor</targetPath>
+                <directory>${project.basedir}/src/main/www</directory>
+                <include>*</include>
+              </resource>
             </resources>
           </configuration>
+          -->
         </plugin>
       </plugins>
     </pluginManagement>
@@ -127,7 +152,7 @@
         <artifactId>docker-maven-plugin</artifactId>
         <executions>
           <execution>
-            <phase>deploy</phase>
+            <phase>package</phase>
             <goals>
               <goal>build</goal>
             </goals>

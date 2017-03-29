@@ -4,10 +4,12 @@ import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.api.SecurityManager
 import `as`.leap.raptor.api.exception.RaptorException
-import `as`.leap.raptor.commons.Utils
-import `as`.leap.raptor.core.impl.DefaultSwapper
 import `as`.leap.raptor.api.impl.NamespaceManagerImpl
 import `as`.leap.raptor.api.impl.SecurityManagerImpl
+import `as`.leap.raptor.commons.Consts
+import `as`.leap.raptor.commons.Utils
+import `as`.leap.raptor.core.impl.DefaultSwapper
+import `as`.leap.raptor.server.vo.PostGroup
 import com.google.common.base.Splitter
 import com.google.common.net.HostAndPort
 import io.reactivex.Single
@@ -19,8 +21,10 @@ import io.vertx.core.net.NetServer
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
+import io.vertx.ext.web.handler.StaticHandler
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.JedisCluster
+import java.io.File
 import java.lang.invoke.MethodHandles
 
 class RaptorServer(private val opts: RaptorOptions) : Runnable {
@@ -33,7 +37,7 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
 
   init {
     // 0. preparement.
-    val seeds = Splitter.on(",").splitToList(opts.redis)
+    val seeds = Splitter.on(",").trimResults().omitEmptyStrings().splitToList(opts.redis)
         .map {
           val hap = HostAndPort.fromString(it)
           redis.clients.jedis.HostAndPort(hap.hostText, hap.getPortOrDefault(6399))
@@ -47,20 +51,28 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
     // 1. create restful server.
     this.apiServer = vertx.createHttpServer()
     val router = Router.router(this.vertx)
+
+    System.getenv("RAPTOR_HOME")?.let {
+      val f = File(it, "www")
+      if (f.exists() && f.isDirectory) {
+        router.route("/*").handler(StaticHandler.create(f.absolutePath))
+      }
+    }
+
     router.route().handler(BodyHandler.create())
     router.route().handler {
       it.response()
-          .putHeader("Access-Control-Allow-Origin", "*")
-          .putHeader("Access-Control-Allow-Methods", "HEAD, POST, GET, OPTIONS, DELETE, PUT")
-          .putHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+          .putHeader(Consts.HEADER_CORS_ORIGIN, Consts.CORS_ORIGIN)
+          .putHeader(Consts.HEADER_CORS_METHOD, Consts.CORS_METHOD)
+          .putHeader(Consts.HEADER_CORS_HEADER, Consts.CORS_HEADER)
       when (it.request().method()) {
         HttpMethod.OPTIONS -> it.response().end()
         else -> it.next()
       }
     }
 
-    router.post("/:ns/groups/:gp").consumes(CONTENT_TYPE_JSON).handler(this::saveGroup)
-    router.put("/:ns/groups/:gp").consumes(CONTENT_TYPE_JSON).handler(this::saveGroup)
+    router.post("/:ns/groups/:gp").consumes(Consts.CONTENT_TYPE_JSON).handler(this::saveGroup)
+    router.put("/:ns/groups/:gp").consumes(Consts.CONTENT_TYPE_JSON).handler(this::saveGroup)
 
     router.delete("/:ns/groups/:gp").handler { ctx ->
       val ob = Single.create<Int> {
@@ -69,7 +81,23 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
         this.namespaceManager.clear(ns, gp)
         it.onSuccess(1)
       }
-      toJSON(ctx, ob, 204)
+      consumeAsJSON(ctx, ob, 204)
+    }
+    router.head("/:ns/groups/:gp").handler { ctx ->
+      val ob = Single.create<Boolean> {
+        val ns = ctx.request().getParam("ns")
+        val gp = ctx.request().getParam("gp")
+        it.onSuccess(this.namespaceManager.exists(ns, gp))
+      }
+      ob.subscribeOn(Schedulers.io()).subscribe({
+        val statusCode = when (it) {
+          true -> 200
+          false -> 404
+        }
+        ctx.response().setStatusCode(statusCode).end()
+      }, {
+        ctx.response().setStatusCode(500).end()
+      })
     }
 
     router.get("/:ns/groups/:gp").handler { ctx ->
@@ -78,7 +106,7 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
         val gp = ctx.request().getParam("gp")
         it.onSuccess(this.namespaceManager.load(ns, gp))
       }
-      toJSON(ctx, ob)
+      consumeAsJSON(ctx, ob)
     }
 
     this.apiServer.requestHandler({ router.accept(it) })
@@ -97,11 +125,12 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
     val ob = Single.create<Int> {
       val ns = ctx.request().getParam("ns")
       val gp = ctx.request().getParam("gp")
-      val addresses = Utils.fromJSONArray(ctx.bodyAsString, Address::class.java)
-      this.namespaceManager.save(ns, gp, addresses)
+      val vo = Utils.fromJSON(ctx.bodyAsString, PostGroup::class.java)
+      val addresses = vo.addresses.map { it.toAddress()!! }.toList().toTypedArray()
+      this.namespaceManager.save(ns, gp, addresses, vo.expires)
       it.onSuccess(addresses.size)
     }
-    toJSON(ctx, ob, 201)
+    consumeAsJSON(ctx, ob, 201)
   }
 
   override fun run() {
@@ -130,19 +159,15 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
 
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
 
-    private val HEADER_CONTENT_TYPE = "Content-Type"
-    private val CONTENT_TYPE_JSON = "application/json"
-    private val CONTENT_TYPE_JSON_UTF8 = "application/json; charset=utf-8"
-
-    private fun toJSON(ctx: RoutingContext, ob: Single<*>, statusCode: Int = 200) {
+    private fun consumeAsJSON(ctx: RoutingContext, ob: Single<*>, statusCode: Int = 200) {
       ob.subscribeOn(Schedulers.io()).subscribe({
         ctx.response()
             .setStatusCode(statusCode)
-            .putHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON_UTF8)
+            .putHeader(Consts.HEADER_CONTENT_TYPE, Consts.CONTENT_TYPE_JSON_UTF8)
             .end(Utils.toJSON(it))
       }, {
         val resp = ctx.response()
-            .putHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON_UTF8)
+            .putHeader(Consts.HEADER_CONTENT_TYPE, Consts.CONTENT_TYPE_JSON_UTF8)
         var code: Int = 500
         var ecode: Int = 5000
         var msg: String? = null
