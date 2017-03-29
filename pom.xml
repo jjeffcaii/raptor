@@ -18,8 +18,10 @@
   </modules>
 
   <properties>
-    <compile.level>1.8</compile.level>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <compile.level>1.8</compile.level>
+    <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
+    <kotlin.compiler.languageVersion>1.1</kotlin.compiler.languageVersion>
     <kotlin.version>1.1.1</kotlin.version>
     <vertx.version>3.4.0</vertx.version>
     <slf4j.version>1.7.25</slf4j.version>
