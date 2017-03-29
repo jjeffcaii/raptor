@@ -12,4 +12,12 @@ object Consts {
   val DEFAULT_GROUP_NAME = "default"
   val KEY_FOR_GROUP = "g"
   val KEY_FOR_SIGN = "k"
+
+  val HEADER_CORS_ORIGIN = "Access-Control-Allow-Origin"
+  val HEADER_CORS_METHOD = "Access-Control-Allow-Methods"
+  val HEADER_CORS_HEADER = "Access-Control-Allow-Headers"
+
+  val CORS_ORIGIN = "*"
+  val CORS_METHOD = "HEAD, POST, GET, OPTIONS, DELETE, PUT"
+  val CORS_HEADER = "Origin, X-Requested-With, Content-Type, Accept"
 }
