@@ -1,13 +1,10 @@
 package `as`.leap.raptor.server
 
-import org.testng.annotations.Test
+object BootstrapTest {
 
-class BootstrapTest {
-
-  @Test
-  fun test() {
+  @JvmStatic
+  fun main(args: Array<String>) {
     Bootstrap.main(emptyArray())
   }
-
 
 }
