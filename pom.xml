@@ -251,4 +251,67 @@
     </plugins>
   </build>
 
+  <profiles>
+    <profile>
+      <id>development</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <env>development</env>
+        <nexus.host>10.10.10.137:8081/nexus</nexus.host>
+        <docker.registry>10.10.10.160:8010</docker.registry>
+      </properties>
+      <repositories>
+        <repository>
+          <id>snapshots</id>
+          <name>Internal Snapshots</name>
+          <url>http://${nexus.host}/content/repositories/snapshots</url>
+        </repository>
+      </repositories>
+      <distributionManagement>
+        <snapshotRepository>
+          <id>snapshots</id>
+          <name>Internal Snapshots</name>
+          <url>http://${nexus.host}/content/repositories/snapshots</url>
+        </snapshotRepository>
+      </distributionManagement>
+    </profile>
+    <profile>
+      <id>production</id>
+      <properties>
+        <env>production</env>
+        <nexus.host>nexus.maxleap.cn:8081</nexus.host>
+        <docker.registry>dockerhub.leapcloud.cn:5000</docker.registry>
+      </properties>
+    </profile>
+  </profiles>
+
+  <repositories>
+    <repository>
+      <id>public</id>
+      <name>Public Repositories</name>
+      <url>http://${nexus.host}/content/groups/public</url>
+    </repository>
+    <repository>
+      <id>releases</id>
+      <name>Internal Releases</name>
+      <url>http://${nexus.host}/content/repositories/releases</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>public</id>
+      <name>Public Repositories</name>
+      <url>http://${nexus.host}/content/groups/public</url>
+    </pluginRepository>
+  </pluginRepositories>
+  <distributionManagement>
+    <repository>
+      <id>releases</id>
+      <name>Internal Releases</name>
+      <url>http://${nexus.host}/content/repositories/releases</url>
+    </repository>
+  </distributionManagement>
+
 </project>

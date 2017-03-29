@@ -11,10 +11,6 @@
 
   <artifactId>raptor-server</artifactId>
 
-  <properties>
-    <docker.registry>10.10.10.160:8010</docker.registry>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>as.leap</groupId>
@@ -112,7 +108,7 @@
             <entryPoint>
               ["java","-XX:+UseG1GC","-Djava.net.preferIPv4Stack=true","-Dlog4j.configurationFile=file:log4j2.xml","-cp","${project.build.finalName}-shaded.jar","as.leap.raptor.server.Bootstrap"]
             </entryPoint>
-            <pushImageTag>false</pushImageTag>
+            <pushImageTag>true</pushImageTag>
             <imageTags>
               <imageTag>latest</imageTag>
             </imageTags>
@@ -139,7 +135,7 @@
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
-            <phase>package</phase>
+            <phase>deploy</phase>
             <goals>
               <goal>shade</goal>
             </goals>
@@ -151,7 +147,7 @@
         <artifactId>docker-maven-plugin</artifactId>
         <executions>
           <execution>
-            <phase>install</phase>
+            <phase>deploy</phase>
             <goals>
               <goal>build</goal>
             </goals>
