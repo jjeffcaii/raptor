@@ -22,7 +22,7 @@ data class Address(val host: String, val context: String, val key: String, val p
 
     val DEFAULT_PORT = 1935
 
-    private val PATTERN_RTMP_URL = Pattern.compile("rtmp://([a-zA-Z0-9\\-_.]+)(:[1-9][0-9]*+)?/([a-zA-Z0-9_\\-]+)([/?].+)$")
+    private val PATTERN_RTMP_URL = Pattern.compile("rtmp://([a-zA-Z0-9\\-_.]+)(:[1-9][0-9]+)?/([a-zA-Z0-9_\\-]+)([/?].+)$")
 
     fun from(url: String): Address? {
       val matcher = PATTERN_RTMP_URL.matcher(url)

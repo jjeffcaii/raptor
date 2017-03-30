@@ -19,6 +19,6 @@ object Consts {
   val HEADER_CORS_HEADER = "Access-Control-Allow-Headers"
 
   val CORS_ORIGIN = "*"
-  val CORS_METHOD = "HEAD, POST, GET, OPTIONS, DELETE, PUT"
-  val CORS_HEADER = "Origin, X-Requested-With, Content-Type, Accept"
+  val CORS_METHOD = "HEAD, POST, GET, OPTIONS, DELETE, PUT, PATCH"
+  val CORS_HEADER = "Origin, X-Requested-With, Content-Type, Accept, $HEADER_MAXLEAP_APPID, $HEADER_MAXLEAP_APIKEY"
 }

@@ -1,0 +1,67 @@
+<div class="row">
+  <div class="col-md-3">
+    <ul class="nav nav-pills nav-stacked">
+      <li role="presentation" ng-class="{'active': vm.tab == 0}">
+        <a href="javascript:" ng-click="vm.toTab(0)">Basic Settings</a>
+      </li>
+      <li role="presentation" ng-class="{'active': vm.tab == 1}">
+        <a href="javascript:" ng-click="vm.toTab(1)">Address Settings</a>
+      </li>
+    </ul>
+  </div>
+  <div class="col-md-9" style="border-left: 1px solid #ccc;">
+    <div class="row">
+      <div class="col-md-12" ng-if="vm.tab == 0">
+        <form>
+          <div class="form-group">
+            <label for="inpGroupName">Name</label>
+            <input type="text" class="form-control" id="inpGroupName"
+                   ng-model="vm.gp.name"
+                   placeholder="Input group name here...">
+          </div>
+          <div class="form-group">
+            <label for="inpGroupExp">Expires</label>
+            <input type="number" class="form-control" id="inpGroupExp" style="width: 100px;"
+                   ng-model="vm.gp.expires" max="300" min="30" step="10"
+                   placeholder="Input group expire(seconds) here...">
+          </div>
+
+        </form>
+      </div>
+      <div class="col-md-12" ng-if="vm.tab == 1">
+        <div class="row" ng-repeat="item in vm.gp.addresses">
+          <div class="col-md-12">
+            <div class="input-group input-group-sm">
+              <span class="input-group-addon">URL</span>
+              <input type="text" class="form-control"
+                     placeholder="Input your rtmp url. (eg: rtmp://send3.douyu.com/live)"
+                     ng-model="item.url">
+            </div>
+            <div class="input-group input-group-sm" style="margin-top: 5px;">
+              <span class="input-group-addon">KEY</span>
+              <input type="text" class="form-control" placeholder="Input your stream key." ng-model="item.streamKey">
+            </div>
+            <hr>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top: 10px;">
+          <div class="col-md-6">
+            <p>
+              <a href="javascript:" class="text text-warning" role="button" ng-click="vm.resetAddress()"><i
+                class="fa fa-undo" aria-hidden="true"></i> reset
+              </a>
+            </p>
+          </div>
+          <div class="col-md-6">
+            <p style="text-align: right;">
+              <a href="javascript:" class="text text-primary" role="button" ng-click="vm.newAddress()"><i
+                class="fa fa-plus" aria-hidden="true"></i> add new
+                address</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

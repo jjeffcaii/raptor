@@ -45,8 +45,8 @@
         "module": null
       },
       "bootstrapComponents": {
-        "key": "angular-strap",
-        "module": "mgcrea.ngStrap"
+        "key": "official",
+        "module": null
       },
       "cssPreprocessor": {
         "key": "less",

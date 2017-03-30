@@ -21,6 +21,8 @@
           <tr>
             <th>#</th>
             <th>Name</th>
+            <th>Address</th>
+            <th>Expired</th>
             <th>Operation</th>
           </tr>
           </thead>
@@ -28,10 +30,62 @@
           <tr ng-repeat="item in vm.groups">
             <td>{{$index+1}}</td>
             <td>{{item.name}}</td>
+            <td>
+              <span class="label label-default" ng-repeat="address in item['addresses']">{{address.url}}</span>
+            </td>
+            <td>{{item.expired | date:'yyyy-MM-dd HH:mm:ss'}}</td>
+            <td>
+              <a href="javascript:" class="btn btn-xs btn-primary" ng-click="vm.edit(item)" role="button">
+                <i class="fa fa-pencil-square-o fa-lg" aria-hidden="true"></i>&nbsp;&nbsp;Edit
+              </a>
+              <a href="javascript:" class="btn btn-xs btn-info" ng-click="vm.qrcode(item)">
+                <i class="fa fa-qrcode fa-lg" aria-hidden="true"></i>&nbsp;&nbsp;QRCode
+              </a>
+            </td>
           </tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
+
+  <div id="modalQRCode" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <h4 class="modal-title">QRCode</h4>
+        </div>
+        <div class="modal-body" style="text-align: center;">
+          <qrcode data="{{vm.qr}}" size="320"></qrcode>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+  <div id="modalGroup" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <h4 class="modal-title">Group Form</h4>
+        </div>
+        <div class="modal-body">
+          <raptor-group gp="vm.current" tab="0"></raptor-group>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" ng-click="vm.save()">Submit</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
 </div>

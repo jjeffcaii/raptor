@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.net.Inet4Address
 
 
 object Utils {
@@ -31,7 +32,11 @@ object Utils {
 
   fun <T> fromJSONArray(json: String, clazz: Class<T>): Array<T> {
     return mapper.readValue(json, TypeFactory.defaultInstance().constructArrayType(clazz))
+
   }
 
+  fun localIP(): String {
+    return Inet4Address.getLocalHost().hostAddress
+  }
 
 }

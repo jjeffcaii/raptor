@@ -1,5 +1,6 @@
 package `as`.leap.raptor.server
 
+import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.api.SecurityManager
 import `as`.leap.raptor.api.exception.RaptorException
@@ -25,10 +26,12 @@ import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.StaticHandler
+import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.JedisCluster
 import java.io.File
 import java.lang.invoke.MethodHandles
+import java.util.concurrent.TimeUnit
 
 class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runnable {
 
@@ -81,14 +84,14 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
 
     // permission check.
     router.route().handler { ctx ->
-      val ob = Single.create<Pair<Boolean, String>> {
+      val ob = Single.create<Triple<Boolean, String, String>> {
         val ns = ctx.request().getHeader(Consts.HEADER_MAXLEAP_APPID)
         val tk = ctx.request().getHeader(Consts.HEADER_MAXLEAP_APIKEY)
-        it.onSuccess(Pair(this.securityManager.nativeValidate(ns, tk), ns))
+        it.onSuccess(Triple(this.securityManager.nativeValidate(ns, tk), ns, tk))
       }
       ob.subscribeOn(Schedulers.io()).subscribe({
         when (it.first) {
-          true -> ctx.put("ns", it.second).next()
+          true -> ctx.put(KEY_NS, it.second).put(KEY_TK, it.third).next()
           else -> {
             ctx.response()
                 .putHeader(Consts.HEADER_CONTENT_TYPE, Consts.CONTENT_TYPE_JSON_UTF8)
@@ -113,7 +116,7 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
       }
       consumeAsJSON(ctx, ob, 201)
     }
-    
+
     router.put("/groups/:gp").consumes(Consts.CONTENT_TYPE_JSON).handler { ctx ->
       val ob = Single.create<Int> {
         val ns: String = ctx.get(KEY_NS)
@@ -196,6 +199,28 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
       consumeAsJSON(ctx, ob)
     }
 
+    router.get("/groups/:gp/publish").handler { ctx ->
+      val ob = Single.create<Any> {
+        val ns: String = ctx.get(KEY_NS)
+        val gp = ctx.request().getParam("gp")
+        val tk: String = ctx.get(KEY_TK)
+        when (this.namespaceManager.exists(ns, gp)) {
+          true -> {
+            val ts = System.currentTimeMillis() + this.namespaceManager.ttl(ns, gp, TimeUnit.MILLISECONDS)
+            val hash = DigestUtils.md5Hex("$ts$tk")
+            val sign = "$hash,$ts"
+            val url = when (opts.rtmpPort) {
+              Address.DEFAULT_PORT -> "rtmp://${opts.hostname}/$ns?k=$sign&g=$gp"
+              else -> "rtmp://${opts.hostname}:${opts.rtmpPort}/$ns?k=$sign&g=$gp"
+            }
+            it.onSuccess(mapOf("url" to url, "ts" to ts))
+          }
+          else -> throw RaptorException("no such group $gp.").code(Errors.missing, 404)
+        }
+      }
+      consumeAsJSON(ctx, ob)
+    }
+
     this.apiServer.requestHandler({ router.accept(it) })
 
     // 2. create rtmp server.
@@ -232,6 +257,7 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
 
   companion object {
     private val KEY_NS = "ns"
+    private val KEY_TK = "tk"
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
 
     private fun consumeAsJSON(ctx: RoutingContext, ob: Single<*>, statusCode: Int = 200) {
