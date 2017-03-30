@@ -58,12 +58,16 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
     www?.let {
       val f = File(it)
       if (f.exists() && f.isDirectory) {
-        logger.info("page files found: {}.", f.absolutePath)
+        if (logger.isDebugEnabled) {
+          logger.debug("page files found: {}.", f.absolutePath)
+        }
         router.route("/site/*").handler(StaticHandler.create(it))
       }
     }
 
     router.route().handler(BodyHandler.create())
+
+    // enable cross domain.
     router.route().handler {
       it.response()
           .putHeader(Consts.HEADER_CORS_ORIGIN, Consts.CORS_ORIGIN)
@@ -75,6 +79,7 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
       }
     }
 
+    // permission check.
     router.route().handler { ctx ->
       val ob = Single.create<Pair<Boolean, String>> {
         val ns = ctx.request().getHeader(Consts.HEADER_MAXLEAP_APPID)
@@ -108,6 +113,7 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
       }
       consumeAsJSON(ctx, ob, 201)
     }
+    
     router.put("/groups/:gp").consumes(Consts.CONTENT_TYPE_JSON).handler { ctx ->
       val ob = Single.create<Int> {
         val ns: String = ctx.get(KEY_NS)
