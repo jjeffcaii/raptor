@@ -6,6 +6,8 @@ interface SecurityManager {
 
   fun validate(namespace: String, streamKey: String): Result
 
+  fun nativeValidate(namespace: String, clientKey: String): Boolean
+
   class Result(val success: Boolean, val group: String)
 
   companion object {

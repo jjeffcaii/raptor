@@ -1,4 +1,4 @@
-export function config ($logProvider, toastrConfig) {
+export function config($logProvider, toastrConfig, cfpLoadingBarProvider) {
   'ngInject';
   // Enable log
   $logProvider.debugEnabled(true);
@@ -9,4 +9,8 @@ export function config ($logProvider, toastrConfig) {
   toastrConfig.positionClass = 'toast-top-right';
   toastrConfig.preventDuplicates = true;
   toastrConfig.progressBar = true;
+
+  cfpLoadingBarProvider.includeBar = true;
+  cfpLoadingBarProvider.includeSpinner = false;
+  cfpLoadingBarProvider.latencyThreshold = 500;
 }

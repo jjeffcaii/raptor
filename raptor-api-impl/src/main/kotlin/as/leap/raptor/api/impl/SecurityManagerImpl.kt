@@ -8,12 +8,22 @@ import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 import java.util.regex.Pattern
 
 class SecurityManagerImpl(endpoint: String) : SecurityManager {
+
+  override fun nativeValidate(namespace: String, clientKey: String): Boolean {
+    if (StringUtils.equals(clientKey, SecurityManager.GOD_KEY)) {
+      return true
+    }
+    val ts: Int = 1
+    val foo = DigestUtils.md5Hex("$ts$clientKey")
+    return this.cache.get(Pair(namespace, "$foo,$ts"))
+  }
 
   private val base: String = "${StringUtils.strip(endpoint, "/")}/2.0/acl"
   private val cache: LoadingCache<Pair<String, String>, Boolean> = CacheBuilder.newBuilder()

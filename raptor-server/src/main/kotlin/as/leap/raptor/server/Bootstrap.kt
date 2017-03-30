@@ -18,7 +18,7 @@ object Bootstrap {
       "production" -> RaptorOptions.production
       else -> RaptorOptions.development
     }
-    val server = RaptorServer(opts)
+    val server = RaptorServer(opts, System.getProperty("raptor.server.www"))
     server.run()
   }
 

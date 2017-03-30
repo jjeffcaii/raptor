@@ -8,6 +8,14 @@ WORKDIR ${RAPTOR_HOME}
 
 EXPOSE 8080 1935
 
-ENTRYPOINT ["java","-XX:+UseG1GC","-Djava.net.preferIPv4Stack=true","-Dlog4j.configurationFile=file:log4j2.xml","-jar","raptor-server-jar-with-dependencies.jar"]
+ENTRYPOINT [\
+"java",\
+"-XX:+UseG1GC",\
+"-Djava.net.preferIPv4Stack=true",\
+"-Dlog4j.configurationFile=file:log4j2.xml",\
+"-Draptor.server.www=www",\
+"-jar",\
+"raptor-server-jar-with-dependencies.jar"\
+]
 
 ADD ./ ./

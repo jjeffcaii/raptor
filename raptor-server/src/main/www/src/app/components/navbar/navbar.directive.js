@@ -19,4 +19,5 @@ class NavbarController {
   constructor() {
     'ngInject';
   }
+
 }

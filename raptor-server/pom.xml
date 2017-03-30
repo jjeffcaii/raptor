@@ -83,8 +83,8 @@
                 <include>${project.artifactId}-jar-with-dependencies.jar</include>
               </resource>
               <resource>
-                <targetPath>www</targetPath>
-                <directory>${project.basedir}/src/main/www</directory>
+                <targetPath>/www</targetPath>
+                <directory>${project.basedir}/src/main/www/dist</directory>
                 <include>*</include>
               </resource>
             </resources>

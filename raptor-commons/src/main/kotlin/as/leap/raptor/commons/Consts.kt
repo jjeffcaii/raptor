@@ -5,6 +5,7 @@ object Consts {
 
   val HEADER_MAXLEAP_APPID = "X-ML-AppId"
   val HEADER_MAXLEAP_SIGN = "X-ML-Request-Sign"
+  val HEADER_MAXLEAP_APIKEY = "X-ML-APIKey"
   val HEADER_CONTENT_TYPE = "Content-Type"
   val CONTENT_TYPE_JSON = "application/json"
   val CONTENT_TYPE_JSON_UTF8 = "application/json; charset=utf-8"

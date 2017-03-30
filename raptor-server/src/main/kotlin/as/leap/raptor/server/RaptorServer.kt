@@ -1,15 +1,18 @@
 package `as`.leap.raptor.server
 
-import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.api.SecurityManager
 import `as`.leap.raptor.api.exception.RaptorException
 import `as`.leap.raptor.api.impl.NamespaceManagerImpl
 import `as`.leap.raptor.api.impl.SecurityManagerImpl
 import `as`.leap.raptor.commons.Consts
+import `as`.leap.raptor.commons.Errors
 import `as`.leap.raptor.commons.Utils
 import `as`.leap.raptor.core.impl.DefaultSwapper
+import `as`.leap.raptor.server.vo.GroupVO
+import `as`.leap.raptor.server.vo.PostAddress
 import `as`.leap.raptor.server.vo.PostGroup
+import `as`.leap.raptor.server.vo.Shit
 import com.google.common.base.Splitter
 import com.google.common.net.HostAndPort
 import io.reactivex.Single
@@ -27,7 +30,7 @@ import redis.clients.jedis.JedisCluster
 import java.io.File
 import java.lang.invoke.MethodHandles
 
-class RaptorServer(private val opts: RaptorOptions) : Runnable {
+class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runnable {
 
   private val vertx = Vertx.vertx()
   private val apiServer: HttpServer
@@ -52,11 +55,11 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
     this.apiServer = vertx.createHttpServer()
     val router = Router.router(this.vertx)
 
-    System.getenv("RAPTOR_HOME")?.let {
-      val f = File(it, "www")
+    www?.let {
+      val f = File(it)
       if (f.exists() && f.isDirectory) {
-        logger.info("page files found: {}.", f.absoluteFile)
-        router.route("/site/*").handler(StaticHandler.create(f.absolutePath))
+        logger.info("page files found: {}.", f.absolutePath)
+        router.route("/site/*").handler(StaticHandler.create(it))
       }
     }
 
@@ -72,21 +75,76 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
       }
     }
 
-    router.post("/:ns/groups/:gp").consumes(Consts.CONTENT_TYPE_JSON).handler(this::saveGroup)
-    router.put("/:ns/groups/:gp").consumes(Consts.CONTENT_TYPE_JSON).handler(this::saveGroup)
+    router.route().handler { ctx ->
+      val ob = Single.create<Pair<Boolean, String>> {
+        val ns = ctx.request().getHeader(Consts.HEADER_MAXLEAP_APPID)
+        val tk = ctx.request().getHeader(Consts.HEADER_MAXLEAP_APIKEY)
+        it.onSuccess(Pair(this.securityManager.nativeValidate(ns, tk), ns))
+      }
+      ob.subscribeOn(Schedulers.io()).subscribe({
+        when (it.first) {
+          true -> ctx.put("ns", it.second).next()
+          else -> {
+            ctx.response()
+                .putHeader(Consts.HEADER_CONTENT_TYPE, Consts.CONTENT_TYPE_JSON_UTF8)
+                .setStatusCode(401)
+                .end(Shit(Errors.security, "Not valid APP_ID or API_KEY!").toString())
+          }
+        }
+      }, { ctx.response().setStatusCode(500).end() })
+    }
 
-    router.delete("/:ns/groups/:gp").handler { ctx ->
+    router.post("/groups/:gp").consumes(Consts.CONTENT_TYPE_JSON).handler { ctx ->
       val ob = Single.create<Int> {
-        val ns = ctx.request().getParam("ns")
+        val ns: String = ctx.get(KEY_NS)
+        val gp = ctx.request().getParam("gp")
+        val vo = Utils.fromJSON(ctx.bodyAsString, PostGroup::class.java)
+        val addresses = vo.addresses.map { it.toAddress()!! }.toList().toTypedArray()
+        if (this.namespaceManager.exists(ns, gp)) {
+          throw RaptorException("group $gp exists already!").code(Errors.conflict)
+        }
+        this.namespaceManager.save(ns, gp, addresses, vo.expires)
+        it.onSuccess(1)
+      }
+      consumeAsJSON(ctx, ob, 201)
+    }
+    router.put("/groups/:gp").consumes(Consts.CONTENT_TYPE_JSON).handler { ctx ->
+      val ob = Single.create<Int> {
+        val ns: String = ctx.get(KEY_NS)
+        val gp = ctx.request().getParam("gp")
+        val vo = Utils.fromJSON(ctx.bodyAsString, PostGroup::class.java)
+        val addresses = vo.addresses.map { it.toAddress()!! }.toList().toTypedArray()
+        this.namespaceManager.clear(ns, gp)
+        this.namespaceManager.save(ns, gp, addresses, vo.expires)
+        it.onSuccess(1)
+      }
+      consumeAsJSON(ctx, ob)
+    }
+
+    router.patch("/groups/:gp").consumes(Consts.CONTENT_TYPE_JSON).handler { ctx ->
+      val ob = Single.create<Int> {
+        val ns: String = ctx.get(KEY_NS)
+        val gp = ctx.request().getParam("gp")
+        val vo = Utils.fromJSON(ctx.bodyAsString, PostGroup::class.java)
+        val addresses = vo.addresses.map { it.toAddress()!! }.toList().toTypedArray()
+        this.namespaceManager.save(ns, gp, addresses, vo.expires)
+        it.onSuccess(1)
+      }
+      consumeAsJSON(ctx, ob)
+    }
+
+    router.delete("/groups/:gp").handler { ctx ->
+      val ob = Single.create<Int> {
+        val ns: String = ctx.get(KEY_NS)
         val gp = ctx.request().getParam("gp")
         this.namespaceManager.clear(ns, gp)
         it.onSuccess(1)
       }
       consumeAsJSON(ctx, ob, 204)
     }
-    router.head("/:ns/groups/:gp").handler { ctx ->
+    router.head("/groups/:gp").handler { ctx ->
       val ob = Single.create<Boolean> {
-        val ns = ctx.request().getParam("ns")
+        val ns: String = ctx.get(KEY_NS)
         val gp = ctx.request().getParam("gp")
         it.onSuccess(this.namespaceManager.exists(ns, gp))
       }
@@ -101,11 +159,33 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
       })
     }
 
-    router.get("/:ns/groups/:gp").handler { ctx ->
-      val ob = Single.create<Array<Address>> {
-        val ns = ctx.request().getParam("ns")
+    router.get("/groups").handler { ctx ->
+      val ob = Single.create<List<GroupVO>> {
+        val ns: String = ctx.get(KEY_NS)
+        val li = this.namespaceManager.list(ns)
+            .map {
+              val addresses = it.value.map { PostAddress(it.toBaseURL(), it.key) }.toList()
+              val exp = this.namespaceManager.ttl(ns, it.key)
+              GroupVO(it.key, addresses, exp)
+            }
+            .toList()
+        it.onSuccess(li)
+      }
+      consumeAsJSON(ctx, ob)
+    }
+
+    router.get("/groups/:gp").handler { ctx ->
+      val ob = Single.create<GroupVO> {
+        val ns: String = ctx.get(KEY_NS)
         val gp = ctx.request().getParam("gp")
-        it.onSuccess(this.namespaceManager.load(ns, gp))
+        when (this.namespaceManager.exists(ns, gp)) {
+          true -> {
+            val addresses = this.namespaceManager.load(ns, gp).map { PostAddress(it.toBaseURL(), it.key) }.toList()
+            val exp = this.namespaceManager.ttl(ns, gp)
+            it.onSuccess(GroupVO(gp, addresses, exp))
+          }
+          else -> throw RaptorException("no such group $gp.").code(Errors.missing, 404)
+        }
       }
       consumeAsJSON(ctx, ob)
     }
@@ -120,18 +200,6 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
       DefaultSwapper(it, netClient, namespaceManager, securityManager)
       it.resume()
     }
-  }
-
-  private fun saveGroup(ctx: RoutingContext) {
-    val ob = Single.create<Int> {
-      val ns = ctx.request().getParam("ns")
-      val gp = ctx.request().getParam("gp")
-      val vo = Utils.fromJSON(ctx.bodyAsString, PostGroup::class.java)
-      val addresses = vo.addresses.map { it.toAddress()!! }.toList().toTypedArray()
-      this.namespaceManager.save(ns, gp, addresses, vo.expires)
-      it.onSuccess(addresses.size)
-    }
-    consumeAsJSON(ctx, ob, 201)
   }
 
   override fun run() {
@@ -157,7 +225,7 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
   }
 
   companion object {
-
+    private val KEY_NS = "ns"
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
 
     private fun consumeAsJSON(ctx: RoutingContext, ob: Single<*>, statusCode: Int = 200) {
@@ -166,27 +234,22 @@ class RaptorServer(private val opts: RaptorOptions) : Runnable {
             .setStatusCode(statusCode)
             .putHeader(Consts.HEADER_CONTENT_TYPE, Consts.CONTENT_TYPE_JSON_UTF8)
             .end(Utils.toJSON(it))
-      }, {
+      }, { ex ->
         val resp = ctx.response()
             .putHeader(Consts.HEADER_CONTENT_TYPE, Consts.CONTENT_TYPE_JSON_UTF8)
         var code: Int = 500
-        var ecode: Int = 5000
+        var ecode: Int = Errors.unknown
         var msg: String? = null
-
-        it.cause?.let { ex ->
-          ex.message?.let { msg = it }
-          when (ex) {
-            is RaptorException -> {
-              val c = ex.toCode()
-              code = c.second
-              ecode = c.first
-            }
-            is IllegalArgumentException -> {
-              code = 400
-            }
+        ex.message?.let { msg = it }
+        when (ex) {
+          is RaptorException -> {
+            val c = ex.toCode()
+            code = c.second
+            ecode = c.first
           }
+          is IllegalArgumentException -> code = 400
         }
-        resp.setStatusCode(code).end(Utils.toJSON(mapOf("code" to ecode, "msg" to msg)))
+        resp.setStatusCode(code).end(Shit(ecode, msg).toString())
       })
     }
 

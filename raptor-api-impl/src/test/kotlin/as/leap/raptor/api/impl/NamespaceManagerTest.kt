@@ -2,7 +2,6 @@ package `as`.leap.raptor.api.impl
 
 import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
-import `as`.leap.raptor.api.impl.NamespaceManagerImpl
 import `as`.leap.raptor.commons.Utils
 import com.google.common.base.Splitter
 import com.google.common.net.HostAndPort
@@ -46,6 +45,8 @@ class NamespaceManagerTest {
     Assert.assertFalse(this.manger!!.exists(ns, gp))
     this.manger!!.save(ns, gp, arrayOf(this.address!!), 3)
     Assert.assertTrue(this.manger!!.exists(ns, gp))
+    val groups = this.manger!!.list(ns)
+    Assert.assertEquals(1, groups.size)
     Thread.sleep(1000)
     var addresses = this.manger!!.load(ns, gp)
     Assert.assertEquals(1, addresses.size)

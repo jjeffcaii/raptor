@@ -6,19 +6,21 @@ data class Address(val host: String, val context: String, val key: String, val p
 
   fun toBaseURL(): String {
     return when (this.port) {
-      1935 -> "rtmp://$host/$context"
+      DEFAULT_PORT -> "rtmp://$host/$context"
       else -> "rtmp://$host:$port/$context"
     }
   }
 
   override fun toString(): String {
     return when (this.port) {
-      1935 -> "rtmp://$host/$context$key"
+      DEFAULT_PORT -> "rtmp://$host/$context$key"
       else -> "rtmp://$host:$port/$context$key"
     }
   }
 
   companion object {
+
+    val DEFAULT_PORT = 1935
 
     private val PATTERN_RTMP_URL = Pattern.compile("rtmp://([a-zA-Z0-9\\-_.]+)(:[1-9][0-9]*+)?/([a-zA-Z0-9_\\-]+)([/?].+)$")
 
