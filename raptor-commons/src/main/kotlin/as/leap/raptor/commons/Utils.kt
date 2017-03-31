@@ -1,7 +1,10 @@
 package `as`.leap.raptor.commons
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonEncoding
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.type.TypeFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import java.io.ByteArrayOutputStream
@@ -11,7 +14,12 @@ import java.net.Inet4Address
 
 object Utils {
 
-  private val mapper = ObjectMapper().registerModule(KotlinModule())
+  private val mapper: ObjectMapper by lazy {
+    ObjectMapper().registerModule(KotlinModule())
+        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false)
+  }
 
   fun toJSON(obj: Any): String {
     ByteArrayOutputStream().use {

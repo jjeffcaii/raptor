@@ -1,4 +1,4 @@
-export function config($logProvider, toastrConfig, cfpLoadingBarProvider) {
+export function config($logProvider, toastrConfig, cfpLoadingBarProvider, $httpProvider) {
   'ngInject';
   // Enable log
   $logProvider.debugEnabled(true);
@@ -13,4 +13,14 @@ export function config($logProvider, toastrConfig, cfpLoadingBarProvider) {
   cfpLoadingBarProvider.includeBar = true;
   cfpLoadingBarProvider.includeSpinner = false;
   cfpLoadingBarProvider.latencyThreshold = 500;
+
+  // alternatively, register the interceptor via an anonymous factory
+  $httpProvider.interceptors.push(($q) => {
+    return {
+      'responseError': (rejection) => {
+        return $q.reject(rejection);
+      }
+    };
+  });
+
 }

@@ -35,6 +35,4 @@ class SecurityManagerTest {
     val hash = DigestUtils.md5Hex("$ts$k")
     Assert.assertFalse(manager.validate(this.namespace, "?k=$hash,$ts").success)
   }
-
-
 }

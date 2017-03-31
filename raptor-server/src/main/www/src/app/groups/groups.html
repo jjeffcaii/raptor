@@ -78,11 +78,13 @@
           <h4 class="modal-title">Group Form</h4>
         </div>
         <div class="modal-body">
-          <raptor-group gp="vm.current" tab="0"></raptor-group>
+          <form>
+            <raptor-group gp="vm.current" tab="0"></raptor-group>
+          </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" ng-click="vm.save()">Submit</button>
+          <a type="button" class="btn btn-default" data-dismiss="modal" role="button">Close</a>
+          <a type="button" class="btn btn-primary" ng-click="vm.save()" role="button">Submit</a>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->

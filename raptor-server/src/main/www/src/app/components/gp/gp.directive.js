@@ -30,8 +30,8 @@ class GpController {
 
   newAddress() {
     this.gp.addresses.push({
-      url: '',
-      streamKey: ''
+      url: 'rtmp://YOUR_SERVER/YOUR_CONTEXT',
+      streamKey: '?foo=bar'
     });
   }
 

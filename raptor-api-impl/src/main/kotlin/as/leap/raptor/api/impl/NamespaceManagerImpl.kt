@@ -68,7 +68,7 @@ class NamespaceManagerImpl(private val jedis: JedisCluster) : NamespaceManager {
 
   companion object {
 
-    private val PATTERN_NORMAL = Pattern.compile("[a-zA-Z0-9]+")
+    private val PATTERN_NORMAL = Pattern.compile("[a-zA-Z0-9_]+")
     private val SPLITTER = "\u0001"
 
     private fun encode(address: Address): String {

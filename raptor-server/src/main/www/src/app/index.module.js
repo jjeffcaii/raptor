@@ -12,8 +12,9 @@ angular.module('www', ['ngAnimate', 'ngCookies', 'ngTouch', 'ngSanitize', 'ngMes
   .constant('R', {
     endpoint: 'http://127.0.0.1:8080',
     headers: {
-      'x-ml-appid': '56a86320e9db7300015438f7',
-      'x-ml-apikey': 'iseedeadpeople'
+      'X-ML-AppId': '56a86320e9db7300015438f7',
+      'X-ML-APIKey': 'iseedeadpeople',
+      'Content-Type': 'application/json; charset=utf-8'
     }
   })
   .constant('moment', moment)

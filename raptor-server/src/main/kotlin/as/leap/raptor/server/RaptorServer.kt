@@ -207,8 +207,14 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
         when (this.namespaceManager.exists(ns, gp)) {
           true -> {
             val ts = System.currentTimeMillis() + this.namespaceManager.ttl(ns, gp, TimeUnit.MILLISECONDS)
-            val hash = DigestUtils.md5Hex("$ts$tk")
-            val sign = "$hash,$ts"
+            val sign: String
+            when (tk) {
+              SecurityManager.GOD_KEY -> sign = tk
+              else -> {
+                val hash = DigestUtils.md5Hex("$ts$tk")
+                sign = "$hash,$ts"
+              }
+            }
             val url = when (opts.rtmpPort) {
               Address.DEFAULT_PORT -> "rtmp://${opts.hostname}/$ns?k=$sign&g=$gp"
               else -> "rtmp://${opts.hostname}:${opts.rtmpPort}/$ns?k=$sign&g=$gp"
@@ -219,6 +225,13 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
         }
       }
       consumeAsJSON(ctx, ob)
+    }
+
+    router.get("/tests/error").handler { ctx ->
+      ctx.response().setStatusCode(500)
+          .putHeader(Consts.HEADER_CONTENT_TYPE, Consts.CONTENT_TYPE_JSON_UTF8)
+          .end(Shit(msg = "fuck you!").toString())
+
     }
 
     this.apiServer.requestHandler({ router.accept(it) })

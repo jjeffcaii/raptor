@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
+import java.util.concurrent.ForkJoinPool
 
 class MessageFliper(private val filter: Filter<Chunk>? = null) {
 
@@ -55,7 +56,11 @@ class MessageFliper(private val filter: Filter<Chunk>? = null) {
     if (logger.isDebugEnabled) {
       logger.debug("<<< pop({} bytes): \n{}\n<<<", b.length(), Codecs.encodeHex(b.bytes, true))
     }
-    this.onMessage?.invoke(SimpleMessage(first.header, payload))
+
+    this.onMessage?.let { msgHandler ->
+      val simpleMessage = SimpleMessage(first.header, payload)
+      ForkJoinPool.commonPool().run { msgHandler.invoke(simpleMessage) }
+    }
     this.queue.clear()
     this.size = 0
   }

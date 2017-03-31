@@ -1,4 +1,7 @@
 import * as _ from "lodash";
+
+const PATTERN_ADDR_URL = /rtmp:\/\/([a-zA-Z0-9_.\-]+)(:[1-9][0-9]+)?\/[a-zA-Z0-9_\-]+/;
+
 export class GroupController {
 
   constructor($http, R, toastr, $log, moment) {
@@ -13,19 +16,16 @@ export class GroupController {
   }
 
   refresh() {
-    this.$http({
-      method: 'GET',
-      url: `${this.R.endpoint}/groups`,
-      headers: this.R.headers
-    }).then(res => {
-      this.$log.info(res.data);
-      this.groups = res.data;
-      _.each(this.groups, it => {
-        it.expired = new Date(_.now() + it['expires'] * 1000);
+    this.$http.get(`${this.R.endpoint}/groups`, {headers: this.R.headers})
+      .then(res => {
+        this.groups = res.data;
+        _.each(this.groups, it => {
+          it.expired = new Date(_.now() + it['expires'] * 1000);
+        });
+      })
+      .catch(err => {
+        this.toastr.error(err.data.msg, `ERROR-${err.data.code}`);
       });
-    }, err => {
-      this.toastr.error(err, 'ERROR');
-    });
   }
 
   edit(gp) {
@@ -36,76 +36,66 @@ export class GroupController {
   create() {
     this.current = {
       isNew: true,
-      name: `group_${_.uniqueId()}`,
-      expires: 60,
+      name: `stream_${_.uniqueId()}`,
+      expires: 300,
       addresses: []
     };
     angular.element('#modalGroup').modal('show');
   }
 
   qrcode(gp) {
-    this.$http({
-      method: 'GET',
-      url: `${this.R.endpoint}/groups/${gp.name}/publish`,
-      headers: this.R.headers
-    }).then(res => {
-      this.$log.info(res.data);
-      this.qr = res.data.url;
-      angular.element('#modalQRCode').modal('show');
-    }, err => {
-      this.toastr.error(err, 'ERROR');
-    });
+    this.$http.get(`${this.R.endpoint}/groups/${gp.name}/publish`, {headers: this.R.headers})
+      .then(res => {
+        this.$log.info(res.data);
+        this.qr = res.data.url;
+        angular.element('#modalQRCode').modal('show');
+      }, err => {
+        this.toastr.error(err.data.msg, `ERROR-${err.data.code}`);
+      });
   }
 
   save() {
     let emsg = this.errmsg();
     if (emsg) {
-      this.$log.error(emsg);
       this.toastr.error(emsg, 'ERROR');
       return;
     }
-
+    let api = `${this.R.endpoint}/groups/${this.current.name}`;
+    let p;
     if (this.current.isNew) {
-      let opts = {
-        method: 'POST',
-        url: `${this.R.endpoint}/groups/${this.current.name}`,
-        headers: this.R.headers
-      };
-      this.$http(opts, this.current)
-        .then(res => {
-          this.$log.info(res.data);
-        }, err => {
-          this.toastr.error(err, 'ERROR');
-        });
+      p = this.$http.post(api, this.current, {headers: this.R.headers})
     } else {
-      let opts = {
-        method: 'PUT',
-        url: `${this.R.endpoint}/groups/${this.current.name}`,
-        headers: this.R.headers
-      };
-      this.$http(opts, this.current)
-        .then(res => {
-          this.$log.info(res.data);
-        }, err => {
-          this.toastr.error(err, 'ERROR');
-        });
+      p = this.$http.put(api, this.current, {headers: this.R.headers})
     }
+
+    p.then(res => {
+      this.$log.info(res.data);
+      this.toastr.success('Save group success!', 'INFO');
+      this.refresh();
+      angular.element('#modalGroup').modal('hide');
+    }).catch(err => {
+      this.toastr.error(err.data.msg, `ERROR-${err.data.code}`);
+    });
   }
 
   errmsg() {
+    if (!this.current) {
+      return 'NULL'
+    }
     let isNameValid = /^[a-zA-Z0-9_]+/g.test(this.current.name);
     if (!isNameValid) {
       return 'Illegal group name!';
     }
-
     if (!this.current.addresses || this.current.addresses.length < 1) {
-      return 'Blank address list!';
+      return 'Empty addresses!';
     }
     let msg = undefined;
-    let addrPattern = /^rtmp:\/\/([a-zA-Z0-9\\-_.]+)(:[1-9][0-9]+)?\/([a-zA-Z0-9_\\-]+)$/g;
-    for (let i = 0; i < this.current.addresses.length; i++) {
+    for (let i = 0, len = this.current.addresses.length; i < len; i++) {
       let address = this.current.addresses[i];
-      if (!addrPattern.test(address.url)) {
+      if (!address.url) {
+        msg = 'Blank address url!';
+        break;
+      } else if (!PATTERN_ADDR_URL.test(address.url)) {
         msg = `Illegal address url: ${address.url}!`;
         break;
       }
