@@ -6,13 +6,19 @@ a restful document for project raptor.
 
 # Group groups
 
+## Groups [/groups]
+
+
+### List stream groups [GET]
+list all exist stream groups.
+
++ Response 200 (application/json)
+    + Attributes (array[Group])
+
+
 ## Groups By Namespace And Name [/groups/{name}]
 
 + Parameters
-    + namespace (string, required)
-
-        your namespace.
-
     + name (string, required)
 
         your group name.
@@ -25,8 +31,17 @@ get a group.
     + Attributes (Group)
 
 
-### Create Group [POST]
-save or update a group.
+### Create stream group [POST]
+save or update a stream group.
+
++ Request (application/json)
+    + Attributes (Group)
+
++ Response 201
+    + Attributes (number)
+
+### Update stream group [PUT]
+save or update an exist stream group.
 
 + Request (application/json)
     + Attributes (Group)
@@ -37,18 +52,15 @@ save or update a group.
 
 
 ### Delete Group [DELETE]
-delete a group.
+delete a stream group.
 
-+ Response 200
++ Response 204
     + Attributes (number)
-
-
-
 
 # Data Structures
 
 ## Address (object)
-RTMP Address
+RTMP stream address.
 
 ### Properties
 + `url` (string, required) - RTMP url.
@@ -56,7 +68,7 @@ RTMP Address
 
 
 ## Group (object)
-RTMP group.
+RTMP stream group.
 
 ### Properties
 + `reconnect` (boolean, optional) - enable adaptor reconnect.
