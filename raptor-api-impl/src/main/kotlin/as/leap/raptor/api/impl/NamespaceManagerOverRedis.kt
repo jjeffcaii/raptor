@@ -11,7 +11,7 @@ import redis.clients.jedis.JedisCluster
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
-class NamespaceManagerImpl(private val jedis: JedisCluster) : NamespaceManager {
+class NamespaceManagerOverRedis(private val jedis: JedisCluster) : NamespaceManager {
 
   override fun list(namespace: String): Map<String, Array<Address>> {
     check(namespace)

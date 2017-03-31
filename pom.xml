@@ -136,14 +136,6 @@
         <version>${project.version}</version>
       </dependency>
 
-
-      <!-- RTMP Provider SDK -->
-      <dependency>
-        <groupId>com.qiniu.pili</groupId>
-        <artifactId>pili-sdk-java</artifactId>
-        <version>2.1.0</version>
-      </dependency>
-
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>

@@ -27,7 +27,7 @@ class NamespaceManagerTest {
         }
         .toSet()
     this.jedis = JedisCluster(seeds)
-    this.manger = NamespaceManagerImpl(this.jedis!!)
+    this.manger = NamespaceManagerOverRedis(this.jedis!!)
   }
 
 

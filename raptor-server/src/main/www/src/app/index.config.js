@@ -4,8 +4,8 @@ export function config($logProvider, toastrConfig, cfpLoadingBarProvider, $httpP
   $logProvider.debugEnabled(true);
 
   // Set options third-party lib
-  toastrConfig.allowHtml = true;
-  toastrConfig.timeOut = 3000;
+  toastrConfig.allowHtml = false;
+  toastrConfig.timeOut = 300;
   toastrConfig.positionClass = 'toast-top-right';
   toastrConfig.preventDuplicates = false;
   toastrConfig.progressBar = false;
@@ -18,6 +18,12 @@ export function config($logProvider, toastrConfig, cfpLoadingBarProvider, $httpP
   $httpProvider.interceptors.push(($q) => {
     return {
       'responseError': (rejection) => {
+        if (rejection.status < 0) {
+          rejection.data = {
+            code: 5000,
+            msg: 'Server Unavailable!'
+          };
+        }
         return $q.reject(rejection);
       }
     };

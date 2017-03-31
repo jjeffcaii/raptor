@@ -5,8 +5,7 @@ export function GpDirective() {
     restrict: 'E',
     templateUrl: 'app/components/gp/gp.html',
     scope: {
-      gp: '=',
-      tab: '='
+      gp: '='
     },
     controller: GpController,
     controllerAs: 'vm',
@@ -30,8 +29,8 @@ class GpController {
 
   newAddress() {
     this.gp.addresses.push({
-      url: 'rtmp://YOUR_SERVER/YOUR_CONTEXT',
-      streamKey: '?foo=bar'
+      url: '',
+      streamKey: ''
     });
   }
 

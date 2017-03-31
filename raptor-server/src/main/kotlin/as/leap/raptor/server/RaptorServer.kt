@@ -4,7 +4,7 @@ import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.api.SecurityManager
 import `as`.leap.raptor.api.exception.RaptorException
-import `as`.leap.raptor.api.impl.NamespaceManagerImpl
+import `as`.leap.raptor.api.impl.NamespaceManagerOverRedis
 import `as`.leap.raptor.api.impl.SecurityManagerImpl
 import `as`.leap.raptor.commons.Consts
 import `as`.leap.raptor.commons.Errors
@@ -51,7 +51,7 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
         .toSet()
     val jedis = JedisCluster(seeds)
     Runtime.getRuntime().addShutdownHook(Thread({ jedis.close() }))
-    this.namespaceManager = NamespaceManagerImpl(jedis)
+    this.namespaceManager = NamespaceManagerOverRedis(jedis)
     this.securityManager = SecurityManagerImpl(opts.maxleap)
 
     // 1. create restful server.

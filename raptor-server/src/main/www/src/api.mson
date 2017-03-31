@@ -6,7 +6,7 @@ a restful document for project raptor.
 
 # Group groups
 
-## Groups By Namespace And Name [/{namespace}/groups/{name}]
+## Groups By Namespace And Name [/groups/{name}]
 
 + Parameters
     + namespace (string, required)
