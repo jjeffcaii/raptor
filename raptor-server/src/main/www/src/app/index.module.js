@@ -10,12 +10,7 @@ import {GpDirective} from "./components/gp/gp.directive";
 
 angular.module('www', ['ngAnimate', 'ngCookies', 'ngTouch', 'ngSanitize', 'ngMessages', 'ngAria', 'ui.router', 'toastr', 'angular-loading-bar', 'monospaced.qrcode'])
   .constant('R', {
-    endpoint: '../',
-    headers: {
-      'X-ML-AppId': '5795ad33aa150a0001fcbfa3',
-      'X-ML-APIKey': 'QXNJZnpNRDBZejhfbmpwRjlBVk5Bdw',
-      'Content-Type': 'application/json; charset=utf-8'
-    }
+    endpoint: '../'
   })
   .constant('moment', moment)
   .config(config)
