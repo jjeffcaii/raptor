@@ -10,10 +10,10 @@ import {GpDirective} from "./components/gp/gp.directive";
 
 angular.module('www', ['ngAnimate', 'ngCookies', 'ngTouch', 'ngSanitize', 'ngMessages', 'ngAria', 'ui.router', 'toastr', 'angular-loading-bar', 'monospaced.qrcode'])
   .constant('R', {
-    endpoint: 'http://127.0.0.1:8080',
+    endpoint: '../',
     headers: {
-      'X-ML-AppId': '56a86320e9db7300015438f7',
-      'X-ML-APIKey': 'iseedeadpeople',
+      'X-ML-AppId': '5795ad33aa150a0001fcbfa3',
+      'X-ML-APIKey': 'QXNJZnpNRDBZejhfbmpwRjlBVk5Bdw',
       'Content-Type': 'application/json; charset=utf-8'
     }
   })

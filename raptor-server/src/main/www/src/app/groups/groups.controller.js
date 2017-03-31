@@ -4,7 +4,7 @@ const PATTERN_ADDR_URL = /rtmp:\/\/([a-zA-Z0-9_.\-]+)(:[1-9][0-9]+)?\/[a-zA-Z0-9
 
 export class GroupController {
 
-  constructor($http, R, toastr, $log, moment) {
+  constructor($http, R, toastr, $log, $state) {
     'ngInject'
 
     this.groups = [];
@@ -12,10 +12,16 @@ export class GroupController {
     this.R = R;
     this.toastr = toastr;
     this.$log = $log;
-    this.$moment = moment;
+    this.$state = $state;
   }
 
   refresh() {
+    if (!this.R.headers) {
+      this.toastr.warn("Your session is expired!", 'Warning');
+      this.$state.go('/');
+      return;
+    }
+
     this.$http.get(`${this.R.endpoint}/groups`, {headers: this.R.headers})
       .then(res => {
         this.groups = res.data;

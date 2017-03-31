@@ -14,6 +14,7 @@ import `as`.leap.raptor.server.vo.GroupVO
 import `as`.leap.raptor.server.vo.PostAddress
 import `as`.leap.raptor.server.vo.PostGroup
 import `as`.leap.raptor.server.vo.Shit
+import com.google.common.base.Joiner
 import com.google.common.base.Splitter
 import com.google.common.net.HostAndPort
 import io.reactivex.Single
@@ -64,7 +65,10 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
         if (logger.isDebugEnabled) {
           logger.debug("page files found: {}.", f.absolutePath)
         }
-        router.route("/site/*").handler(StaticHandler.create(it))
+        router.route("/console/*").handler(StaticHandler.create(it))
+        router.get("/favicon.ico").handler { ctx ->
+          ctx.response().sendFile(Joiner.on("/").join(arrayOf(it, "favicon.ico")))
+        }
       }
     }
 
@@ -227,11 +231,8 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
       consumeAsJSON(ctx, ob)
     }
 
-    router.get("/tests/error").handler { ctx ->
-      ctx.response().setStatusCode(500)
-          .putHeader(Consts.HEADER_CONTENT_TYPE, Consts.CONTENT_TYPE_JSON_UTF8)
-          .end(Shit(msg = "fuck you!").toString())
-
+    router.get("/ok").handler { ctx ->
+      ctx.response().putHeader(Consts.HEADER_CONTENT_TYPE, Consts.CONTENT_TYPE_JSON_UTF8).end("1")
     }
 
     this.apiServer.requestHandler({ router.accept(it) })
