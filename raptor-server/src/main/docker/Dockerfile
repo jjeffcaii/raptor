@@ -16,7 +16,7 @@ ENTRYPOINT [\
 "-jar",\
 "raptor-server-jar-with-dependencies.jar",\
 "--www",\
-"www"
+"www"\
 ]
 
 ADD ./ ./
