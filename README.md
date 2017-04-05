@@ -1,6 +1,6 @@
 # Project Raptor: a simple proxy for RTMP.
 ----------------------------------
-![raptor](./docs/raptor.jpg "raptor")
+![raptor](docs/raptor.jpg "raptor")
 
 ## Links
 --------------------------------------------
@@ -10,4 +10,4 @@
 
 ## Time Sequence
 ----------------------------------
-![time sequence diagram.](./docs/timeseq.png "time sequence")
+![time_sequence_diagram](docs/timeseq.png "time_sequence")
