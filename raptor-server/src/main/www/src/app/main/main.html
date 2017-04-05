@@ -1,4 +1,4 @@
-<div class="container" ng-controller="MainController as vm">
+<div class="container" ng-controller="MainController as vm" ng-init="vm.init()">
   <form class="form-signin" role="form">
     <h2 class="form-signin-heading">Welcome to Raptor</h2>
     <hr>
@@ -7,8 +7,9 @@
     <input type="password" class="form-control" ng-model="vm.auth.pwd" placeholder="Client Key" required>
     <hr>
     <a ng-click="vm.login()"
-       class="btn btn-lg btn-primary btn-block"
+       class="btn btn-lg btn-success btn-block"
        role="button"
        ng-disabled="!vm.validate()">Log In</a>
+    <a ng-click="vm.test()" class="btn btn-lg btn-info btn-block" role="button">Demo</a>
   </form>
 </div>

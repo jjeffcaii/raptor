@@ -35,18 +35,26 @@
       <div class="col-md-12" ng-if="vm.tab == 1">
         <div class="row" ng-repeat="item in vm.gp.addresses">
           <div class="col-md-12">
-            <div class="input-group input-group-sm">
-              <span class="input-group-addon">URL</span>
-              <input type="text" class="form-control"
-                     pattern="^rtmp://([a-zA-Z0-9\-_.]+)(:[1-9][0-9]+)?/([a-zA-Z0-9_\-]+)$"
-                     placeholder="Input your rtmp url. (eg: rtmp://send3.douyu.com/live)"
-                     ng-model="item.url" required>
-            </div>
-            <div class="input-group input-group-sm" style="margin-top: 5px;">
-              <span class="input-group-addon">KEY</span>
-              <input type="text" class="form-control"
-                     placeholder="Input your stream key."
-                     ng-model="item.streamKey">
+            <div class="row">
+              <div class="col-md-11">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-addon">URL</span>
+                  <input type="text" class="form-control"
+                         pattern="^rtmp://([a-zA-Z0-9\-_.]+)(:[1-9][0-9]+)?/([a-zA-Z0-9_\-]+)$"
+                         placeholder="Input your rtmp url. (eg: rtmp://send3.douyu.com/live)"
+                         ng-model="item.url" required>
+                </div>
+                <div class="input-group input-group-sm" style="margin-top: 5px;">
+                  <span class="input-group-addon">KEY</span>
+                  <input type="text" class="form-control"
+                         placeholder="Input your stream key."
+                         ng-model="item.streamKey">
+                </div>
+              </div>
+              <div class="col-md-1">
+                <a href="javascript:" class="btn btn-danger btn-sm" role="button"
+                   ng-click="vm.removeAddress(item)">X</a>
+              </div>
             </div>
             <hr>
           </div>

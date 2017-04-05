@@ -85,7 +85,7 @@
               <resource>
                 <targetPath>/www</targetPath>
                 <directory>${project.basedir}/src/main/www/dist</directory>
-                <include>*</include>
+                <include>**/*</include>
               </resource>
             </resources>
             <pushImageTag>true</pushImageTag>

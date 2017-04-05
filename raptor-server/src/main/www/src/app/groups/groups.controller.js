@@ -4,8 +4,8 @@ const PATTERN_ADDR_URL = /rtmp:\/\/([a-zA-Z0-9_.\-]+)(:[1-9][0-9]+)?\/[a-zA-Z0-9
 
 export class GroupController {
 
-  constructor($http, R, toastr, $log, $state) {
-    'ngInject'
+  constructor($http, R, toastr, $log, $state, $cookies, $interval) {
+    'ngInject';
 
     this.groups = [];
     this.$http = $http;
@@ -13,20 +13,59 @@ export class GroupController {
     this.toastr = toastr;
     this.$log = $log;
     this.$state = $state;
+    this.$cookies = $cookies;
+    this.$interval = $interval;
+  }
+
+  _headers() {
+    let ns = this.$cookies.get('i');
+    let tk = this.$cookies.get('k');
+    if (!ns || !tk) {
+      this.$state.go('home');
+      this.toastr.error('Your session is expired!', 'ERROR');
+      throw new Error('raptor session expired.')
+    }
+    return {
+      'X-ML-AppId': ns,
+      'X-ML-APIKey': tk,
+      'Content-Type': 'application/json; charset=utf-8'
+    };
+  }
+
+  fight() {
+    if (!_.isUndefined(this.stop)) {
+      return;
+    }
+    this.stop = this.$interval(() => {
+      _.each(this.groups, gp => {
+        if (--gp.expires < 1) {
+          let idx = this.groups.indexOf(gp);
+          this.groups.splice(idx, 1);
+        }
+      });
+    }, 1000);
+  }
+
+  init() {
+    this.refresh();
+    this.fight();
+  }
+
+  stopFlight() {
+    if (_.isUndefined(this.stop)) {
+      return;
+    }
+    this.$interval.cancel(this.stop);
+    this.stop = undefined;
   }
 
   refresh() {
-    if (!this.R.headers) {
-      this.toastr.warn("Your session is expired!", 'Warning');
-      this.$state.go('/');
-      return;
-    }
-
-    this.$http.get(`${this.R.endpoint}/groups`, {headers: this.R.headers})
+    this.$http.get(`${this.R.endpoint}/groups`, {headers: this._headers()})
       .then(res => {
         this.groups = res.data;
         _.each(this.groups, it => {
-          it.expired = new Date(_.now() + it['expires'] * 1000);
+          it.left = it.expires;
+
         });
       })
       .catch(err => {
@@ -37,6 +76,21 @@ export class GroupController {
   edit(gp) {
     this.current = _.cloneDeep(gp);
     angular.element('#modalGroup').modal('show');
+  }
+
+  drop(gp) {
+    let opts = {
+      url: `${this.R.endpoint}/groups/${gp.name}`,
+      method: 'DELETE',
+      headers: this._headers()
+    };
+
+    this.$http(opts).then(() => {
+      this.toastr.success(`Delete stream group ${gp.name} success!`, 'Notification')
+      this.refresh();
+    }).catch(err => {
+      this.toastr.error(err.data.msg, `ERROR-${err.data.code}`);
+    })
   }
 
   create() {
@@ -50,7 +104,7 @@ export class GroupController {
   }
 
   qrcode(gp) {
-    this.$http.get(`${this.R.endpoint}/groups/${gp.name}/publish`, {headers: this.R.headers})
+    this.$http.get(`${this.R.endpoint}/groups/${gp.name}/publish`, {headers: this._headers()})
       .then(res => {
         this.$log.info(res.data);
         this.qr = res.data.url;
@@ -69,9 +123,9 @@ export class GroupController {
     let api = `${this.R.endpoint}/groups/${this.current.name}`;
     let p;
     if (this.current.isNew) {
-      p = this.$http.post(api, this.current, {headers: this.R.headers})
+      p = this.$http.post(api, this.current, {headers: this._headers()})
     } else {
-      p = this.$http.put(api, this.current, {headers: this.R.headers})
+      p = this.$http.put(api, this.current, {headers: this._headers()})
     }
 
     p.then(res => {

@@ -1,2 +1,16 @@
 # Project Raptor
-simple proxy for RTMP.
+----------------------------------
+a simple proxy for RTMP.
+
+## What is raptor?
+--------------------------------
+![raptor](docs/raptor.jpg "raptor")
+
+## Time Sequence
+----------------------------------
+![time sequence diagram.](docs/timeseq.png "time sequence")
+
+## Restful API
+--------------------------------------------
+- Postman: [./docs/postman.json](./docs/postman.json)
+- Reference: [http://raptor.maxleap.cn/console/api.html](http://raptor.maxleap.cn/console/api.html)

@@ -16,8 +16,16 @@ export function NavbarDirective() {
 }
 
 class NavbarController {
-  constructor() {
+  constructor($state, $cookies) {
     'ngInject';
+    this.$cookies = $cookies;
+    this.$state = $state;
+  }
+
+  exit() {
+    this.$cookies.remove('i');
+    this.$cookies.remove('k');
+    this.$state.go('home');
   }
 
 }

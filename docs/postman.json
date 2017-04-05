@@ -1,0 +1,174 @@
+{
+	"variables": [],
+	"info": {
+		"name": "raptor",
+		"_postman_id": "363ba2d9-0110-e1f5-8d34-ff7947666c69",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "获取某个组",
+			"request": {
+				"url": "http://{{raptor.server}}/groups/default",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "x-ml-appid",
+						"value": "{{raptor.namespace}}",
+						"description": ""
+					},
+					{
+						"key": "x-ml-apikey",
+						"value": "iseedeadpeople",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "创建组",
+			"request": {
+				"url": "http://{{raptor.server}}/groups/default",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "x-ml-appid",
+						"value": "{{raptor.namespace}}",
+						"description": ""
+					},
+					{
+						"key": "x-ml-apikey",
+						"value": "iseedeadpeople",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"expires\": 300,\n\t\"addresses\": [{\n\t\t\"url\":\"rtmp://pili-publish.maxwon.cn/maxwon-live/qux?e=1490863038&token=Thphesb5UQHYEMKQspI4LrUUKO3gWd47rEvGdHcK:DltzyyqK89iZZiYr-9T9CAQB-mE=\"\n\t}]\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "删除某个组",
+			"request": {
+				"url": "http://{{raptor.server}}/groups/default",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "x-ml-appid",
+						"value": "{{raptor.namespace}}",
+						"description": ""
+					},
+					{
+						"key": "x-ml-apikey",
+						"value": "iseedeadpeople",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "\t"
+			},
+			"response": []
+		},
+		{
+			"name": "列出所有组",
+			"request": {
+				"url": "http://{{raptor.server}}/groups",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "x-ml-appid",
+						"value": "{{raptor.namespace}}",
+						"description": ""
+					},
+					{
+						"key": "x-ml-apikey",
+						"value": "iseedeadpeople",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "更新组",
+			"request": {
+				"url": "http://{{raptor.server}}/groups/default",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "x-ml-appid",
+						"value": "{{raptor.namespace}}",
+						"description": ""
+					},
+					{
+						"key": "x-ml-apikey",
+						"value": "iseedeadpeople",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"expires\": 300,\n\t\"addresses\": [{\n\t\t\"url\":\"rtmp://pili-publish.maxwon.cn/maxwon-live/qux?e=1490863038&token=Thphesb5UQHYEMKQspI4LrUUKO3gWd47rEvGdHcK:DltzyyqK89iZZiYr-9T9CAQB-mE=\"\n\t}]\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "发布某个组",
+			"request": {
+				"url": "http://{{raptor.server}}/groups/default/publish",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "x-ml-appid",
+						"value": "{{raptor.namespace}}",
+						"description": ""
+					},
+					{
+						"key": "x-ml-apikey",
+						"value": "iseedeadpeople",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
