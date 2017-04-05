@@ -1,5 +1,8 @@
 package `as`.leap.raptor.core.model
 
+import org.slf4j.LoggerFactory
+import java.lang.invoke.MethodHandles
+
 enum class MessageType(val code: Byte) {
   // protocol control
   CTRL_SET_CHUNK_SIZE(0x01),
@@ -52,6 +55,9 @@ enum class MessageType(val code: Byte) {
   }
 
   companion object {
+
+    private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
+
     fun toChunkType(code: Short): MessageType? {
       return when (code.toInt()) {
         1 -> CTRL_SET_CHUNK_SIZE
@@ -69,7 +75,11 @@ enum class MessageType(val code: Byte) {
         8 -> MEDIA_AUDIO
         9 -> MEDIA_VIDEO
         22 -> AGGREGATE
-        else -> throw IllegalArgumentException("Not valid chunk type: byte=$code.")
+        else -> {
+          logger.error("Not valid chunk type: byte=$code.")
+          System.exit(1)
+          throw IllegalArgumentException("Not valid chunk type: byte=$code.")
+        }
       }
     }
   }

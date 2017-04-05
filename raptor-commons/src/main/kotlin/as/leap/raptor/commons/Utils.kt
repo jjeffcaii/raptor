@@ -9,7 +9,8 @@ import com.fasterxml.jackson.databind.type.TypeFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.net.Inet4Address
+import java.net.NetworkInterface
+import java.util.regex.Pattern
 
 
 object Utils {
@@ -44,7 +45,16 @@ object Utils {
   }
 
   fun localIP(): String {
-    return Inet4Address.getLocalHost().hostAddress
+    val PATTERN_IP4 = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}")
+    val li = mutableListOf<String>()
+    NetworkInterface.getNetworkInterfaces().iterator().forEach { network ->
+      network.inetAddresses.iterator().forEach {
+        if (PATTERN_IP4.matcher(it.hostAddress).matches()) {
+          li.add(it.hostAddress)
+        }
+      }
+    }
+    return li.filter { "127.0.0.1" != it }.first()
   }
 
 }

@@ -1,5 +1,6 @@
 package `as`.leap.raptor.core.impl
 
+import `as`.leap.raptor.api.Address
 import `as`.leap.raptor.api.NamespaceManager
 import `as`.leap.raptor.api.SecurityManager
 import `as`.leap.raptor.core.Swapper
@@ -44,14 +45,28 @@ class DefaultSwapper(
     }
   }
 
+
   override fun handleCMD(cmd: CommandConnect) {
-    val app = cmd.getConnectInfo().app
-    if (!this.securityManager.exists(app)) {
-      logger.error("invalid application: {}.", app)
+    val connInfo = cmd.getConnectInfo()
+    val qux = Address.extractFull(connInfo.app)
+    if (qux == null) {
+      this.handleConnect(connInfo.app)
+    } else {
+      this.handleConnectInline(qux.first, qux.second)
+    }
+  }
+
+  private fun handleConnect(ns: String) {
+    if (!this.securityManager.exists(ns)) {
+      logger.error("invalid application: {}.", ns)
       this.close()
       return
     }
-    this.namespace = app
+    this.namespace = ns
+    this.sendConnectSuccess()
+  }
+
+  private fun sendConnectSuccess() {
     // 1. send ack window size
     val b = Buffer.buffer()
     val header: Header = Header.getProtocolHeader(MessageType.CTRL_ACK_WINDOW_SIZE)
@@ -78,16 +93,36 @@ class DefaultSwapper(
     this.write(b)
   }
 
-  override fun handleCMD(cmd: CommandReleaseStream) {
-    this.streamKey = cmd.getStreamKey()
+  private fun handleConnectInline(ns: String, streamKey: String) {
+    if (!this.securityManager.exists(ns)) {
+      logger.error("invalid application: {}.", ns)
+      this.close()
+      return
+    }
+    this.namespace = ns
+    this.streamKey = streamKey
     val result = this.securityManager.validate(this.namespace, streamKey)
     if (!result.success) {
       logger.error("illegal stream key: namespace={}, streamKey={}.", this.namespace, this.streamKey)
       this.close()
       return
     }
-
     this.group = result.group
+    this.sendConnectSuccess()
+  }
+
+  override fun handleCMD(cmd: CommandReleaseStream) {
+    if (this.streamKey.isNullOrBlank()) {
+      this.streamKey = cmd.getStreamKey()
+      val result = this.securityManager.validate(this.namespace, streamKey)
+      if (!result.success) {
+        logger.error("illegal stream key: namespace={}, streamKey={}.", this.namespace, this.streamKey)
+        this.close()
+        return
+      }
+      this.group = result.group
+    }
+
     val addresses = this.namespaceManager.load(this.namespace, this.group)
     // no address binding.
     if (addresses.isEmpty()) {
@@ -95,7 +130,6 @@ class DefaultSwapper(
       this.close()
       return
     }
-
     addresses.forEach { this.establish(it) }
     val header = Header(FMT.F1, 3, MessageType.COMMAND_AMF0)
     val payload = CommandResult(this.transId, arrayOf(null, 1))

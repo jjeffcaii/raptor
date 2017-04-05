@@ -106,6 +106,7 @@ class ChunkFliper(
       }
       ReadState.CHUNK_HEADER_MSG_3 -> {
         this.buffer2 = buffer
+        this.already = 0
         this.timestamp = buffer.getUnsignedMedium(0)
         if (this.timestamp == 0x7FFFFF) {
           this.state = ReadState.CHUNK_EXT_TS
