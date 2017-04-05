@@ -296,10 +296,12 @@
   </profiles>
 
   <repositories>
+    <!--
     <repository>
       <id>jcenter</id>
       <url>http://jcenter.bintray.com</url>
     </repository>
+    -->
     <repository>
       <id>public</id>
       <name>Public Repositories</name>
