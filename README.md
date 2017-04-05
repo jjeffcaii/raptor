@@ -1,4 +1,4 @@
-# Project Raptor -- a simple proxy for RTMP.
+# Project Raptor: a simple proxy for RTMP.
 ----------------------------------
 ![raptor](docs/raptor.jpg "raptor")
 
