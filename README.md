@@ -1,9 +1,5 @@
-# Project Raptor
+# Project Raptor -- a simple proxy for RTMP.
 ----------------------------------
-a simple proxy for RTMP.
-
-## What is raptor?
---------------------------------
 ![raptor](docs/raptor.jpg "raptor")
 
 ## Time Sequence
