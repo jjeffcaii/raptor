@@ -5,10 +5,9 @@ import `as`.leap.raptor.commons.Utils
 data class RaptorOptions(
     var redis: String,
     var maxleap: String,
-    var hostname: String = Utils.localIP(),
+    var hostname: String = Utils.ipv4().first(),
     var httpPort: Int = 8080,
     var rtmpPort: Int = 1935
-
 ) {
 
   companion object {

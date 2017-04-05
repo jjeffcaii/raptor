@@ -13,9 +13,10 @@ ENTRYPOINT [\
 "-XX:+UseG1GC",\
 "-Djava.net.preferIPv4Stack=true",\
 "-Dlog4j.configurationFile=file:log4j2.xml",\
-"-Draptor.server.www=www",\
 "-jar",\
-"raptor-server-jar-with-dependencies.jar"\
+"raptor-server-jar-with-dependencies.jar",\
+"--www",\
+"www"
 ]
 
 ADD ./ ./

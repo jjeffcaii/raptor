@@ -38,23 +38,22 @@ object Utils {
     return mapper.readValue(json, clazz)
   }
 
-
   fun <T> fromJSONArray(json: String, clazz: Class<T>): Array<T> {
     return mapper.readValue(json, TypeFactory.defaultInstance().constructArrayType(clazz))
-
   }
 
-  fun localIP(): String {
+  fun ipv4(): List<String> {
     val PATTERN_IP4 = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}")
     val li = mutableListOf<String>()
     NetworkInterface.getNetworkInterfaces().iterator().forEach { network ->
       network.inetAddresses.iterator().forEach {
-        if (PATTERN_IP4.matcher(it.hostAddress).matches()) {
-          li.add(it.hostAddress)
+        val addr = it.hostAddress
+        if (PATTERN_IP4.matcher(addr).matches() && "127.0.0.1" != addr) {
+          li.add(addr)
         }
       }
     }
-    return li.filter { "127.0.0.1" != it }.first()
+    return li
   }
 
 }
