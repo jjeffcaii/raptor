@@ -1,7 +1,13 @@
 package `as`.leap.raptor.commons
 
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.runBlocking
+import org.apache.commons.lang3.RandomUtils
 import org.testng.annotations.Test
 import kotlin.coroutines.experimental.buildSequence
+import kotlin.system.measureTimeMillis
 
 class CoroutinesTest {
 
@@ -30,6 +36,24 @@ class CoroutinesTest {
       }
     }
     println("cost: ${System.currentTimeMillis() - begin} ms")
+  }
+
+  private suspend fun longTimeJob(): Long {
+    val t = RandomUtils.nextLong(1000L, 3000L)
+    delay(t)
+    return t
+  }
+
+  @Test(enabled = false)
+  fun testAsyncAwait() {
+    runBlocking {
+      val cost = measureTimeMillis {
+        val a1 = async(CommonPool) { longTimeJob() }
+        val a2 = async(CommonPool) { longTimeJob() }
+        println("a1+a2: ${a1.await() + a2.await()}")
+      }
+      println("cost: $cost ms")
+    }
   }
 
 }

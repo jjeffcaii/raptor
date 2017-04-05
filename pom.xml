@@ -176,6 +176,11 @@
         <version>${kotlin.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.jetbrains.kotlinx</groupId>
+        <artifactId>kotlinx-coroutines-core</artifactId>
+        <version>0.14</version>
+      </dependency>
+      <dependency>
         <groupId>org.testng</groupId>
         <artifactId>testng</artifactId>
         <version>6.11</version>
@@ -282,6 +287,10 @@
   </profiles>
 
   <repositories>
+    <repository>
+      <id>jcenter</id>
+      <url>http://jcenter.bintray.com</url>
+    </repository>
     <repository>
       <id>public</id>
       <name>Public Repositories</name>
