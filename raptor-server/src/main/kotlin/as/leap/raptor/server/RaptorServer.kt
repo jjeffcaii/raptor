@@ -27,6 +27,7 @@ import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.StaticHandler
+import io.vertx.kotlin.core.net.NetServerOptions
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.JedisCluster
@@ -238,7 +239,7 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
     this.apiServer.requestHandler({ router.accept(it) })
 
     // 2. create rtmp server.
-    this.rtmpServer = vertx.createNetServer()
+    this.rtmpServer = vertx.createNetServer(NetServerOptions(tcpNoDelay = true, usePooledBuffers = true))
     val netClient = vertx.createNetClient()
     this.rtmpServer.connectHandler {
       it.pause()

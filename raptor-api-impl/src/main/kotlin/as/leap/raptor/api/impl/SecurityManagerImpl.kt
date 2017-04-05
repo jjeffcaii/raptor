@@ -52,8 +52,6 @@ class SecurityManagerImpl(endpoint: String) : SecurityManager {
   }
 
   override fun validate(namespace: String, streamKey: String): SecurityManager.Result {
-    logger.info("------> validate: namespace={}, streamKey={}", namespace, streamKey)
-
     val sk = if (streamKey.startsWith("/") || streamKey.startsWith("?")) {
       streamKey.substring(1)
     } else {
