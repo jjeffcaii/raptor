@@ -12,30 +12,34 @@ import `as`.leap.raptor.core.model.payload.CommandDeleteStream
 import `as`.leap.raptor.core.model.payload.CommandFCUnpublilsh
 import `as`.leap.raptor.core.model.payload.ProtocolChunkSize
 import `as`.leap.raptor.core.utils.Do
-import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetClient
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.lang.invoke.MethodHandles
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * RTMP后端适配器
+ */
 abstract class Adaptor(
     private val netClient: NetClient,
     protected val address: Address,
     protected val chunkSize: Long,
-    reconnect: Int = 0
+    private val reconnect: Int = 0
 ) : Closeable {
 
-  private var backend: Endpoint? = null
+  var backend: Endpoint? = null
 
   protected val connected = AtomicBoolean(false)
   protected var transId: Int = 0
-  private val retry = AtomicInteger(reconnect)
-
   protected var onConnect: Do? = null
   protected var onClose: Do? = null
+
+  private val isClosed = AtomicBoolean(false)
+  private var retry = 0
+  private val remembers: MutableList<Message> = mutableListOf()
+  private var newborn = false
 
   fun onConnect(cb: Do?): Adaptor {
     this.onConnect = cb
@@ -75,10 +79,16 @@ abstract class Adaptor(
       this.write(header, payload)
       // bind close event.
       endpoint.onClose {
-        if (this.retry.decrementAndGet() < 0) {
-          this.onClose?.invoke()
-        } else {
-          //TODO
+        this.connected.set(false)
+        if (!this.isClosed.get()) {
+          if (++this.retry > this.reconnect) {
+            logger.warn("endpoint is DEAD now!!!")
+            this.isClosed.set(true)
+            this.onClose?.invoke()
+          } else {
+            logger.warn("endpoint reconnect (retry {}/{}).", this.retry, this.reconnect)
+            this.connect()
+          }
         }
       }
     }, {
@@ -102,11 +112,57 @@ abstract class Adaptor(
 
   abstract fun onCommand(msg: Message)
 
-  fun write(buffer: Buffer, strict: Boolean = true): Adaptor {
-    if (strict) {
-      Preconditions.checkArgument(this.connected(), "cannot write buffer because adaptor is disconnected.")
+  private var bingoNext = false
+  private var firstAudio: Chunk? = null
+  private var firstVideo: Chunk? = null
+
+
+  fun write(chunk: Chunk, strict: Boolean = true): Adaptor {
+    if (!strict || this.connected()) {
+      if (this.newborn) {
+        synchronized(this) {
+          when (chunk.header.fmt) {
+            FMT.F0 -> {
+              this.backend?.write(chunk.toBuffer())
+              this.newborn = false
+            }
+            FMT.F1 -> {
+              if (this.bingoNext) {
+                val hd = Header.clone(chunk.header)
+                hd.fmt = FMT.F0
+                hd.streamId = 1
+                this.write(hd.toBuffer().appendBuffer(chunk.payload))
+                this.newborn = false
+                logger.info(">>> hack chunk(1) success. your adaptor is reborn now!!!")
+              } else if (chunk.payload.length() < this.chunkSize) {
+                this.bingoNext = true
+                logger.info(">>> next media chunk is bingo!")
+              } else {
+                logger.info(">>> next media chunk is not bingo :-(")
+              }
+            }
+            else -> {
+              logger.warn(">>> newborn adaptor is waiting for chunk(0,1) but now is chunk({}).", chunk.header.fmt.code)
+            }
+          }
+        }
+      } else {
+        this.backend?.write(chunk.toBuffer())
+        if (this.firstAudio == null && chunk.header.fmt == FMT.F0 && chunk.header.type == MessageType.MEDIA_AUDIO) {
+          this.firstAudio = chunk
+        }
+        if (this.firstVideo == null && chunk.header.fmt == FMT.F0 && chunk.header.type == MessageType.MEDIA_VIDEO) {
+          this.firstVideo = chunk
+        }
+      }
     }
-    this.backend?.write(buffer)
+    return this
+  }
+
+  fun write(buffer: Buffer, strict: Boolean = true): Adaptor {
+    if (!strict || this.connected()) {
+      this.backend?.write(buffer)
+    }
     return this
   }
 
@@ -119,8 +175,11 @@ abstract class Adaptor(
     return this
   }
 
-  fun write(msg: Message): Adaptor {
+  fun write(msg: Message, remember: Boolean = false): Adaptor {
     this.backend?.write(msg.toBuffer(this.chunkSize))
+    if (remember) {
+      this.remembers.add(msg)
+    }
     return this
   }
 
@@ -145,9 +204,40 @@ abstract class Adaptor(
   protected fun ok() {
     this.connected.set(true)
     this.onConnect?.invoke()
+    this.onConnect = null
+    if (this.retry > 0) {
+      synchronized(this) {
+        this.remembers.forEach { this.write(it) }
+        this.firstAudio?.let {
+          this.write(it.toBuffer())
+        }
+        this.firstVideo?.let {
+          this.write(it.toBuffer())
+        }
+        this.newborn = true
+        this.bingoNext = false
+      }
+    }
+    
+    // mock adaptor close.
+    /*
+    if (retry < 1) {
+      ForkJoinPool.commonPool().submit {
+        Thread.sleep(RandomUtils.nextLong(3000L, 10000L))
+        this.backend?.close()
+        Thread.sleep(RandomUtils.nextLong(3000L, 10000L))
+        this.backend?.close()
+        Thread.sleep(RandomUtils.nextLong(3000L, 10000L))
+        this.backend?.close()
+        Thread.sleep(RandomUtils.nextLong(3000L, 10000L))
+        this.backend?.close()
+      }
+    }
+    */
   }
 
   override fun close() {
+    this.isClosed.set(true)
     this.backend?.close()
   }
 

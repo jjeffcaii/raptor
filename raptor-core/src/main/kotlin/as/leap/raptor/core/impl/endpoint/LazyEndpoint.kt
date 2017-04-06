@@ -24,7 +24,9 @@ class LazyEndpoint(netClient: NetClient, host: String, port: Int = 1935) : Endpo
         parser.setOutput(fliper)
         socket.handler(parser)
         socket.exceptionHandler {
-          logger.error("endpoint error.", it)
+          if (logger.isDebugEnabled) {
+            logger.debug("endpoint error.", it)
+          }
           this.onError?.invoke(it)
         }
         socket.closeHandler {

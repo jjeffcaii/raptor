@@ -19,6 +19,9 @@ import java.lang.invoke.MethodHandles
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * 数据交换区
+ */
 abstract class Swapper(
     socket: NetSocket,
     private val netClient: NetClient,
@@ -150,7 +153,7 @@ abstract class Swapper(
         .onHandshake { handshaker.validate(it) }
         .onChunk { chunk ->
           if (chunk.header.type.isMedia()) {
-            this.adaptors.forEach { it.write(chunk.toBuffer()) }
+            this.adaptors.forEach { it.write(chunk) }
           } else {
             messages.append(chunk)
           }
@@ -212,7 +215,7 @@ abstract class Swapper(
     val payload = msg.toModel() as SimpleAMFPayload
     val first = payload.body.first()
     if (first is String && SET_DATA_FRAME == first) {
-      this.adaptors.forEach { it.write(msg) }
+      this.adaptors.forEach { it.write(msg, true) }
     }
   }
 
