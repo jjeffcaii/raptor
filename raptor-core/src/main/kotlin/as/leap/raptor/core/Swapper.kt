@@ -16,12 +16,14 @@ import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.lang.invoke.MethodHandles
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class Swapper(
     socket: NetSocket,
     private val netClient: NetClient,
-    private val strategy: LiveStrategy = Swapper.LiveStrategy.ALL
+    private val strategy: LiveStrategy = Swapper.LiveStrategy.ALL,
+    private val reconnect: Int = 0
 ) : Closeable {
 
   private val endpoint: Endpoint
@@ -35,6 +37,7 @@ abstract class Swapper(
 
   private val adaptors: MutableList<Adaptor> = mutableListOf()
   private val connects = AtomicInteger(0)
+  private val isClosed = AtomicBoolean(false)
 
   abstract protected fun handleCMD(cmd: CommandReleaseStream)
   abstract protected fun handleCMD(cmd: CommandConnect)
@@ -55,7 +58,7 @@ abstract class Swapper(
   }
 
   protected fun establish(address: Address) {
-    val adaptor = DefaultAdaptor(this.netClient, address, this.chunkSize)
+    val adaptor = DefaultAdaptor(this.netClient, address, this.chunkSize, this.reconnect)
     // bind connect
     adaptor.onConnect {
       logger.info("establish success: {}", address)
@@ -66,24 +69,26 @@ abstract class Swapper(
     }
     // bind close
     adaptor.onClose {
-      logger.warn("connection dead: {}", address)
-      val lives = this.connects.decrementAndGet()
-      when (this.strategy) {
-        LiveStrategy.ALL -> {
-          logger.warn("swapper closed: strategy=ALL, need={}, alive={}.", this.adaptors.size, lives)
-          this.close()
-        }
-        LiveStrategy.QUORUM -> {
-          val need = this.adaptors.size / 2 + 1
-          if (lives < need) {
-            logger.warn("swapper closed: strategy=QUORUM, need={}, alive={}.", need, lives)
+      if (!this.isClosed.get()) {
+        logger.warn("adaptor is dead: {}", address)
+        val lives = this.connects.decrementAndGet()
+        when (this.strategy) {
+          LiveStrategy.ALL -> {
+            logger.warn("swapper closed: strategy=ALL, need={}, alive={}.", this.adaptors.size, lives)
             this.close()
           }
-        }
-        LiveStrategy.ANY -> {
-          if (lives < 1) {
-            logger.warn("swapper closed: strategy=ANY, need=1, alive=0.")
-            this.close()
+          LiveStrategy.QUORUM -> {
+            val need = this.adaptors.size / 2 + 1
+            if (lives < need) {
+              logger.warn("swapper closed: strategy=QUORUM, need={}, alive={}.", need, lives)
+              this.close()
+            }
+          }
+          LiveStrategy.ANY -> {
+            if (lives < 1) {
+              logger.warn("swapper closed: strategy=ANY, need=1, alive=0.")
+              this.close()
+            }
           }
         }
       }
@@ -99,8 +104,11 @@ abstract class Swapper(
   }
 
   override fun close() {
-    this.endpoint.close()
-    this.adaptors.forEach(Adaptor::close)
+    if (!this.isClosed.getAndSet(true)) {
+      logger.info("***** swapper closed! *****")
+      this.endpoint.close()
+      this.adaptors.forEach(Adaptor::close)
+    }
   }
 
   enum class LiveStrategy {

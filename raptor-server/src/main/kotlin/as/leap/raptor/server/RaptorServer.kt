@@ -243,7 +243,7 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
     val netClient = vertx.createNetClient()
     this.rtmpServer.connectHandler {
       it.pause()
-      DefaultSwapper(it, netClient, namespaceManager, securityManager)
+      DefaultSwapper(it, netClient, opts.strategy, opts.reconnect, namespaceManager, securityManager)
       it.resume()
     }
   }

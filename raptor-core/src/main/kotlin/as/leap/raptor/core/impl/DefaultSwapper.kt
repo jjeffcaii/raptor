@@ -18,9 +18,11 @@ import java.lang.invoke.MethodHandles
 class DefaultSwapper(
     socket: NetSocket,
     netClient: NetClient,
+    strategy: LiveStrategy = Swapper.LiveStrategy.ALL,
+    reconnect: Int = 0,
     private val namespaceManager: NamespaceManager,
     private val securityManager: SecurityManager
-) : Swapper(socket, netClient) {
+) : Swapper(socket, netClient, strategy, reconnect) {
 
   override fun connect() {
     // 1. send onFCPublish command.

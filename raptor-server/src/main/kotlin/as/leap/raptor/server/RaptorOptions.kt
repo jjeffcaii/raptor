@@ -1,13 +1,16 @@
 package `as`.leap.raptor.server
 
 import `as`.leap.raptor.commons.Utils
+import `as`.leap.raptor.core.Swapper
 
 data class RaptorOptions(
     var redis: String,
     var maxleap: String,
     var hostname: String = Utils.ipv4().first(),
     var httpPort: Int = 8080,
-    var rtmpPort: Int = 1935
+    var rtmpPort: Int = 1935,
+    var reconnect: Int = 3,
+    var strategy: Swapper.LiveStrategy = Swapper.LiveStrategy.ALL
 ) {
 
   companion object {
