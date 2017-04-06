@@ -1,6 +1,7 @@
 package `as`.leap.raptor.core
 
 import `as`.leap.raptor.api.Address
+import `as`.leap.raptor.commons.Consts
 import `as`.leap.raptor.core.impl.DefaultAdaptor
 import `as`.leap.raptor.core.impl.endpoint.DirectEndpoint
 import `as`.leap.raptor.core.impl.ext.Endpoint
@@ -19,11 +20,12 @@ import java.util.concurrent.atomic.AtomicInteger
 
 abstract class Swapper(
     socket: NetSocket,
-    private val netClient: NetClient
+    private val netClient: NetClient,
+    private val strategy: LiveStrategy = Swapper.LiveStrategy.ALL
 ) : Closeable {
 
   private val endpoint: Endpoint
-  protected var chunkSize: Long = 128
+  protected var chunkSize: Long = Consts.RTMP_DEFAULT_CHUNK_SIZE
   protected var namespace: String = StringUtils.EMPTY
   protected var group: String = StringUtils.EMPTY
 
@@ -60,8 +62,27 @@ abstract class Swapper(
         logger.info("**** start publishing! ****")
       }
     }, {
-      logger.warn("some backend closed. close all endpoints.")
-      this.close()
+      logger.warn("connection dead: {}", address)
+      val lives = this.connects.decrementAndGet()
+      when (this.strategy) {
+        LiveStrategy.ALL -> {
+          logger.warn("swapper closed: strategy=ALL, need={}, alive={}.", this.adaptors.size, lives)
+          this.close()
+        }
+        LiveStrategy.QUORUM -> {
+          val need = this.adaptors.size / 2 + 1
+          if (lives < need) {
+            logger.warn("swapper closed: strategy=QUORUM, need={}, alive={}.", need, lives)
+            this.close()
+          }
+        }
+        LiveStrategy.ANY -> {
+          if (lives < 1) {
+            logger.warn("swapper closed: strategy=ANY, need=1, alive=0.")
+            this.close()
+          }
+        }
+      }
     })
     this.adaptors.add(adaptor)
     if (logger.isDebugEnabled) {
@@ -72,6 +93,10 @@ abstract class Swapper(
   override fun close() {
     this.endpoint.close()
     this.adaptors.forEach(Adaptor::close)
+  }
+
+  enum class LiveStrategy {
+    ANY, QUORUM, ALL
   }
 
   init {
@@ -98,18 +123,20 @@ abstract class Swapper(
         }
         else -> {
           // ignore
+          if (logger.isDebugEnabled) {
+            logger.debug("other message type: {}.", it.header.type)
+          }
         }
       }
     }
     val handshaker = Handshaker(this.endpoint, failed = { this.close() }, passive = true)
     this.endpoint
         .onHandshake { handshaker.validate(it) }
-        .onChunk {
-          if (it.header.type.isMedia()) {
-            val buffer = it.toBuffer()
-            this.adaptors.forEach { it.write(buffer) }
+        .onChunk { chunk ->
+          if (chunk.header.type.isMedia()) {
+            this.adaptors.forEach { it.write(chunk.toBuffer()) }
           } else {
-            messages.append(it)
+            messages.append(chunk)
           }
         }
         .onClose {
@@ -168,10 +195,8 @@ abstract class Swapper(
   private fun sndSetDataFrame(msg: Message) {
     val payload = msg.toModel() as SimpleAMFPayload
     val first = payload.body.first()
-    if (first is String && StringUtils.equals(SET_DATA_FRAME, first)) {
-      this.adaptors.forEach {
-        it.write(msg)
-      }
+    if (first is String && SET_DATA_FRAME == first) {
+      this.adaptors.forEach { it.write(msg) }
     }
   }
 

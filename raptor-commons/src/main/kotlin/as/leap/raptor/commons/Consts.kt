@@ -2,6 +2,7 @@ package `as`.leap.raptor.commons
 
 object Consts {
 
+  val RTMP_DEFAULT_CHUNK_SIZE = 128L
 
   val HEADER_MAXLEAP_APPID = "X-ML-AppId"
   val HEADER_MAXLEAP_SIGN = "X-ML-Request-Sign"

@@ -1,5 +1,6 @@
 package `as`.leap.raptor.core.impl.ext
 
+import `as`.leap.raptor.commons.Consts
 import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.utils.Callback
 import io.vertx.core.Handler
@@ -12,7 +13,7 @@ class ChunkFliper(
     private val parser: RecordParser,
     private val onHandshake: Callback<Handshake>,
     private val onChunk: Callback<Chunk>,
-    private var chunkSize: Int = 128
+    private var chunkSize: Int = Consts.RTMP_DEFAULT_CHUNK_SIZE.toInt()
 ) : Handler<Buffer> {
 
   private var state: ReadState = ReadState.HANDSHAKE0
