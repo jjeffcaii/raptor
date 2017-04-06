@@ -40,6 +40,9 @@ abstract class Adaptor(
   private var retry = 0
   private val remembers: MutableList<Message> = mutableListOf()
   private var newborn = false
+  private var bingoNext = false
+  private var firstAudio: Chunk? = null
+  private var firstVideo: Chunk? = null
 
   fun onConnect(cb: Do?): Adaptor {
     this.onConnect = cb
@@ -112,19 +115,17 @@ abstract class Adaptor(
 
   abstract fun onCommand(msg: Message)
 
-  private var bingoNext = false
-  private var firstAudio: Chunk? = null
-  private var firstVideo: Chunk? = null
-
 
   fun write(chunk: Chunk, strict: Boolean = true): Adaptor {
     if (!strict || this.connected()) {
       if (this.newborn) {
+        // 处理重连后新生的适配器
         synchronized(this) {
           when (chunk.header.fmt) {
             FMT.F0 -> {
               this.backend?.write(chunk.toBuffer())
               this.newborn = false
+              logger.info(">>> send chunk(0) success. your adaptor is reborn now!!!")
             }
             FMT.F1 -> {
               if (this.bingoNext) {
@@ -136,13 +137,13 @@ abstract class Adaptor(
                 logger.info(">>> hack chunk(1) success. your adaptor is reborn now!!!")
               } else if (chunk.payload.length() < this.chunkSize) {
                 this.bingoNext = true
-                logger.info(">>> next media chunk is bingo!")
+                logger.info(">>> skip broken media but next one will be bingo :-D")
               } else {
-                logger.info(">>> next media chunk is not bingo :-(")
+                logger.info(">>> skip broken media.")
               }
             }
             else -> {
-              logger.warn(">>> newborn adaptor is waiting for chunk(0,1) but now is chunk({}).", chunk.header.fmt.code)
+              logger.warn(">>> newborn adaptor is waiting for chunk(0,1) but now is {}.", chunk.header.fmt.code)
             }
           }
         }
@@ -218,7 +219,7 @@ abstract class Adaptor(
         this.bingoNext = false
       }
     }
-    
+
     // mock adaptor close.
     /*
     if (retry < 1) {
