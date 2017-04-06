@@ -1,10 +1,10 @@
 package `as`.leap.raptor.core.impl
 
 import `as`.leap.raptor.api.Address
+import `as`.leap.raptor.commons.Consts
 import `as`.leap.raptor.core.Adaptor
 import `as`.leap.raptor.core.model.*
 import `as`.leap.raptor.core.model.payload.*
-import `as`.leap.raptor.core.utils.Do
 import io.vertx.core.net.NetClient
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -13,10 +13,9 @@ import java.lang.invoke.MethodHandles
 class DefaultAdaptor(
     netClient: NetClient,
     address: Address,
-    chunkSize: Long,
-    onConnect: Do? = null,
-    onClose: Do? = null
-) : Adaptor(netClient, address, chunkSize, onConnect, onClose) {
+    chunkSize: Long = Consts.RTMP_DEFAULT_CHUNK_SIZE,
+    reconnect: Int = 0
+) : Adaptor(netClient, address, chunkSize, reconnect) {
 
   private var mark: Int = -1
 

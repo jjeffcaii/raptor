@@ -1,6 +1,7 @@
 package `as`.leap.raptor.core
 
 import `as`.leap.raptor.api.Address
+import `as`.leap.raptor.commons.Consts
 import `as`.leap.raptor.core.impl.endpoint.LazyEndpoint
 import `as`.leap.raptor.core.impl.ext.Endpoint
 import `as`.leap.raptor.core.impl.ext.Handshaker
@@ -18,29 +19,46 @@ import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.lang.invoke.MethodHandles
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 abstract class Adaptor(
-    netClient: NetClient,
+    private val netClient: NetClient,
     protected val address: Address,
     protected val chunkSize: Long,
-    protected val onConnect: Do?,
-    protected val onClose: Do?) : Closeable {
+    reconnect: Int = 0
+) : Closeable {
 
-  private val backend: Endpoint
+  private var backend: Endpoint? = null
 
   protected val connected = AtomicBoolean(false)
   protected var transId: Int = 0
+  private val retry = AtomicInteger(reconnect)
 
-  init {
-    this.backend = LazyEndpoint(netClient, this.address.host, this.address.port)
+  protected var onConnect: Do? = null
+  protected var onClose: Do? = null
+
+  fun onConnect(cb: Do?): Adaptor {
+    this.onConnect = cb
+    return this
+  }
+
+  fun onClose(cb: Do?): Adaptor {
+    this.onClose = cb
+    return this
+  }
+
+  fun connect() {
+    this.transId = 0
+    val endpoint = LazyEndpoint(this.netClient, this.address.host, this.address.port)
+    this.backend = endpoint
     val messages = MessageFliper()
-    val hc = Handshaker(backend, {
+    val hc = Handshaker(endpoint, {
 
       if (logger.isDebugEnabled) {
         logger.debug("handshake with {}:{} succes!", this.address.host, this.address.port)
       }
 
-      if (this.chunkSize != 128L) {
+      if (this.chunkSize != Consts.RTMP_DEFAULT_CHUNK_SIZE) {
         this.sndChunkSize(this.chunkSize)
       }
 
@@ -56,14 +74,19 @@ abstract class Adaptor(
       val header = Header(FMT.F0, 3, MessageType.COMMAND_AMF0)
       this.write(header, payload)
       // bind close event.
-      backend.onClose { this.onClose?.invoke() }
+      endpoint.onClose {
+        if (this.retry.decrementAndGet() < 0) {
+          this.onClose?.invoke()
+        } else {
+          //TODO
+        }
+      }
     }, {
       logger.error("handshake failed: close backend.")
-      this.close()
-      this.onClose?.invoke()
+      endpoint.close()
     })
 
-    backend.onChunk { messages.append(it) }.onHandshake { hc.validate(it) }
+    endpoint.onChunk { messages.append(it) }.onHandshake { hc.validate(it) }
 
     messages.onMessage {
       when (it.header.type) {
@@ -75,7 +98,6 @@ abstract class Adaptor(
         }
       }
     }
-
   }
 
   abstract fun onCommand(msg: Message)
@@ -84,7 +106,7 @@ abstract class Adaptor(
     if (strict) {
       Preconditions.checkArgument(this.connected(), "cannot write buffer because adaptor is disconnected.")
     }
-    this.backend.write(buffer)
+    this.backend?.write(buffer)
     return this
   }
 
@@ -98,7 +120,7 @@ abstract class Adaptor(
   }
 
   fun write(msg: Message): Adaptor {
-    this.backend.write(msg.toBuffer(this.chunkSize))
+    this.backend?.write(msg.toBuffer(this.chunkSize))
     return this
   }
 
@@ -126,7 +148,7 @@ abstract class Adaptor(
   }
 
   override fun close() {
-    this.backend.close()
+    this.backend?.close()
   }
 
   private fun sndChunkSize(newSize: Long) {

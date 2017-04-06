@@ -13,7 +13,7 @@ class ChunkFliper(
     private val parser: RecordParser,
     private val onHandshake: Callback<Handshake>,
     private val onChunk: Callback<Chunk>,
-    private var chunkSize: Int = Consts.RTMP_DEFAULT_CHUNK_SIZE.toInt()
+    private var chunkSize: Int = Consts.RTMP_DEFAULT_CHUNK_SIZE32
 ) : Handler<Buffer> {
 
   private var state: ReadState = ReadState.HANDSHAKE0

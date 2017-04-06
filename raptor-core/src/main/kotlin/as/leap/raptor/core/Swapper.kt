@@ -55,13 +55,17 @@ abstract class Swapper(
   }
 
   protected fun establish(address: Address) {
-    val adaptor = DefaultAdaptor(this.netClient, address, this.chunkSize, {
+    val adaptor = DefaultAdaptor(this.netClient, address, this.chunkSize)
+    // bind connect
+    adaptor.onConnect {
       logger.info("establish success: {}", address)
       if (this.connects.incrementAndGet() == this.adaptors.size) {
         this.connect()
         logger.info("**** start publishing! ****")
       }
-    }, {
+    }
+    // bind close
+    adaptor.onClose {
       logger.warn("connection dead: {}", address)
       val lives = this.connects.decrementAndGet()
       when (this.strategy) {
@@ -83,11 +87,15 @@ abstract class Swapper(
           }
         }
       }
-    })
-    this.adaptors.add(adaptor)
+    }
+    // fire connect
+    adaptor.connect()
+
     if (logger.isDebugEnabled) {
       logger.debug("establish to {}......", address)
     }
+
+    this.adaptors.add(adaptor)
   }
 
   override fun close() {
