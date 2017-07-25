@@ -49,6 +49,11 @@
     </dependency>
 
     <dependency>
+      <groupId>org.fusesource.leveldbjni</groupId>
+      <artifactId>leveldbjni-all</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.flex.blazeds</groupId>
       <artifactId>flex-messaging-core</artifactId>
     </dependency>

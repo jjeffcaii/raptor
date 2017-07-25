@@ -115,7 +115,6 @@ abstract class Adaptor(
 
   abstract fun onCommand(msg: Message)
 
-
   fun write(chunk: Chunk, strict: Boolean = true): Adaptor {
     if (!strict || this.connected()) {
       if (this.newborn) {

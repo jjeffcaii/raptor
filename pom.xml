@@ -114,6 +114,12 @@
         <version>2.9.0</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.fusesource.leveldbjni</groupId>
+        <artifactId>leveldbjni-all</artifactId>
+        <version>1.8</version>
+      </dependency>
+
       <!-- amf0/amf3 -->
       <dependency>
         <groupId>org.apache.flex.blazeds</groupId>

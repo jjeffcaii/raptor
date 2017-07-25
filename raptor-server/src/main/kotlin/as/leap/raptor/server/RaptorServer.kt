@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit
 
 class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runnable {
 
-  private val vertx = Vertx.vertx()
+   private val vertx = Vertx.vertx()
   private val apiServer: HttpServer
   private val rtmpServer: NetServer
   private val namespaceManager: NamespaceManager
@@ -251,7 +251,7 @@ class RaptorServer(private val opts: RaptorOptions, www: String? = null) : Runna
   override fun run() {
     this.apiServer.listen(this.opts.httpPort, {
       when (it.succeeded()) {
-        true -> logger.info("API server start success!")
+        true -> logger.info("API server start success! (http://127.0.0.1:${this.opts.httpPort}/console/)")
         else -> {
           logger.error("API server start failed!!!", it.cause())
           System.exit(1)
