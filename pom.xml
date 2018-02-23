@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>as.leap</groupId>
+  <groupId>in.firedog</groupId>
   <artifactId>raptor</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
@@ -12,7 +12,6 @@
   <modules>
     <module>raptor-commons</module>
     <module>raptor-api</module>
-    <module>raptor-api-impl</module>
     <module>raptor-core</module>
     <module>raptor-server</module>
   </modules>
@@ -71,11 +70,6 @@
         <version>1.10</version>
       </dependency>
       <dependency>
-        <groupId>commons-cli</groupId>
-        <artifactId>commons-cli</artifactId>
-        <version>1.4</version>
-      </dependency>
-      <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-pool2</artifactId>
         <version>2.4.2</version>
@@ -108,18 +102,6 @@
         <version>2.9.1</version>
       </dependency>
 
-      <dependency>
-        <groupId>redis.clients</groupId>
-        <artifactId>jedis</artifactId>
-        <version>2.9.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.fusesource.leveldbjni</groupId>
-        <artifactId>leveldbjni-all</artifactId>
-        <version>1.8</version>
-      </dependency>
-
       <!-- amf0/amf3 -->
       <dependency>
         <groupId>org.apache.flex.blazeds</groupId>
@@ -134,22 +116,17 @@
 
       <!-- modeule deps -->
       <dependency>
-        <groupId>as.leap</groupId>
+        <groupId>in.firedog</groupId>
         <artifactId>raptor-commons</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>as.leap</groupId>
+        <groupId>in.firedog</groupId>
         <artifactId>raptor-api</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>as.leap</groupId>
-        <artifactId>raptor-api-impl</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>as.leap</groupId>
+        <groupId>in.firedog</groupId>
         <artifactId>raptor-core</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -263,74 +240,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>development</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <env>development</env>
-        <nexus.host>10.10.10.137:8081/nexus</nexus.host>
-        <docker.registry>10.10.10.160:8010</docker.registry>
-      </properties>
-      <repositories>
-        <repository>
-          <id>snapshots</id>
-          <name>Internal Snapshots</name>
-          <url>http://${nexus.host}/content/repositories/snapshots</url>
-        </repository>
-      </repositories>
-      <distributionManagement>
-        <snapshotRepository>
-          <id>snapshots</id>
-          <name>Internal Snapshots</name>
-          <url>http://${nexus.host}/content/repositories/snapshots</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
-    <profile>
-      <id>production</id>
-      <properties>
-        <env>production</env>
-        <nexus.host>nexus.maxleap.cn:8081</nexus.host>
-        <docker.registry>dockerhub.leapcloud.cn:5000</docker.registry>
-      </properties>
-    </profile>
-  </profiles>
-
-  <repositories>
-    <!--
-    <repository>
-      <id>jcenter</id>
-      <url>http://jcenter.bintray.com</url>
-    </repository>
-    -->
-    <repository>
-      <id>public</id>
-      <name>Public Repositories</name>
-      <url>http://${nexus.host}/content/groups/public</url>
-    </repository>
-    <repository>
-      <id>releases</id>
-      <name>Internal Releases</name>
-      <url>http://${nexus.host}/content/repositories/releases</url>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>public</id>
-      <name>Public Repositories</name>
-      <url>http://${nexus.host}/content/groups/public</url>
-    </pluginRepository>
-  </pluginRepositories>
-  <distributionManagement>
-    <repository>
-      <id>releases</id>
-      <name>Internal Releases</name>
-      <url>http://${nexus.host}/content/repositories/releases</url>
-    </repository>
-  </distributionManagement>
-
 </project>

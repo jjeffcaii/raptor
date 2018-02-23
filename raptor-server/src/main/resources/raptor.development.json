@@ -1,4 +1,0 @@
-{
-  "maxleap": "http://apiuat.maxleap.cn/",
-  "redis": "1.redis.cluster:6399,2.redis.cluster:6399,3.redis.cluster:6399"
-}
