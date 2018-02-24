@@ -31,9 +31,7 @@ abstract class Swapper(
 
   private val endpoint: Endpoint
   protected var chunkSize: Long = Consts.RTMP_DEFAULT_CHUNK_SIZE
-  protected var namespace: String = StringUtils.EMPTY
-  protected var group: String = StringUtils.EMPTY
-
+  protected var channel: String = StringUtils.EMPTY
   protected var streamKey: String = StringUtils.EMPTY
 
   protected var transId: Int = 0

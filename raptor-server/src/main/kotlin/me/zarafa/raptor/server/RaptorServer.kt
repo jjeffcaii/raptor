@@ -1,7 +1,7 @@
 package me.zarafa.raptor.server
 
 import me.zarafa.raptor.api.Address
-import me.zarafa.raptor.api.NamespaceManager
+import me.zarafa.raptor.api.ChannelManager
 import me.zarafa.raptor.commons.Consts
 import me.zarafa.raptor.commons.Errors
 import me.zarafa.raptor.commons.Utils
@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.lang.invoke.MethodHandles
 
-class RaptorServer(private val namespaceManager: NamespaceManager, private val opts: RaptorOptions) : Runnable {
+class RaptorServer(private val channelManager: ChannelManager, private val opts: RaptorOptions) : Runnable {
   private val vertx = Vertx.vertx()
   private val apiServer: HttpServer
   private val rtmpServer: NetServer
@@ -77,10 +77,10 @@ class RaptorServer(private val namespaceManager: NamespaceManager, private val o
         val gp = ctx.request().getParam("gp")
         val vo = Utils.fromJSON(ctx.bodyAsString, PostGroup::class.java)
         val addresses = vo.addresses.map { it.toAddress()!! }.toList().toTypedArray()
-        if (this.namespaceManager.exists(ns, gp)) {
+        if (this.channelManager.exists(ns, gp)) {
           throw Exception("group $gp exists already!")
         }
-        this.namespaceManager.save(ns, gp, addresses, vo.expires)
+        this.channelManager.save(ns, gp, addresses, vo.expires)
         it.onSuccess(1)
       }
       consumeAsJSON(ctx, ob, 201)
@@ -92,8 +92,8 @@ class RaptorServer(private val namespaceManager: NamespaceManager, private val o
         val gp = ctx.request().getParam("gp")
         val vo = Utils.fromJSON(ctx.bodyAsString, PostGroup::class.java)
         val addresses = vo.addresses.map { it.toAddress()!! }.toList().toTypedArray()
-        this.namespaceManager.clear(ns, gp)
-        this.namespaceManager.save(ns, gp, addresses, vo.expires)
+        this.channelManager.clear(ns, gp)
+        this.channelManager.save(ns, gp, addresses, vo.expires)
         it.onSuccess(1)
       }
       consumeAsJSON(ctx, ob)
@@ -105,7 +105,7 @@ class RaptorServer(private val namespaceManager: NamespaceManager, private val o
         val gp = ctx.request().getParam("gp")
         val vo = Utils.fromJSON(ctx.bodyAsString, PostGroup::class.java)
         val addresses = vo.addresses.map { it.toAddress()!! }.toList().toTypedArray()
-        this.namespaceManager.save(ns, gp, addresses, vo.expires)
+        this.channelManager.save(ns, gp, addresses, vo.expires)
         it.onSuccess(1)
       }
       consumeAsJSON(ctx, ob)
@@ -115,7 +115,7 @@ class RaptorServer(private val namespaceManager: NamespaceManager, private val o
       val ob = Single.create<Int> {
         val ns: String = ctx.get(KEY_NS)
         val gp = ctx.request().getParam("gp")
-        this.namespaceManager.clear(ns, gp)
+        this.channelManager.clear(ns, gp)
         it.onSuccess(1)
       }
       consumeAsJSON(ctx, ob, 204)
@@ -124,7 +124,7 @@ class RaptorServer(private val namespaceManager: NamespaceManager, private val o
       val ob = Single.create<Boolean> {
         val ns: String = ctx.get(KEY_NS)
         val gp = ctx.request().getParam("gp")
-        it.onSuccess(this.namespaceManager.exists(ns, gp))
+        it.onSuccess(this.channelManager.exists(ns, gp))
       }
       ob.subscribeOn(Schedulers.io()).subscribe({
         val statusCode = when (it) {
@@ -140,10 +140,10 @@ class RaptorServer(private val namespaceManager: NamespaceManager, private val o
     router.get("/groups").handler { ctx ->
       val ob = Single.create<List<GroupVO>> {
         val ns: String = ctx.get(KEY_NS)
-        val li = this.namespaceManager.list(ns)
+        val li = this.channelManager.list(ns)
             .map {
               val addresses = it.value.map { PostAddress(it.toBaseURL(), it.key) }.toList()
-              val exp = this.namespaceManager.ttl(ns, it.key)
+              val exp = this.channelManager.ttl(ns, it.key)
               GroupVO(it.key, addresses, exp)
             }
             .toList()
@@ -156,10 +156,10 @@ class RaptorServer(private val namespaceManager: NamespaceManager, private val o
       val ob = Single.create<GroupVO> {
         val ns: String = ctx.get(KEY_NS)
         val gp = ctx.request().getParam("gp")
-        when (this.namespaceManager.exists(ns, gp)) {
+        when (this.channelManager.exists(ns, gp)) {
           true -> {
-            val addresses = this.namespaceManager.load(ns, gp).map { PostAddress(it.toBaseURL(), it.key) }.toList()
-            val exp = this.namespaceManager.ttl(ns, gp)
+            val addresses = this.channelManager.load(ns, gp).map { PostAddress(it.toBaseURL(), it.key) }.toList()
+            val exp = this.channelManager.ttl(ns, gp)
             it.onSuccess(GroupVO(gp, addresses, exp))
           }
           else -> throw Exception("no such group $gp.")
@@ -172,7 +172,7 @@ class RaptorServer(private val namespaceManager: NamespaceManager, private val o
       val ob = Single.create<Any> {
         val ns: String = ctx.get(KEY_NS)
         val gp = ctx.request().getParam("gp")
-        when (this.namespaceManager.exists(ns, gp)) {
+        when (this.channelManager.exists(ns, gp)) {
           true -> {
             val url = when (opts.rtmpPort) {
               Address.DEFAULT_PORT -> "rtmp://${opts.hostname}/$ns?g=$gp"
@@ -197,7 +197,7 @@ class RaptorServer(private val namespaceManager: NamespaceManager, private val o
     val netClient = vertx.createNetClient()
     this.rtmpServer.connectHandler {
       it.pause()
-      DefaultSwapper(it, netClient, opts.strategy, opts.reconnect, namespaceManager)
+      DefaultSwapper(it, netClient, opts.strategy, opts.reconnect, channelManager)
       it.resume()
     }
   }

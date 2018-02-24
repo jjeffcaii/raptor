@@ -4,7 +4,7 @@ import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetClient
 import io.vertx.core.net.NetSocket
 import me.zarafa.raptor.api.Address
-import me.zarafa.raptor.api.NamespaceManager
+import me.zarafa.raptor.api.ChannelManager
 import me.zarafa.raptor.core.Swapper
 import me.zarafa.raptor.core.model.FMT
 import me.zarafa.raptor.core.model.Header
@@ -19,7 +19,7 @@ class DefaultSwapper(
     netClient: NetClient,
     strategy: LiveStrategy = Swapper.LiveStrategy.ALL,
     reconnect: Int = 0,
-    private val namespaceManager: NamespaceManager
+    private val channelManager: ChannelManager
 ) : Swapper(socket, netClient, strategy, reconnect) {
 
   override fun connect() {
@@ -56,13 +56,13 @@ class DefaultSwapper(
     }
   }
 
-  private fun handleConnect(ns: String) {
-    if (!this.namespaceManager.exists(ns)) {
-      logger.error("invalid application: {}.", ns)
+  private fun handleConnect(channel: String) {
+    if (!this.channelManager.exists(channel)) {
+      logger.error("invalid application: {}.", channel)
       this.close()
       return
     }
-    this.namespace = ns
+    this.channel = channel
     this.sendConnectSuccess()
   }
 
@@ -94,39 +94,36 @@ class DefaultSwapper(
   }
 
   private fun handleConnectInline(ns: String, streamKey: String) {
-    if (!this.securityManager.exists(ns)) {
-      logger.error("invalid application: {}.", ns)
+    if (!this.channelManager.exists(ns)) {
+      logger.error("invalid channel: {}.", ns)
       this.close()
       return
     }
-    this.namespace = ns
+    this.channel = ns
     this.streamKey = streamKey
-    val result = this.securityManager.validate(this.namespace, streamKey)
-    if (!result.success) {
-      logger.error("illegal stream key: namespace={}, streamKey={}.", this.namespace, this.streamKey)
+
+    if (!this.channelManager.validate(this.channel, streamKey)) {
+      logger.error("illegal stream key: channel={}, streamKey={}.", this.channel, this.streamKey)
       this.close()
       return
     }
-    this.group = result.group
     this.sendConnectSuccess()
   }
 
   override fun handleCMD(cmd: CommandReleaseStream) {
     if (this.streamKey.isBlank()) {
       this.streamKey = cmd.getStreamKey()
-      val result = this.securityManager.validate(this.namespace, streamKey)
-      if (!result.success) {
-        logger.error("illegal stream key: namespace={}, streamKey={}.", this.namespace, this.streamKey)
+      if (!this.channelManager.validate(this.channel, streamKey)) {
+        logger.error("illegal stream key: channel={}, streamKey={}.", this.channel, this.streamKey)
         this.close()
         return
       }
-      this.group = result.group
     }
 
-    val addresses = this.namespaceManager.load(this.namespace, this.group)
+    val addresses = this.channelManager.load(this.channel)
     // no address binding.
     if (addresses.isEmpty()) {
-      logger.error("missing addresses: namespace={}, group={}.", this.namespace, this.group)
+      logger.error("missing addresses: channel={}.", this.channel)
       this.close()
       return
     }
