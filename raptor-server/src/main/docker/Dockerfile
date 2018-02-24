@@ -1,6 +1,6 @@
 FROM openjdk:8-jdk-alpine
 
-LABEL maintainer = "wcai@maxleap.com"
+LABEL maintainer = "jjeffcaii@outlook.com"
 
 ENV RAPTOR_HOME="/usr/local/lib/raptor" RAPTOR_LOG_DIR="/mnt/sandbox"
 

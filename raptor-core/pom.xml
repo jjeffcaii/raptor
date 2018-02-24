@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <artifactId>raptor</artifactId>
-    <groupId>as.leap</groupId>
+    <groupId>me.zarafa</groupId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -14,11 +14,11 @@
   <dependencies>
 
     <dependency>
-      <groupId>as.leap</groupId>
+      <groupId>me.zarafa</groupId>
       <artifactId>raptor-commons</artifactId>
     </dependency>
     <dependency>
-      <groupId>as.leap</groupId>
+      <groupId>me.zarafa</groupId>
       <artifactId>raptor-api</artifactId>
     </dependency>
 
@@ -47,12 +47,6 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-lang-kotlin</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>org.fusesource.leveldbjni</groupId>
-      <artifactId>leveldbjni-all</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>org.apache.flex.blazeds</groupId>
       <artifactId>flex-messaging-core</artifactId>
@@ -67,7 +61,5 @@
       <artifactId>slf4j-simple</artifactId>
       <scope>test</scope>
     </dependency>
-
-
   </dependencies>
 </project>
