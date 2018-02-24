@@ -1,10 +1,9 @@
 package me.zarafa.raptor.core.model
 
-import `in`.firedog.raptor.core.model.payload.*
-import me.zarafa.raptor.core.utils.Codecs
 import com.google.common.base.Preconditions
 import io.vertx.core.buffer.Buffer
 import me.zarafa.raptor.core.model.payload.*
+import me.zarafa.raptor.core.utils.Codecs
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 

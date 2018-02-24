@@ -1,5 +1,8 @@
 package me.zarafa.raptor.core
 
+import io.vertx.core.buffer.Buffer
+import io.vertx.core.net.NetClient
+import io.vertx.core.net.NetSocket
 import me.zarafa.raptor.api.Address
 import me.zarafa.raptor.commons.Consts
 import me.zarafa.raptor.core.impl.DefaultAdaptor
@@ -7,11 +10,6 @@ import me.zarafa.raptor.core.impl.endpoint.DirectEndpoint
 import me.zarafa.raptor.core.impl.ext.Endpoint
 import me.zarafa.raptor.core.impl.ext.Handshaker
 import me.zarafa.raptor.core.impl.ext.MessageFliper
-import `in`.firedog.raptor.core.model.*
-import `in`.firedog.raptor.core.model.payload.*
-import io.vertx.core.buffer.Buffer
-import io.vertx.core.net.NetClient
-import io.vertx.core.net.NetSocket
 import me.zarafa.raptor.core.model.*
 import me.zarafa.raptor.core.model.payload.*
 import org.apache.commons.lang3.StringUtils
@@ -44,9 +42,9 @@ abstract class Swapper(
   private val connects = AtomicInteger(0)
   private val isClosed = AtomicBoolean(false)
 
-  abstract protected fun handleCMD(cmd: CommandReleaseStream)
-  abstract protected fun handleCMD(cmd: CommandConnect)
-  abstract protected fun connect()
+  protected abstract fun handleCMD(cmd: CommandReleaseStream)
+  protected abstract fun handleCMD(cmd: CommandConnect)
+  protected abstract fun connect()
 
   protected fun write(buffer: Buffer): Swapper {
     this.endpoint.write(buffer)
@@ -222,8 +220,8 @@ abstract class Swapper(
   }
 
   companion object {
+    private const val SET_DATA_FRAME = "@setDataFrame"
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
-    private val SET_DATA_FRAME = "@setDataFrame"
   }
 
 }

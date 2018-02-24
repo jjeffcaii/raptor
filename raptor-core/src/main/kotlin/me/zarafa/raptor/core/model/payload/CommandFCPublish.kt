@@ -7,7 +7,7 @@ class CommandFCPublish(transId: Int, values: Array<Any?>) : AbstractCommand(NAME
   }
 
   companion object {
-    val NAME = "FCPublish"
+    const val NAME = "FCPublish"
   }
 
 }

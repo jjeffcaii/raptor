@@ -1,8 +1,8 @@
 package me.zarafa.raptor.core.model
 
-import me.zarafa.raptor.core.utils.Buffered
 import com.google.common.base.MoreObjects
 import io.vertx.core.buffer.Buffer
+import me.zarafa.raptor.core.utils.Buffered
 
 data class Header(
     var fmt: FMT,
@@ -15,17 +15,21 @@ data class Header(
 
   fun toBasicHeader(): Buffer {
     val b = Buffer.buffer()
-    if (this.csid < 64) {
-      val v = this.fmt.code shl 6 or this.csid
-      b.appendByte(v.toByte())
-    } else if (this.csid < 320) {
-      val v = this.fmt.code shl 6
-      b.appendByte(v.toByte())
-      b.appendByte((this.csid - 64).toByte())
-    } else {
-      val v = this.fmt.code shl 6 or 1
-      b.appendByte(v.toByte())
-      b.appendUnsignedShortLE(this.csid - 64)
+    when {
+      this.csid < 64 -> {
+        val v = this.fmt.code shl 6 or this.csid
+        b.appendByte(v.toByte())
+      }
+      this.csid < 320 -> {
+        val v = this.fmt.code shl 6
+        b.appendByte(v.toByte())
+        b.appendByte((this.csid - 64).toByte())
+      }
+      else -> {
+        val v = this.fmt.code shl 6 or 1
+        b.appendByte(v.toByte())
+        b.appendUnsignedShortLE(this.csid - 64)
+      }
     }
     return b
   }
@@ -56,7 +60,7 @@ data class Header(
     return b
   }
 
-  fun hasExtendedTimestamp(): Boolean {
+  private fun hasExtendedTimestamp(): Boolean {
     return this.timestamp > 0xFFFFFF
   }
 

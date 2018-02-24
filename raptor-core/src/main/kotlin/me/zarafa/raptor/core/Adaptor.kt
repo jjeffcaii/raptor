@@ -1,20 +1,19 @@
 package me.zarafa.raptor.core
 
+import io.vertx.core.buffer.Buffer
+import io.vertx.core.net.NetClient
 import me.zarafa.raptor.api.Address
 import me.zarafa.raptor.commons.Consts
 import me.zarafa.raptor.core.impl.endpoint.LazyEndpoint
 import me.zarafa.raptor.core.impl.ext.Endpoint
 import me.zarafa.raptor.core.impl.ext.Handshaker
 import me.zarafa.raptor.core.impl.ext.MessageFliper
-import `in`.firedog.raptor.core.model.*
+import me.zarafa.raptor.core.model.*
 import me.zarafa.raptor.core.model.payload.CommandConnect
 import me.zarafa.raptor.core.model.payload.CommandDeleteStream
 import me.zarafa.raptor.core.model.payload.CommandFCUnpublilsh
 import me.zarafa.raptor.core.model.payload.ProtocolChunkSize
 import me.zarafa.raptor.core.utils.Do
-import io.vertx.core.buffer.Buffer
-import io.vertx.core.net.NetClient
-import me.zarafa.raptor.core.model.*
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.lang.invoke.MethodHandles

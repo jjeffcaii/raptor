@@ -7,6 +7,6 @@ class CommandFCUnpublilsh(transId: Int, values: Array<Any?>) : AbstractCommand(N
   }
 
   companion object {
-    val NAME = "FCUnpublish"
+    const val NAME = "FCUnpublish"
   }
 }

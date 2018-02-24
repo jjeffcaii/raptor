@@ -7,16 +7,16 @@ class CommandReleaseStream(transId: Int, objects: Array<Any?>) : AbstractCommand
 
   fun getStreamKey(): String {
     val foo = this.values[1]
-    if (foo == null) {
-      return StringUtils.EMPTY
+    return if (foo == null) {
+      StringUtils.EMPTY
     } else {
       Preconditions.checkArgument(foo is String, "Not valid stream key type: ${foo::class}.")
-      return foo as String
+      foo as String
     }
   }
 
   companion object {
-    val NAME = "releaseStream"
+    const val NAME = "releaseStream"
   }
 
 }

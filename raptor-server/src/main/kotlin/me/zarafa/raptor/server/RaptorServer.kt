@@ -225,7 +225,7 @@ class RaptorServer(private val namespaceManager: NamespaceManager, private val o
   }
 
   companion object {
-    private val KEY_NS = "ns"
+    private const val KEY_NS = "ns"
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
 
     private fun consumeAsJSON(ctx: RoutingContext, ob: Single<*>, statusCode: Int = 200) {

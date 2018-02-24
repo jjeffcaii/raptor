@@ -16,7 +16,7 @@ class CommandResult(transId: Int, values: Array<Any?>) : AbstractCommand(NAME, t
   }
 
   companion object {
-    val NAME = "_result"
+    const val NAME = "_result"
   }
 
 }

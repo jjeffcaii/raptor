@@ -22,7 +22,7 @@ class CommandConnect(transId: Int, objects: Array<Any?>) : AbstractCommand(NAME,
   }
 
   companion object {
-    val NAME = "connect"
+    const val NAME = "connect"
   }
 
   data class ConnectInfo(

@@ -1,5 +1,8 @@
 package me.zarafa.raptor.core.impl
 
+import io.vertx.core.buffer.Buffer
+import io.vertx.core.net.NetClient
+import io.vertx.core.net.NetSocket
 import me.zarafa.raptor.api.Address
 import me.zarafa.raptor.api.NamespaceManager
 import me.zarafa.raptor.core.Swapper
@@ -7,10 +10,6 @@ import me.zarafa.raptor.core.model.FMT
 import me.zarafa.raptor.core.model.Header
 import me.zarafa.raptor.core.model.MessageType
 import me.zarafa.raptor.core.model.Payload
-import `in`.firedog.raptor.core.model.payload.*
-import io.vertx.core.buffer.Buffer
-import io.vertx.core.net.NetClient
-import io.vertx.core.net.NetSocket
 import me.zarafa.raptor.core.model.payload.*
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
@@ -113,7 +112,7 @@ class DefaultSwapper(
   }
 
   override fun handleCMD(cmd: CommandReleaseStream) {
-    if (this.streamKey.isNullOrBlank()) {
+    if (this.streamKey.isBlank()) {
       this.streamKey = cmd.getStreamKey()
       val result = this.securityManager.validate(this.namespace, streamKey)
       if (!result.success) {
@@ -138,8 +137,8 @@ class DefaultSwapper(
   }
 
   companion object {
+    private const val SND_CHUNK_SIZE = 1024L
     private val logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
-    private val SND_CHUNK_SIZE = 1024L
     private val CONNECTION_RESPONSE_CMD = mapOf(
         "fmsVer" to "FMS/3,0,1,123",
         "capabilities" to 31

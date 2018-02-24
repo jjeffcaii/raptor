@@ -1,11 +1,9 @@
 package me.zarafa.raptor.core.impl
 
+import io.vertx.core.net.NetClient
 import me.zarafa.raptor.api.Address
 import me.zarafa.raptor.commons.Consts
 import me.zarafa.raptor.core.Adaptor
-import `in`.firedog.raptor.core.model.*
-import `in`.firedog.raptor.core.model.payload.*
-import io.vertx.core.net.NetClient
 import me.zarafa.raptor.core.model.*
 import me.zarafa.raptor.core.model.payload.*
 import org.apache.commons.lang3.StringUtils
