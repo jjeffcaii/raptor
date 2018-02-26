@@ -1,5 +1,5 @@
-# Raptor
-Raptor是一个用Kotlin实现的动态RTMP直播推流代理库。您可以集成它来实现多端同时直播推流。[Engish Docs](./README.md)
+# Raptor [>>>Engish Docs<<<](./README.md)
+Raptor是一个用Kotlin实现的动态RTMP直播推流代理库。您可以集成它来实现多端同时直播推流。
 
 ## 样例代码
 > 请参考: raptor-server/src/test/kotlin/me/zarafa/raptor/server/Example.kt

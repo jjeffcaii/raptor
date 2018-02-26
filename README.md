@@ -1,5 +1,5 @@
-# Raptor
-Raptor is a dynamic RTMP proxy written by Kotlin.[中文文档](./README.zh-CN.md)
+# Raptor [>>中文文档<<<](./README.zh-CN.md)
+Raptor is a dynamic RTMP proxy written by Kotlin.
 
 ## Example
 > Please see raptor-server/src/test/kotlin/me/zarafa/raptor/server/Example.kt
