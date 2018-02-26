@@ -18,7 +18,7 @@ interface ChannelManager {
   /**
    * save channel
    */
-  fun save(channel: String, addresses: Array<Address>, expiresInSeconds: Int = 60)
+  fun save(channel: String, addresses: Array<Address>)
 
   /**
    * load channel
