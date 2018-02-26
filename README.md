@@ -34,3 +34,6 @@ object Example {
 
 ## Time Sequence
 ![time_sequence_diagram](docs/timeseq.png "time_sequence")
+
+## Similar projects
+ - https://github.com/arut/nginx-rtmp-module
