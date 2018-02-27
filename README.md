@@ -1,4 +1,5 @@
 # Raptor [>>中文文档<<<](./README.zh-CN.md)
+[![](https://jitpack.io/v/jjeffcaii/raptor.svg)](https://jitpack.io/#jjeffcaii/raptor)
 Raptor is a dynamic RTMP proxy written by Kotlin.
 
 ## Example
